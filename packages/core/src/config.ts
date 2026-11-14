@@ -6,6 +6,7 @@ import { isDeepStrictEqual } from "node:util"
 import { applyEdits, modify, type ParseError, parse } from "jsonc-parser"
 import { Context, Effect, FiberMap, Layer, Option, PubSub, Ref, Schema, Semaphore, Stream } from "effect"
 import { Directory, Document, Info, type Patch, type Entry, Event } from "@opencode/schema/config"
+import type { ConfigProvider } from "@opencode/schema/config/provider"
 import type { Mcp } from "@opencode/schema/mcp"
 import { Credential } from "./credential.js"
 import { Bus } from "./bus.js"
@@ -52,6 +53,11 @@ export interface Interface {
    * unrelated JSONC content. Removing a server another document defines leaves that definition in place.
    */
   readonly mcp?: (server: string, config: Mcp.ServerConfig | undefined) => Effect.Effect<void, FSUtil.Error>
+  /**
+   * Sets, or removes with `undefined`, one provider in the highest-precedence global config document, preserving
+   * unrelated JSONC content. Removing a provider another document defines leaves that definition in place.
+   */
+  readonly provider?: (id: string, config: ConfigProvider.Info | undefined) => Effect.Effect<void, FSUtil.Error>
   /**
    * Replaces, or clears with `undefined`, the document an integration connection contributes. It loads right after
    * managed policies: its settings layer below remote, user, and project config, while its policies outrank theirs.
@@ -497,31 +503,44 @@ export const layer = (options?: Options) =>
         (effect) => updateLock.withPermit(effect),
       )
 
-      const mcp = Effect.fn("Config.mcp")(
-        function* (server: string, config: Mcp.ServerConfig | undefined) {
+      // Rewrites the highest-precedence global config document through `edit`, keeping unrelated JSONC, then reloads.
+      const editGlobal = Effect.fnUntraced(
+        function* (method: string, edit: (text: string) => string) {
           const directory = initial.global ?? AbsolutePath.make(globalService.config)
           const candidates = ConfigDiscovery.names.map((name) => path.join(directory, name))
           const filepath =
             (yield* Effect.filter(candidates, fs.isFile)).at(-1) ?? path.join(directory, "opencode.jsonc")
           const text = (yield* fs.readFileStringSafe(filepath)) ?? "{}\n"
-          const formatting = { formattingOptions: { tabSize: 2, insertSpaces: true } }
           const updated = yield* Effect.try({
-            try: () => {
-              // A V1 document lists servers directly under `mcp`; drop that entry so the name is not defined twice.
-              // `servers` and `timeout` are the current format's own keys there, never a V1 server.
-              const cleared =
-                server === "servers" || server === "timeout"
-                  ? text
-                  : applyEdits(text, modify(text, ["mcp", server], undefined, formatting))
-              return applyEdits(cleared, modify(cleared, ["mcp", "servers", server], config, formatting))
-            },
-            catch: (cause) => new FSUtil.FileSystemError({ method: "config.mcp", cause }),
+            try: () => edit(text),
+            catch: (cause) => new FSUtil.FileSystemError({ method, cause }),
           })
           yield* fs.writeWithDirs(filepath, updated.endsWith("\n") ? updated : `${updated}\n`)
           yield* requestReload
         },
         (effect) => updateLock.withPermit(effect),
       )
+      const formatting = { formattingOptions: { tabSize: 2, insertSpaces: true } }
+
+      const mcp = Effect.fn("Config.mcp")(function* (server: string, config: Mcp.ServerConfig | undefined) {
+        yield* editGlobal("config.mcp", (text) => {
+          // A V1 document lists servers directly under `mcp`; drop that entry so the name is not defined twice.
+          // `servers` and `timeout` are the current format's own keys there, never a V1 server.
+          const cleared =
+            server === "servers" || server === "timeout"
+              ? text
+              : applyEdits(text, modify(text, ["mcp", server], undefined, formatting))
+          return applyEdits(cleared, modify(cleared, ["mcp", "servers", server], config, formatting))
+        })
+      })
+
+      const provider = Effect.fn("Config.provider")(function* (id: string, config: ConfigProvider.Info | undefined) {
+        yield* editGlobal("config.provider", (text) => {
+          // A V1 document defines providers under `provider`; drop that entry so the ID is not defined twice.
+          const cleared = applyEdits(text, modify(text, ["provider", id], undefined, formatting))
+          return applyEdits(cleared, modify(cleared, ["providers", id], config, formatting))
+        })
+      })
 
       return Service.of({
         entries: Effect.fnUntraced(function* () {
@@ -535,6 +554,7 @@ export const layer = (options?: Options) =>
         changes: () => Stream.fromPubSub(updates),
         update,
         mcp,
+        provider,
         integration: Effect.fn("Config.integration")(function* (integrationID, document) {
           if (isDeepStrictEqual(integrations.get(integrationID), document)) return
           integrations.delete(integrationID)

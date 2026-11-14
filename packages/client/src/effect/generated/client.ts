@@ -328,6 +328,10 @@ import type {
   ExperimentalConfigMcpSetOutput,
   ExperimentalConfigMcpRemoveInput,
   ExperimentalConfigMcpRemoveOutput,
+  ExperimentalConfigProviderSetInput,
+  ExperimentalConfigProviderSetOutput,
+  ExperimentalConfigProviderRemoveInput,
+  ExperimentalConfigProviderRemoveOutput,
 } from "../api/api.js"
 import { ClientError } from "./client-error.js"
 
@@ -2001,9 +2005,25 @@ const EndpointExperimentalConfigMcpRemove =
       raw["config.mcp.remove"]({ params: { server: input["server"] } }).pipe(Effect.mapError(mapClientError)),
     )
 
+const EndpointExperimentalConfigProviderSet =
+  (raw: RawClient["server.config"]) => (input: ExperimentalConfigProviderSetInput) =>
+    preserveEffect<ExperimentalConfigProviderSetOutput>()(
+      raw["config.provider.set"]({
+        params: { provider: input["provider"] },
+        payload: { name: input["name"], baseURL: input["baseURL"], models: input["models"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointExperimentalConfigProviderRemove =
+  (raw: RawClient["server.config"]) => (input: ExperimentalConfigProviderRemoveInput) =>
+    preserveEffect<ExperimentalConfigProviderRemoveOutput>()(
+      raw["config.provider.remove"]({ params: { provider: input["provider"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
 const adaptGroupExperimentalConfig = (raw: RawClient["server.config"]) => ({
   update: EndpointExperimentalConfigUpdate(raw),
   mcp: { set: EndpointExperimentalConfigMcpSet(raw), remove: EndpointExperimentalConfigMcpRemove(raw) },
+  provider: { set: EndpointExperimentalConfigProviderSet(raw), remove: EndpointExperimentalConfigProviderRemove(raw) },
 })
 
 const adaptClient = (raw: RawClient) => {
@@ -2153,6 +2173,13 @@ const adaptClient = (raw: RawClient) => {
         set: client.experimental.config.mcp.set,
         /** @deprecated Use `client.experimental.config.mcp.remove`. Removed in the next minor. */
         remove: client.experimental.config.mcp.remove,
+      },
+      /** @deprecated Use `client.experimental.config.provider`. Removed in the next minor. */
+      provider: {
+        /** @deprecated Use `client.experimental.config.provider.set`. Removed in the next minor. */
+        set: client.experimental.config.provider.set,
+        /** @deprecated Use `client.experimental.config.provider.remove`. Removed in the next minor. */
+        remove: client.experimental.config.provider.remove,
       },
     },
   }

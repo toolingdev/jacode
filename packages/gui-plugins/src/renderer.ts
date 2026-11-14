@@ -29,6 +29,8 @@ import sources from "./sources"
 import sourcesRenderer from "./sources/renderer"
 import goal from "./goal"
 import goalRenderer from "./goal/renderer"
+import customProviders from "./custom-providers"
+import customProvidersRenderer from "./custom-providers/renderer"
 import mcpServers from "./mcp-servers"
 import mcpServersRenderer from "./mcp-servers/renderer"
 import subscriptionUsage from "./subscription-usage"
@@ -56,6 +58,7 @@ export const builtins = compose({
   "microsoft-office": { ...microsoftOffice, windowEntry: eager(microsoftOfficeRenderer) },
   sources: { ...sources, windowEntry: eager(sourcesRenderer) },
   goal: { ...goal, windowEntry: eager(goalRenderer) },
+  "custom-providers": { ...customProviders, windowEntry: eager(customProvidersRenderer) },
   "mcp-servers": { ...mcpServers, windowEntry: eager(mcpServersRenderer) },
   "subscription-usage": { ...subscriptionUsage, windowEntry: eager(subscriptionUsageRenderer) },
 })

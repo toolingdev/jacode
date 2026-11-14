@@ -2855,6 +2855,15 @@ export interface ConfigApi<E = never> {
     /** @deprecated Use `client.experimental.config.mcp.remove`. Removed in the next minor. */
     readonly remove: ExperimentalConfigMcpRemoveOperation<E>
   }
+
+  /** @deprecated Use `client.experimental.config.provider`. Removed in the next minor. */
+  readonly provider: {
+    /** @deprecated Use `client.experimental.config.provider.set`. Removed in the next minor. */
+    readonly set: ExperimentalConfigProviderSetOperation<E>
+
+    /** @deprecated Use `client.experimental.config.provider.remove`. Removed in the next minor. */
+    readonly remove: ExperimentalConfigProviderRemoveOperation<E>
+  }
 }
 
 export type ExperimentalConfigUpdateInput = { readonly shell: string | null }
@@ -2878,11 +2887,32 @@ export type ExperimentalConfigMcpRemoveOperation<E = never> = (
   input: ExperimentalConfigMcpRemoveInput,
 ) => Effect.Effect<ExperimentalConfigMcpRemoveOutput, E>
 
+export type ExperimentalConfigProviderSetInput = {
+  readonly provider: string
+  readonly name?: string | undefined
+  readonly baseURL: string
+  readonly models: { readonly [x: string]: { readonly name?: string | undefined } }
+}
+export type ExperimentalConfigProviderSetOutput = void
+export type ExperimentalConfigProviderSetOperation<E = never> = (
+  input: ExperimentalConfigProviderSetInput,
+) => Effect.Effect<ExperimentalConfigProviderSetOutput, E>
+
+export type ExperimentalConfigProviderRemoveInput = { readonly provider: string }
+export type ExperimentalConfigProviderRemoveOutput = void
+export type ExperimentalConfigProviderRemoveOperation<E = never> = (
+  input: ExperimentalConfigProviderRemoveInput,
+) => Effect.Effect<ExperimentalConfigProviderRemoveOutput, E>
+
 export interface ExperimentalConfigApi<E = never> {
   readonly update: ExperimentalConfigUpdateOperation<E>
   readonly mcp: {
     readonly set: ExperimentalConfigMcpSetOperation<E>
     readonly remove: ExperimentalConfigMcpRemoveOperation<E>
+  }
+  readonly provider: {
+    readonly set: ExperimentalConfigProviderSetOperation<E>
+    readonly remove: ExperimentalConfigProviderRemoveOperation<E>
   }
 }
 
@@ -3149,6 +3179,24 @@ export type ConfigMcpRemoveOutput = ExperimentalConfigMcpRemoveOutput
 
 /** @deprecated Use `ExperimentalConfigMcpRemoveOperation`. Removed in the next minor. */
 export type ConfigMcpRemoveOperation<E = never> = ExperimentalConfigMcpRemoveOperation<E>
+
+/** @deprecated Use `ExperimentalConfigProviderSetInput`. Removed in the next minor. */
+export type ConfigProviderSetInput = ExperimentalConfigProviderSetInput
+
+/** @deprecated Use `ExperimentalConfigProviderSetOutput`. Removed in the next minor. */
+export type ConfigProviderSetOutput = ExperimentalConfigProviderSetOutput
+
+/** @deprecated Use `ExperimentalConfigProviderSetOperation`. Removed in the next minor. */
+export type ConfigProviderSetOperation<E = never> = ExperimentalConfigProviderSetOperation<E>
+
+/** @deprecated Use `ExperimentalConfigProviderRemoveInput`. Removed in the next minor. */
+export type ConfigProviderRemoveInput = ExperimentalConfigProviderRemoveInput
+
+/** @deprecated Use `ExperimentalConfigProviderRemoveOutput`. Removed in the next minor. */
+export type ConfigProviderRemoveOutput = ExperimentalConfigProviderRemoveOutput
+
+/** @deprecated Use `ExperimentalConfigProviderRemoveOperation`. Removed in the next minor. */
+export type ConfigProviderRemoveOperation<E = never> = ExperimentalConfigProviderRemoveOperation<E>
 
 /** @deprecated Use `ExperimentalGenerateApi`. Removed in the next minor. */
 export type GenerateApi<E = never> = ExperimentalGenerateApi<E>

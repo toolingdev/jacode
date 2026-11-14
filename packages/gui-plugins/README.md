@@ -768,6 +768,7 @@ export const builtins = compose({
   "microsoft-office": microsoftOffice,
   sources,
   goal,
+  "custom-providers": customProviders,
   "mcp-servers": mcpServers,
   "subscription-usage": subscriptionUsage,
 })
@@ -795,6 +796,7 @@ export const builtins = compose({
   "microsoft-office": { ...microsoftOffice, windowEntry: eager(microsoftOfficeRenderer) },
   sources: { ...sources, windowEntry: eager(sourcesRenderer) },
   goal: { ...goal, windowEntry: eager(goalRenderer) },
+  "custom-providers": { ...customProviders, windowEntry: eager(customProvidersRenderer) },
   "mcp-servers": { ...mcpServers, windowEntry: eager(mcpServersRenderer) },
   "subscription-usage": { ...subscriptionUsage, windowEntry: eager(subscriptionUsageRenderer) },
 })

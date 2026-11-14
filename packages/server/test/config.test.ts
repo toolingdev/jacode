@@ -179,8 +179,67 @@ it.live("removes a saved MCP server in either format and leaves the others", () 
   }),
 )
 
+it.live("saves and removes a provider in the global config, replacing a V1 entry of the same ID", () =>
+  Effect.gen(function* () {
+    const tmp = yield* Effect.acquireDisposable(Effect.promise(() => tmpdir("opencode-config-provider-")))
+    const global = path.join(tmp.path, "global")
+    const config = path.join(global, "opencode.jsonc")
+    yield* Effect.promise(() => fs.mkdir(global, { recursive: true }))
+    yield* Effect.promise(() =>
+      fs.writeFile(
+        config,
+        `{
+  // keep this comment
+  "provider": {
+    "demo": { "npm": "@ai-sdk/openai-compatible", "options": { "baseURL": "https://old.example.com/v1" } },
+    "other": { "npm": "@ai-sdk/openai-compatible", "options": { "baseURL": "https://other.example.com/v1" } }
+  }
+}
+`,
+      ),
+    )
+    const server = yield* startServer(global)
+    const demo = {
+      name: "Demo",
+      package: "aisdk:@ai-sdk/openai-compatible",
+      settings: { baseURL: "https://new.example.com/v1" },
+      models: { "vendor/model": { name: "Vendor Model" } },
+    }
+    const form = { name: demo.name, baseURL: demo.settings.baseURL, models: demo.models }
+    const saved = yield* Effect.promise(() =>
+      fetch(new URL("/api/experimental/config/provider/demo", server.base), {
+        method: "PUT",
+        headers: { ...server.headers, "content-type": "application/json" },
+        body: JSON.stringify(form),
+      }),
+    )
+
+    expect(saved.status).toBe(204)
+    const text = yield* Effect.promise(() => fs.readFile(config, "utf8"))
+    expect(text).toContain("// keep this comment")
+    expect(text).not.toContain("https://old.example.com/v1")
+    expect(parse(text)).toEqual({
+      provider: { other: { npm: "@ai-sdk/openai-compatible", options: { baseURL: "https://other.example.com/v1" } } },
+      providers: { demo },
+    })
+
+    const removed = yield* Effect.promise(() =>
+      fetch(new URL("/api/experimental/config/provider/demo", server.base), {
+        method: "DELETE",
+        headers: server.headers,
+      }),
+    )
+
+    expect(removed.status).toBe(204)
+    expect(parse(yield* Effect.promise(() => fs.readFile(config, "utf8")))).toEqual({
+      provider: { other: { npm: "@ai-sdk/openai-compatible", options: { baseURL: "https://other.example.com/v1" } } },
+      providers: {},
+    })
+  }),
+)
+
 // The fixtures' only JSONC is this one comment, so the rest parses as JSON.
-function parse(text: string): { mcp?: unknown } {
+function parse(text: string): { mcp?: unknown; provider?: unknown; providers?: unknown } {
   return JSON.parse(text.replace("// keep this comment", ""))
 }
 

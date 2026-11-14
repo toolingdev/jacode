@@ -14,6 +14,7 @@ import wsl from "./wsl"
 import microsoftOffice from "./microsoft-office"
 import sources from "./sources"
 import goal from "./goal"
+import customProviders from "./custom-providers"
 import mcpServers from "./mcp-servers"
 import subscriptionUsage from "./subscription-usage"
 
@@ -34,6 +35,7 @@ export const builtins = compose({
   "microsoft-office": microsoftOffice,
   sources,
   goal,
+  "custom-providers": customProviders,
   "mcp-servers": mcpServers,
   "subscription-usage": subscriptionUsage,
 })

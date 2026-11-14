@@ -16245,6 +16245,122 @@
         "description": "Experimental: may change without compatibility guarantees. Remove an MCP server from the highest-precedence global configuration document. A server another document defines stays configured.",
         "summary": "Delete saved MCP server"
       }
+    },
+    "/api/experimental/config/provider/{provider}": {
+      "put": {
+        "tags": ["config"],
+        "operationId": "experimental.config.provider.set",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "LocationNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationNotFoundErrorEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Experimental: may change without compatibility guarantees. Add an OpenAI-compatible provider to the highest-precedence global configuration document, or replace the one of that ID there, so it stays configured across restarts. Its API key is stored separately, as the credential of the integration with the same ID.",
+        "summary": "Save provider",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Config.CustomProvider"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "delete": {
+        "tags": ["config"],
+        "operationId": "experimental.config.provider.remove",
+        "parameters": [
+          {
+            "name": "provider",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "LocationNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationNotFoundErrorEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Experimental: may change without compatibility guarantees. Remove a provider from the highest-precedence global configuration document. A provider another document defines stays configured.",
+        "summary": "Delete saved provider"
+      }
     }
   },
   "components": {
@@ -16648,6 +16764,31 @@
       "Config.Compaction.Percent": {
         "type": "string",
         "pattern": "^([1-9]\\d?(\\.\\d+)?)%$"
+      },
+      "Config.CustomProvider": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "baseURL": {
+            "type": "string"
+          },
+          "models": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["baseURL", "models"],
+        "additionalProperties": false
       },
       "Config.DirectoryEncoded": {
         "type": "object",

@@ -5003,6 +5003,19 @@ export type ExperimentalConfigMcpRemoveInput = { readonly server: string }
 
 export type ExperimentalConfigMcpRemoveOutput = void
 
+export type ExperimentalConfigProviderSetInput = {
+  readonly provider: string
+  readonly name?: string | undefined
+  readonly baseURL: string
+  readonly models: { readonly [x: string]: { readonly name?: string } }
+}
+
+export type ExperimentalConfigProviderSetOutput = void
+
+export type ExperimentalConfigProviderRemoveInput = { readonly provider: string }
+
+export type ExperimentalConfigProviderRemoveOutput = void
+
 /** @deprecated Use `ExperimentalSessionStatsInput`. Removed in the next minor. */
 export type SessionStatsInput = ExperimentalSessionStatsInput
 
@@ -5182,3 +5195,15 @@ export type ConfigMcpRemoveInput = ExperimentalConfigMcpRemoveInput
 
 /** @deprecated Use `ExperimentalConfigMcpRemoveOutput`. Removed in the next minor. */
 export type ConfigMcpRemoveOutput = ExperimentalConfigMcpRemoveOutput
+
+/** @deprecated Use `ExperimentalConfigProviderSetInput`. Removed in the next minor. */
+export type ConfigProviderSetInput = ExperimentalConfigProviderSetInput
+
+/** @deprecated Use `ExperimentalConfigProviderSetOutput`. Removed in the next minor. */
+export type ConfigProviderSetOutput = ExperimentalConfigProviderSetOutput
+
+/** @deprecated Use `ExperimentalConfigProviderRemoveInput`. Removed in the next minor. */
+export type ConfigProviderRemoveInput = ExperimentalConfigProviderRemoveInput
+
+/** @deprecated Use `ExperimentalConfigProviderRemoveOutput`. Removed in the next minor. */
+export type ConfigProviderRemoveOutput = ExperimentalConfigProviderRemoveOutput

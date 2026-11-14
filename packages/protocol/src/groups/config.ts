@@ -1,4 +1,5 @@
 import { Config } from "@opencode/schema/config"
+import { ConfigCustomProvider } from "@opencode/schema/config/custom-provider"
 import { ConfigShell } from "@opencode/schema/config/shell"
 import { Mcp } from "@opencode/schema/mcp"
 import { Schema } from "effect"
@@ -69,6 +70,33 @@ export const ConfigGroup = HttpApiGroup.make("server.config")
         summary: "Delete saved MCP server",
         description:
           "Experimental: may change without compatibility guarantees. Remove an MCP server from the highest-precedence global configuration document. A server another document defines stays configured.",
+      }),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.put("config.provider.set", "/api/experimental/config/provider/:provider", {
+      params: { provider: Schema.String },
+      payload: ConfigCustomProvider.Info,
+      success: HttpApiSchema.NoContent,
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.provider.set",
+        summary: "Save provider",
+        description:
+          "Experimental: may change without compatibility guarantees. Add an OpenAI-compatible provider to the highest-precedence global configuration document, or replace the one of that ID there, so it stays configured across restarts. Its API key is stored separately, as the credential of the integration with the same ID.",
+      }),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.delete("config.provider.remove", "/api/experimental/config/provider/:provider", {
+      params: { provider: Schema.String },
+      success: HttpApiSchema.NoContent,
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.provider.remove",
+        summary: "Delete saved provider",
+        description:
+          "Experimental: may change without compatibility guarantees. Remove a provider from the highest-precedence global configuration document. A provider another document defines stays configured.",
       }),
     ),
   )
