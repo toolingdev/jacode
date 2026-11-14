@@ -63,12 +63,21 @@ export function acquireApplicationLock() {
   return false
 }
 
+// Fork: a packaged build keeps its data, config, cache and state in a folder of its own. The shared XDG folders
+// hold the stock app's database and background service, which a build of another version would migrate or replace.
+function forkRoot() {
+  return app.isPackaged ? path.join(app.getPath("appData"), "OpenCodeFork") : undefined
+}
+
 function createTestRoot() {
   const root = testOnboarding
     ? path.join(tmpdir(), `opencode-onboarding-${randomUUID()}`)
-    : process.env.OPENCODE_DESKTOP_TEST_ROOT
+    : (process.env.OPENCODE_DESKTOP_TEST_ROOT ?? forkRoot())
 
   if (!root) return undefined
+
+  // Later startup steps read this to keep the root's folders in place.
+  process.env.OPENCODE_DESKTOP_TEST_ROOT = root
 
   if (testOnboarding) rmSync(root, { recursive: true, force: true })
 
