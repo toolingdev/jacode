@@ -5,6 +5,9 @@ import { Effect } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/http-api"
 import { Api } from "../api"
 
+// The built-in route for an OpenAI-compatible host's `/images/generations`, set per image model.
+const OPENAI_COMPATIBLE_IMAGES = "@opencode/ai/providers/openai-compatible/images"
+
 export const ConfigHandler = HttpApiBuilder.group(Api, "server.config", (handlers) =>
   handlers
     .handle("config.get", () => Config.Service.use((config) => config.entries()))
@@ -44,7 +47,22 @@ export const ConfigHandler = HttpApiBuilder.group(Api, "server.config", (handler
             ...(ctx.payload.name === undefined ? {} : { name: ctx.payload.name }),
             package: Provider.aisdk("@ai-sdk/openai-compatible"),
             settings: { baseURL: ctx.payload.baseURL },
-            models: ctx.payload.models,
+            models: {
+              ...ctx.payload.models,
+              ...Object.fromEntries(
+                Object.entries(ctx.payload.imageModels ?? {}).map(([id, model]) => [
+                  id,
+                  {
+                    ...model,
+                    type: "image",
+                    package: OPENAI_COMPATIBLE_IMAGES,
+                    ...(ctx.payload.imageBaseURL === undefined
+                      ? {}
+                      : { settings: { baseURL: ctx.payload.imageBaseURL } }),
+                  },
+                ]),
+              ),
+            },
           })
           .pipe(Effect.orDie)
         return HttpApiSchema.NoContent.make()

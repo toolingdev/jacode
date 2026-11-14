@@ -2010,7 +2010,13 @@ const EndpointExperimentalConfigProviderSet =
     preserveEffect<ExperimentalConfigProviderSetOutput>()(
       raw["config.provider.set"]({
         params: { provider: input["provider"] },
-        payload: { name: input["name"], baseURL: input["baseURL"], models: input["models"] },
+        payload: {
+          name: input["name"],
+          baseURL: input["baseURL"],
+          models: input["models"],
+          imageModels: input["imageModels"],
+          imageBaseURL: input["imageBaseURL"],
+        },
       }).pipe(Effect.mapError(mapClientError)),
     )
 

@@ -769,6 +769,7 @@ export const builtins = compose({
   sources,
   goal,
   "custom-providers": customProviders,
+  "image-gen": imageGen,
   "mcp-servers": mcpServers,
   "subscription-usage": subscriptionUsage,
 })
@@ -797,6 +798,7 @@ export const builtins = compose({
   sources: { ...sources, windowEntry: eager(sourcesRenderer) },
   goal: { ...goal, windowEntry: eager(goalRenderer) },
   "custom-providers": { ...customProviders, windowEntry: eager(customProvidersRenderer) },
+  "image-gen": { ...imageGen, windowEntry: eager(imageGenRenderer) },
   "mcp-servers": { ...mcpServers, windowEntry: eager(mcpServersRenderer) },
   "subscription-usage": { ...subscriptionUsage, windowEntry: eager(subscriptionUsageRenderer) },
 })

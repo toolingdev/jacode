@@ -16785,6 +16785,21 @@
               },
               "additionalProperties": false
             }
+          },
+          "imageModels": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "imageBaseURL": {
+            "type": "string"
           }
         },
         "required": ["baseURL", "models"],

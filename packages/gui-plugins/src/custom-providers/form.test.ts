@@ -6,6 +6,7 @@ describe("custom provider form", () => {
     expect(
       readProviderForm(
         {
+          ...emptyProviderForm,
           id: " nanogpt-sub ",
           name: " NanoGPT Subscription ",
           baseURL: " https://nano-gpt.com/api/subscription/v1 ",
@@ -30,30 +31,72 @@ describe("custom provider form", () => {
     })
   })
 
-  test("leaves out an empty name and stores no key when none is typed", () => {
+  test("reads image models with their own base URL", () => {
     expect(
-      readProviderForm({ ...emptyProviderForm, id: "p", baseURL: "http://localhost:11434/v1", models: "m" }, []),
+      readProviderForm(
+        {
+          ...emptyProviderForm,
+          id: "p",
+          baseURL: "https://x/subscription/v1",
+          models: "chat-model",
+          imageModels: "z-image-turbo = Z Image Turbo\nchroma",
+          imageBaseURL: " https://x/v1 ",
+        },
+        [],
+      ),
     ).toEqual({
       ok: true,
-      config: { provider: "p", baseURL: "http://localhost:11434/v1", models: { m: {} } },
+      config: {
+        provider: "p",
+        baseURL: "https://x/subscription/v1",
+        models: { "chat-model": {} },
+        imageModels: { "z-image-turbo": { name: "Z Image Turbo" }, chroma: {} },
+        imageBaseURL: "https://x/v1",
+      },
       key: undefined,
     })
   })
 
+  test("accepts a provider with only image models and drops an image base URL without them", () => {
+    expect(
+      readProviderForm({ ...emptyProviderForm, id: "p", baseURL: "https://x/v1", imageModels: "painter" }, []),
+    ).toEqual({
+      ok: true,
+      config: { provider: "p", baseURL: "https://x/v1", models: {}, imageModels: { painter: {} } },
+      key: undefined,
+    })
+    expect(
+      readProviderForm(
+        { ...emptyProviderForm, id: "p", baseURL: "https://x/v1", models: "m", imageBaseURL: "https://y/v1" },
+        [],
+      ),
+    ).toEqual({ ok: true, config: { provider: "p", baseURL: "https://x/v1", models: { m: {} } }, key: undefined })
+  })
+
   test("reports every field to fix at once", () => {
-    expect(readProviderForm({ ...emptyProviderForm, id: "Has Space", baseURL: "ftp://x", models: "" }, [])).toEqual({
+    expect(readProviderForm({ ...emptyProviderForm, id: "Has Space", baseURL: "ftp://x" }, [])).toEqual({
       ok: false,
       errors: { id: "id.invalid", baseURL: "baseURL.invalid", models: "models.required" },
     })
-    expect(readProviderForm({ ...emptyProviderForm, baseURL: "https://x/v1", models: "= name only" }, [])).toEqual({
-      ok: false,
-      errors: { id: "id.required", models: "models.invalid" },
-    })
     expect(
-      readProviderForm({ ...emptyProviderForm, id: "p", baseURL: "https://x/v1", models: "two words" }, []),
+      readProviderForm(
+        {
+          ...emptyProviderForm,
+          baseURL: "https://x/v1",
+          models: "= name only",
+          imageModels: "two words",
+          imageBaseURL: "nope",
+        },
+        [],
+      ),
     ).toEqual({
       ok: false,
-      errors: { models: "models.invalid" },
+      errors: {
+        id: "id.required",
+        models: "models.invalid",
+        imageModels: "models.invalid",
+        imageBaseURL: "baseURL.invalid",
+      },
     })
   })
 
@@ -69,12 +112,29 @@ describe("custom provider form", () => {
       name: "P",
       baseURL: "https://x/v1",
       models: { "a/b": "A B", plain: "" },
+      imageModels: { painter: "Painter" },
+      imageBaseURL: "https://img/v1",
     })
 
-    expect(form).toEqual({ id: "p", name: "P", baseURL: "https://x/v1", key: "", models: "a/b = A B\nplain" })
+    expect(form).toEqual({
+      id: "p",
+      name: "P",
+      baseURL: "https://x/v1",
+      key: "",
+      models: "a/b = A B\nplain",
+      imageModels: "painter = Painter",
+      imageBaseURL: "https://img/v1",
+    })
     expect(readProviderForm(form, [])).toEqual({
       ok: true,
-      config: { provider: "p", name: "P", baseURL: "https://x/v1", models: { "a/b": { name: "A B" }, plain: {} } },
+      config: {
+        provider: "p",
+        name: "P",
+        baseURL: "https://x/v1",
+        models: { "a/b": { name: "A B" }, plain: {} },
+        imageModels: { painter: { name: "Painter" } },
+        imageBaseURL: "https://img/v1",
+      },
       key: undefined,
     })
   })

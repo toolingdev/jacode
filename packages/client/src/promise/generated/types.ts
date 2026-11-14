@@ -5008,6 +5008,8 @@ export type ExperimentalConfigProviderSetInput = {
   readonly name?: string | undefined
   readonly baseURL: string
   readonly models: { readonly [x: string]: { readonly name?: string } }
+  readonly imageModels?: { readonly [x: string]: { readonly name?: string } } | undefined
+  readonly imageBaseURL?: string | undefined
 }
 
 export type ExperimentalConfigProviderSetOutput = void

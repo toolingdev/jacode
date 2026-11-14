@@ -15,6 +15,7 @@ import microsoftOffice from "./microsoft-office"
 import sources from "./sources"
 import goal from "./goal"
 import customProviders from "./custom-providers"
+import imageGen from "./image-gen"
 import mcpServers from "./mcp-servers"
 import subscriptionUsage from "./subscription-usage"
 
@@ -36,6 +37,7 @@ export const builtins = compose({
   sources,
   goal,
   "custom-providers": customProviders,
+  "image-gen": imageGen,
   "mcp-servers": mcpServers,
   "subscription-usage": subscriptionUsage,
 })

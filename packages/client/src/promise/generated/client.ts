@@ -1825,7 +1825,13 @@ export function make(options: ClientOptions) {
               {
                 method: "PUT",
                 path: `/api/experimental/config/provider/${encodeURIComponent(input.provider)}`,
-                body: { name: input["name"], baseURL: input["baseURL"], models: input["models"] },
+                body: {
+                  name: input["name"],
+                  baseURL: input["baseURL"],
+                  models: input["models"],
+                  imageModels: input["imageModels"],
+                  imageBaseURL: input["imageBaseURL"],
+                },
                 successStatus: 204,
                 declaredStatuses: [400, 401, 404],
                 empty: true,

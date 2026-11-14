@@ -7,6 +7,8 @@ export type ProviderForm = {
   readonly baseURL: string
   readonly key: string
   readonly models: string
+  readonly imageModels: string
+  readonly imageBaseURL: string
 }
 
 /** What is wrong with one field, as an i18n key suffix under `error.`. */
@@ -14,6 +16,8 @@ export type ProviderFormErrors = {
   readonly id?: "id.required" | "id.invalid" | "id.taken" | undefined
   readonly baseURL?: "baseURL.invalid" | undefined
   readonly models?: "models.required" | "models.invalid" | undefined
+  readonly imageModels?: "models.invalid" | undefined
+  readonly imageBaseURL?: "baseURL.invalid" | undefined
 }
 
 export type ProviderFormResult =
@@ -25,21 +29,40 @@ export type ProviderFormResult =
     }
   | { readonly ok: false; readonly errors: ProviderFormErrors }
 
-export const emptyProviderForm: ProviderForm = { id: "", name: "", baseURL: "", key: "", models: "" }
+export const emptyProviderForm: ProviderForm = {
+  id: "",
+  name: "",
+  baseURL: "",
+  key: "",
+  models: "",
+  imageModels: "",
+  imageBaseURL: "",
+}
 
 /** A saved provider as the form shows it for editing. The key is never read back. */
 export function providerForm(
   id: string,
-  provider: { readonly name?: string; readonly baseURL?: string; readonly models: Readonly<Record<string, string>> },
+  provider: {
+    readonly name?: string
+    readonly baseURL?: string
+    readonly models: Readonly<Record<string, string>>
+    readonly imageModels: Readonly<Record<string, string>>
+    readonly imageBaseURL?: string
+  },
 ): ProviderForm {
+  const lines = (models: Readonly<Record<string, string>>) =>
+    Object.entries(models)
+      .map(([model, name]) => (name ? `${model} = ${name}` : model))
+      .join("\n")
+
   return {
     id,
     name: provider.name ?? "",
     baseURL: provider.baseURL ?? "",
     key: "",
-    models: Object.entries(provider.models)
-      .map(([model, name]) => (name ? `${model} = ${name}` : model))
-      .join("\n"),
+    models: lines(provider.models),
+    imageModels: lines(provider.imageModels),
+    imageBaseURL: provider.imageBaseURL ?? "",
   }
 }
 
@@ -59,24 +82,52 @@ export function readProviderForm(form: ProviderForm, taken: readonly string[]): 
         : undefined
 
   const baseURL = form.baseURL.trim()
-  const validURL = URL.canParse(baseURL) && /^https?:$/.test(new URL(baseURL).protocol)
+  const imageBaseURL = form.imageBaseURL.trim()
   const models = modelLines(form.models)
-  const modelsError = !models ? "models.invalid" : Object.keys(models).length === 0 ? "models.required" : undefined
+  const imageModels = modelLines(form.imageModels)
+  // A provider may offer only image models, so one list may be empty but not both.
+  const none = models && imageModels && Object.keys(models).length + Object.keys(imageModels).length === 0
+  const modelsError = !models ? "models.invalid" : none ? "models.required" : undefined
 
-  if (idError || !validURL || !models || modelsError)
+  if (
+    idError ||
+    !httpURL(baseURL) ||
+    !models ||
+    modelsError ||
+    !imageModels ||
+    (imageBaseURL && !httpURL(imageBaseURL))
+  )
     return {
       ok: false,
-      errors: { id: idError, baseURL: validURL ? undefined : "baseURL.invalid", models: modelsError },
+      errors: {
+        id: idError,
+        baseURL: httpURL(baseURL) ? undefined : "baseURL.invalid",
+        models: modelsError,
+        imageModels: imageModels ? undefined : "models.invalid",
+        imageBaseURL: !imageBaseURL || httpURL(imageBaseURL) ? undefined : "baseURL.invalid",
+      },
     }
 
   const name = form.name.trim()
   const key = form.key.trim()
+  const images = Object.keys(imageModels).length > 0
 
   return {
     ok: true,
-    config: name ? { provider: id, name, baseURL, models } : { provider: id, baseURL, models },
+    config: {
+      provider: id,
+      name: name || undefined,
+      baseURL,
+      models,
+      imageModels: images ? imageModels : undefined,
+      imageBaseURL: images && imageBaseURL ? imageBaseURL : undefined,
+    },
     key: key || undefined,
   }
+}
+
+function httpURL(text: string) {
+  return URL.canParse(text) && /^https?:$/.test(new URL(text).protocol)
 }
 
 // Non-empty lines as `model-id` or `model-id = Display name`; undefined when a line has no ID before its `=`.

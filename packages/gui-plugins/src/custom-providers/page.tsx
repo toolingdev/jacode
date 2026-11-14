@@ -155,7 +155,14 @@ export default function CustomProvidersPage() {
   }
 
   const summary = (row: ProviderRow) =>
-    [row.baseURL, ctx.t("row.models", { count: Object.keys(row.models).length }), ctx.t(`key.${row.key}`)]
+    [
+      row.baseURL,
+      ctx.t("row.models", { count: Object.keys(row.models).length }),
+      Object.keys(row.imageModels).length > 0
+        ? ctx.t("row.images", { count: Object.keys(row.imageModels).length })
+        : undefined,
+      ctx.t(`key.${row.key}`),
+    ]
       .filter((part) => part !== undefined)
       .join(" · ")
 
@@ -342,6 +349,32 @@ function ProviderDialog(props: {
           />
           {problem("models")}
         </div>
+        <div class="flex flex-col gap-1">
+          <TextField
+            multiline
+            label={ctx.t("form.imageModels")}
+            placeholder={ctx.t("form.imageModels.placeholder")}
+            value={form().imageModels}
+            validationState={errors().imageModels ? "invalid" : "valid"}
+            onChange={(imageModels) => set({ imageModels })}
+          />
+          {problem("imageModels")}
+        </div>
+        <label class="flex flex-col gap-1">
+          {heading(ctx.t("form.imageBaseURL"))}
+          <ui.TextInput
+            label={ctx.t("form.imageBaseURL")}
+            placeholder={ctx.t("form.imageBaseURL.placeholder")}
+            type="url"
+            size="large"
+            class="w-full"
+            value={form().imageBaseURL}
+            invalid={!!errors().imageBaseURL}
+            onInput={(imageBaseURL) => set({ imageBaseURL })}
+            onSubmit={submit}
+          />
+          {problem("imageBaseURL")}
+        </label>
         <Show when={failure()}>
           {(message) => <span class="text-12-regular text-v2-state-fg-danger">{message()}</span>}
         </Show>

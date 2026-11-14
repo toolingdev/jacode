@@ -203,9 +203,23 @@ it.live("saves and removes a provider in the global config, replacing a V1 entry
       name: "Demo",
       package: "aisdk:@ai-sdk/openai-compatible",
       settings: { baseURL: "https://new.example.com/v1" },
-      models: { "vendor/model": { name: "Vendor Model" } },
+      models: {
+        "vendor/model": { name: "Vendor Model" },
+        "vendor/painter": {
+          name: "Painter",
+          type: "image",
+          package: "@opencode/ai/providers/openai-compatible/images",
+          settings: { baseURL: "https://images.example.com/v1" },
+        },
+      },
     }
-    const form = { name: demo.name, baseURL: demo.settings.baseURL, models: demo.models }
+    const form = {
+      name: demo.name,
+      baseURL: demo.settings.baseURL,
+      models: { "vendor/model": { name: "Vendor Model" } },
+      imageModels: { "vendor/painter": { name: "Painter" } },
+      imageBaseURL: "https://images.example.com/v1",
+    }
     const saved = yield* Effect.promise(() =>
       fetch(new URL("/api/experimental/config/provider/demo", server.base), {
         method: "PUT",

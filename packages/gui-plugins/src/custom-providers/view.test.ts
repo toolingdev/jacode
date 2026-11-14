@@ -32,11 +32,17 @@ describe("custom provider rows", () => {
       ],
     )
 
-    expect(rows).toEqual([
-      { id: "env", name: undefined, baseURL: "https://b/v1", models: {}, key: "environment" },
-      { id: "file", name: undefined, baseURL: "https://c/v1", models: { "x/y": "X Y" }, key: "config" },
-      { id: "none", name: undefined, baseURL: undefined, models: {}, key: "missing" },
+    expect(rows).toMatchObject([
+      { id: "env", baseURL: "https://b/v1", models: {}, imageModels: {}, key: "environment" },
+      { id: "file", baseURL: "https://c/v1", models: { "x/y": "X Y" }, key: "config" },
+      { id: "none", models: {}, key: "missing" },
       { id: "stored", name: "Stored", baseURL: "https://a/v1", models: { m: "" }, key: "stored" },
+    ])
+    expect(rows.map((row) => [row.name, row.baseURL, row.imageBaseURL])).toEqual([
+      [undefined, "https://b/v1", undefined],
+      [undefined, "https://c/v1", undefined],
+      [undefined, undefined, undefined],
+      ["Stored", "https://a/v1", undefined],
     ])
   })
 
@@ -50,6 +56,39 @@ describe("custom provider rows", () => {
         ],
         [],
       ),
-    ).toEqual([{ id: "p", name: "New", baseURL: "https://new/v1", models: {}, key: "missing" }])
+    ).toEqual([
+      {
+        id: "p",
+        name: "New",
+        baseURL: "https://new/v1",
+        models: {},
+        imageModels: {},
+        imageBaseURL: undefined,
+        key: "missing",
+      },
+    ])
+  })
+
+  test("separates image models from chat models and reads where their API lives", () => {
+    const images = "@opencode/ai/providers/openai-compatible/images"
+
+    expect(
+      providerRows(
+        [
+          document({
+            p: {
+              settings: { baseURL: "https://x/subscription/v1" },
+              models: {
+                chat: { name: "Chat" },
+                painter: { name: "Painter", type: "image", package: images, settings: { baseURL: "https://x/v1" } },
+              },
+            },
+          }),
+        ],
+        [],
+      ),
+    ).toMatchObject([
+      { id: "p", models: { chat: "Chat" }, imageModels: { painter: "Painter" }, imageBaseURL: "https://x/v1" },
+    ])
   })
 })
