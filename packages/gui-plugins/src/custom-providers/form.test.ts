@@ -38,8 +38,8 @@ describe("custom provider form", () => {
           ...emptyProviderForm,
           id: "p",
           baseURL: "https://x/subscription/v1",
-          models: "chat-model",
-          imageModels: "z-image-turbo = Z Image Turbo\nchroma",
+          models: "chat-model\nseer = Seer [vision]",
+          imageModels: "z-image-turbo = Z Image Turbo\nchroma\nqwen-image [EDIT]",
           imageBaseURL: " https://x/v1 ",
         },
         [],
@@ -49,8 +49,8 @@ describe("custom provider form", () => {
       config: {
         provider: "p",
         baseURL: "https://x/subscription/v1",
-        models: { "chat-model": {} },
-        imageModels: { "z-image-turbo": { name: "Z Image Turbo" }, chroma: {} },
+        models: { "chat-model": {}, seer: { name: "Seer", images: true } },
+        imageModels: { "z-image-turbo": { name: "Z Image Turbo" }, chroma: {}, "qwen-image": { images: true } },
         imageBaseURL: "https://x/v1",
       },
       key: undefined,
@@ -111,8 +111,8 @@ describe("custom provider form", () => {
     const form = providerForm("p", {
       name: "P",
       baseURL: "https://x/v1",
-      models: { "a/b": "A B", plain: "" },
-      imageModels: { painter: "Painter" },
+      models: { "a/b": { name: "A B", images: true }, plain: { name: "", images: false } },
+      imageModels: { painter: { name: "Painter", images: true } },
       imageBaseURL: "https://img/v1",
     })
 
@@ -121,8 +121,8 @@ describe("custom provider form", () => {
       name: "P",
       baseURL: "https://x/v1",
       key: "",
-      models: "a/b = A B\nplain",
-      imageModels: "painter = Painter",
+      models: "a/b = A B [vision]\nplain",
+      imageModels: "painter = Painter [edit]",
       imageBaseURL: "https://img/v1",
     })
     expect(readProviderForm(form, [])).toEqual({
@@ -131,8 +131,8 @@ describe("custom provider form", () => {
         provider: "p",
         name: "P",
         baseURL: "https://x/v1",
-        models: { "a/b": { name: "A B" }, plain: {} },
-        imageModels: { painter: { name: "Painter" } },
+        models: { "a/b": { name: "A B", images: true }, plain: {} },
+        imageModels: { painter: { name: "Painter", images: true } },
         imageBaseURL: "https://img/v1",
       },
       key: undefined,

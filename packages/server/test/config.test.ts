@@ -204,11 +204,13 @@ it.live("saves and removes a provider in the global config, replacing a V1 entry
       package: "aisdk:@ai-sdk/openai-compatible",
       settings: { baseURL: "https://new.example.com/v1" },
       models: {
-        "vendor/model": { name: "Vendor Model" },
+        "vendor/model": { name: "Vendor Model", capabilities: { input: ["text"] } },
+        "vendor/vision": { capabilities: { input: ["text", "image"] } },
         "vendor/painter": {
           name: "Painter",
           type: "image",
           package: "@opencode/ai/providers/openai-compatible/images",
+          capabilities: { input: ["text", "image"], output: ["image"] },
           settings: { baseURL: "https://images.example.com/v1" },
         },
       },
@@ -216,8 +218,8 @@ it.live("saves and removes a provider in the global config, replacing a V1 entry
     const form = {
       name: demo.name,
       baseURL: demo.settings.baseURL,
-      models: { "vendor/model": { name: "Vendor Model" } },
-      imageModels: { "vendor/painter": { name: "Painter" } },
+      models: { "vendor/model": { name: "Vendor Model" }, "vendor/vision": { images: true } },
+      imageModels: { "vendor/painter": { name: "Painter", images: true } },
       imageBaseURL: "https://images.example.com/v1",
     }
     const saved = yield* Effect.promise(() =>

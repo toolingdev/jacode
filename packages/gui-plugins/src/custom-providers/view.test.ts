@@ -34,9 +34,15 @@ describe("custom provider rows", () => {
 
     expect(rows).toMatchObject([
       { id: "env", baseURL: "https://b/v1", models: {}, imageModels: {}, key: "environment" },
-      { id: "file", baseURL: "https://c/v1", models: { "x/y": "X Y" }, key: "config" },
+      { id: "file", baseURL: "https://c/v1", models: { "x/y": { name: "X Y", images: false } }, key: "config" },
       { id: "none", models: {}, key: "missing" },
-      { id: "stored", name: "Stored", baseURL: "https://a/v1", models: { m: "" }, key: "stored" },
+      {
+        id: "stored",
+        name: "Stored",
+        baseURL: "https://a/v1",
+        models: { m: { name: "", images: false } },
+        key: "stored",
+      },
     ])
     expect(rows.map((row) => [row.name, row.baseURL, row.imageBaseURL])).toEqual([
       [undefined, "https://b/v1", undefined],
@@ -79,8 +85,14 @@ describe("custom provider rows", () => {
             p: {
               settings: { baseURL: "https://x/subscription/v1" },
               models: {
-                chat: { name: "Chat" },
-                painter: { name: "Painter", type: "image", package: images, settings: { baseURL: "https://x/v1" } },
+                chat: { name: "Chat", capabilities: { input: ["text", "image"] } },
+                painter: {
+                  name: "Painter",
+                  type: "image",
+                  package: images,
+                  capabilities: { input: ["text"], output: ["image"] },
+                  settings: { baseURL: "https://x/v1" },
+                },
               },
             },
           }),
@@ -88,7 +100,12 @@ describe("custom provider rows", () => {
         [],
       ),
     ).toMatchObject([
-      { id: "p", models: { chat: "Chat" }, imageModels: { painter: "Painter" }, imageBaseURL: "https://x/v1" },
+      {
+        id: "p",
+        models: { chat: { name: "Chat", images: true } },
+        imageModels: { painter: { name: "Painter", images: false } },
+        imageBaseURL: "https://x/v1",
+      },
     ])
   })
 })

@@ -47,3 +47,13 @@ export function modelRef(value: string) {
 
   return { providerID: value.slice(0, index), id: value.slice(index + 1) }
 }
+
+/**
+ * The media type and base64 data of a `data:` URL, as a file reader returns one. Undefined for anything else, or for
+ * a data URL that is not base64.
+ */
+export function dataUrlParts(url: string) {
+  const match = /^data:([^;,]+);base64,(.+)$/s.exec(url)
+
+  return match?.[1] && match[2] ? { mime: match[1], data: match[2] } : undefined
+}

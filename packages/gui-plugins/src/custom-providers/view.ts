@@ -1,4 +1,5 @@
 import type { ConfigEntry, IntegrationInfo } from "@opencode/client/promise"
+import type { ModelEntry } from "./form"
 import { Option, Schema } from "effect"
 
 // Provider settings are open JSON; these two are read as text or not at all.
@@ -12,10 +13,10 @@ export type ProviderRow = {
   readonly id: string
   readonly name: string | undefined
   readonly baseURL: string | undefined
-  /** Chat model IDs with their display names; an empty name means the ID is shown. */
-  readonly models: Readonly<Record<string, string>>
-  /** Image model IDs with their display names. */
-  readonly imageModels: Readonly<Record<string, string>>
+  /** Chat models by ID; an empty name means the ID is shown. */
+  readonly models: Readonly<Record<string, ModelEntry>>
+  /** Image models by ID. */
+  readonly imageModels: Readonly<Record<string, ModelEntry>>
   /** Where the image models' API lives, when it is not the provider's base URL. */
   readonly imageBaseURL: string | undefined
   readonly key: KeySource
@@ -59,6 +60,17 @@ export function providerRows(
     .toSorted((a, b) => a.id.localeCompare(b.id))
 }
 
-function named(models: readonly (readonly [string, { readonly name?: string }])[]) {
-  return Object.fromEntries(models.map(([model, config]) => [model, config.name ?? ""]))
+// A model without declared inputs is listed as text-only: saving it again then never sends it an image it may refuse.
+function named(
+  models: readonly (readonly [
+    string,
+    { readonly name?: string; readonly capabilities?: { readonly input?: readonly string[] } },
+  ])[],
+) {
+  return Object.fromEntries(
+    models.map(([model, config]) => [
+      model,
+      { name: config.name ?? "", images: config.capabilities?.input?.includes("image") ?? false },
+    ]),
+  )
 }

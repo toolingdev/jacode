@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { imageBytes, imagePath, modelRef, modelValue } from "./image"
+import { dataUrlParts, imageBytes, imagePath, modelRef, modelValue } from "./image"
 
 describe("generated image helpers", () => {
   test("names a saved image by local time, position and type", () => {
@@ -19,5 +19,11 @@ describe("generated image helpers", () => {
 
     expect(modelValue(model)).toBe("nanogpt-sub/vendor/z-image/turbo")
     expect(modelRef(modelValue(model))).toEqual(model)
+  })
+
+  test("splits a base64 data URL and refuses other strings", () => {
+    expect(dataUrlParts("data:image/png;base64,AAEC")).toEqual({ mime: "image/png", data: "AAEC" })
+    expect(dataUrlParts("data:text/plain,hello")).toBeUndefined()
+    expect(dataUrlParts("https://example.com/a.png")).toBeUndefined()
   })
 })

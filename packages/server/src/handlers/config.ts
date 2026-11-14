@@ -8,6 +8,15 @@ import { Api } from "../api"
 // The built-in route for an OpenAI-compatible host's `/images/generations`, set per image model.
 const OPENAI_COMPATIBLE_IMAGES = "@opencode/ai/providers/openai-compatible/images"
 
+function named(model: { readonly name?: string }) {
+  return model.name === undefined ? {} : { name: model.name }
+}
+
+// Explicit either way: an unset capability defaults to accepting images, which text-only models refuse.
+function inputs(model: { readonly images?: boolean }) {
+  return model.images ? ["text", "image"] : ["text"]
+}
+
 export const ConfigHandler = HttpApiBuilder.group(Api, "server.config", (handlers) =>
   handlers
     .handle("config.get", () => Config.Service.use((config) => config.entries()))
@@ -48,14 +57,20 @@ export const ConfigHandler = HttpApiBuilder.group(Api, "server.config", (handler
             package: Provider.aisdk("@ai-sdk/openai-compatible"),
             settings: { baseURL: ctx.payload.baseURL },
             models: {
-              ...ctx.payload.models,
+              ...Object.fromEntries(
+                Object.entries(ctx.payload.models).map(([id, model]) => [
+                  id,
+                  { ...named(model), capabilities: { input: inputs(model) } },
+                ]),
+              ),
               ...Object.fromEntries(
                 Object.entries(ctx.payload.imageModels ?? {}).map(([id, model]) => [
                   id,
                   {
-                    ...model,
+                    ...named(model),
                     type: "image",
                     package: OPENAI_COMPATIBLE_IMAGES,
+                    capabilities: { input: inputs(model), output: ["image"] },
                     ...(ctx.payload.imageBaseURL === undefined
                       ? {}
                       : { settings: { baseURL: ctx.payload.imageBaseURL } }),

@@ -29,6 +29,9 @@ export type ProviderFormResult =
     }
   | { readonly ok: false; readonly errors: ProviderFormErrors }
 
+/** One saved model as the form shows it: its display name, empty for none, and whether it accepts image input. */
+export type ModelEntry = { readonly name: string; readonly images: boolean }
+
 export const emptyProviderForm: ProviderForm = {
   id: "",
   name: "",
@@ -45,14 +48,14 @@ export function providerForm(
   provider: {
     readonly name?: string
     readonly baseURL?: string
-    readonly models: Readonly<Record<string, string>>
-    readonly imageModels: Readonly<Record<string, string>>
+    readonly models: Readonly<Record<string, ModelEntry>>
+    readonly imageModels: Readonly<Record<string, ModelEntry>>
     readonly imageBaseURL?: string
   },
 ): ProviderForm {
-  const lines = (models: Readonly<Record<string, string>>) =>
+  const lines = (models: Readonly<Record<string, ModelEntry>>, tag: string) =>
     Object.entries(models)
-      .map(([model, name]) => (name ? `${model} = ${name}` : model))
+      .map(([model, entry]) => `${entry.name ? `${model} = ${entry.name}` : model}${entry.images ? ` [${tag}]` : ""}`)
       .join("\n")
 
   return {
@@ -60,8 +63,8 @@ export function providerForm(
     name: provider.name ?? "",
     baseURL: provider.baseURL ?? "",
     key: "",
-    models: lines(provider.models),
-    imageModels: lines(provider.imageModels),
+    models: lines(provider.models, "vision"),
+    imageModels: lines(provider.imageModels, "edit"),
     imageBaseURL: provider.imageBaseURL ?? "",
   }
 }
@@ -130,20 +133,23 @@ function httpURL(text: string) {
   return URL.canParse(text) && /^https?:$/.test(new URL(text).protocol)
 }
 
-// Non-empty lines as `model-id` or `model-id = Display name`; undefined when a line has no ID before its `=`.
-function modelLines(text: string): Record<string, { name?: string }> | undefined {
+// Non-empty lines as `model-id` or `model-id = Display name`, each optionally ending in `[vision]` or `[edit]` for a
+// model that accepts image input; undefined when a line has no ID before its `=`.
+function modelLines(text: string): Record<string, { name?: string; images?: boolean }> | undefined {
   const entries = text
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line !== "")
     .map((line) => {
-      const index = line.indexOf("=")
-      const id = (index === -1 ? line : line.slice(0, index)).trim()
-      const name = index === -1 ? "" : line.slice(index + 1).trim()
+      const tagged = /\s*\[(?:vision|edit|images)\]$/i.test(line)
+      const rest = line.replace(/\s*\[(?:vision|edit|images)\]$/i, "")
+      const index = rest.indexOf("=")
+      const id = (index === -1 ? rest : rest.slice(0, index)).trim()
+      const name = index === -1 ? "" : rest.slice(index + 1).trim()
 
       if (!id || /\s/.test(id)) return undefined
 
-      return [id, name ? { name } : {}] as const
+      return [id, tagged ? (name ? { name, images: true } : { images: true }) : name ? { name } : {}] as const
     })
 
   if (entries.some((entry) => entry === undefined)) return undefined

@@ -3,7 +3,14 @@ export * as ConfigCustomProvider from "./custom-provider.js"
 import { Schema } from "effect"
 import { optional } from "../schema.js"
 
-const Model = Schema.Struct({ name: Schema.String.pipe(optional) })
+const Model = Schema.Struct({
+  name: Schema.String.pipe(optional),
+  /**
+   * The model accepts image input: a chat model that can look at images, or an image model that can edit them or use
+   * them as references. Defaults to false, so a text-only model is never sent an image it would refuse.
+   */
+  images: Schema.Boolean.pipe(optional),
+})
 
 /**
  * A provider that speaks the OpenAI chat API at its own URL, as a client's "add custom provider" form describes it.

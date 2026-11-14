@@ -2891,8 +2891,12 @@ export type ExperimentalConfigProviderSetInput = {
   readonly provider: string
   readonly name?: string | undefined
   readonly baseURL: string
-  readonly models: { readonly [x: string]: { readonly name?: string | undefined } }
-  readonly imageModels?: { readonly [x: string]: { readonly name?: string | undefined } } | undefined
+  readonly models: {
+    readonly [x: string]: { readonly name?: string | undefined; readonly images?: boolean | undefined }
+  }
+  readonly imageModels?:
+    | { readonly [x: string]: { readonly name?: string | undefined; readonly images?: boolean | undefined } }
+    | undefined
   readonly imageBaseURL?: string | undefined
 }
 export type ExperimentalConfigProviderSetOutput = void

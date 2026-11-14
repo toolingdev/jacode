@@ -5007,8 +5007,8 @@ export type ExperimentalConfigProviderSetInput = {
   readonly provider: string
   readonly name?: string | undefined
   readonly baseURL: string
-  readonly models: { readonly [x: string]: { readonly name?: string } }
-  readonly imageModels?: { readonly [x: string]: { readonly name?: string } } | undefined
+  readonly models: { readonly [x: string]: { readonly name?: string; readonly images?: boolean } }
+  readonly imageModels?: { readonly [x: string]: { readonly name?: string; readonly images?: boolean } } | undefined
   readonly imageBaseURL?: string | undefined
 }
 

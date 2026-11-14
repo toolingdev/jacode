@@ -1,7 +1,17 @@
 import { createLatest, usePlugin, type MountedSession } from "@opencode/plugin/gui"
 import { TextField } from "@opencode/ui/text-field"
 import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
-import { aspects, counts, imageBytes, imagePath, modelRef, modelValue, type Aspect, type Count } from "./image"
+import {
+  aspects,
+  counts,
+  dataUrlParts,
+  imageBytes,
+  imagePath,
+  modelRef,
+  modelValue,
+  type Aspect,
+  type Count,
+} from "./image"
 import type definition from "./index"
 
 /** One generated image as the dialog shows it: the picture, and where it was saved or why it was not. */
@@ -26,6 +36,35 @@ export default function ImageDialog(props: { session: MountedSession; onClose: (
   const options = createMemo(() =>
     (models.latest ?? []).map((model) => ({ value: modelValue(model), label: model.name || model.id })),
   )
+
+  /** An input image for the request: one to edit, or a reference for style and subject. */
+  type Reference = { readonly name: string; readonly mime: string; readonly data: string }
+
+  const [references, setReferences] = createSignal<readonly Reference[]>([])
+
+  // Input images are offered only for a model that declares it accepts them, and sent only to one.
+  const accepts = () =>
+    (models.latest ?? []).find((item) => modelValue(item) === model())?.capabilities.input.includes("image") ?? false
+
+  const read = (file: File) =>
+    new Promise<Reference>((resolve, reject) => {
+      const reader = new FileReader()
+
+      reader.addEventListener("error", () => reject(new Error(ctx.t("references.failed", { name: file.name }))))
+      reader.addEventListener("load", () => {
+        const parts = dataUrlParts(String(reader.result))
+
+        if (!parts) return reject(new Error(ctx.t("references.failed", { name: file.name })))
+        resolve({ name: file.name, ...parts })
+      })
+      reader.readAsDataURL(file)
+    })
+
+  const addReferences = (files: readonly File[]) =>
+    void Promise.all(files.map(read)).then(
+      (added) => setReferences((current) => [...current, ...added]),
+      (cause) => setFailure(cause instanceof Error ? cause.message : String(cause)),
+    )
 
   const [prompt, setPrompt] = createSignal("")
   const [picked, setPicked] = createSignal<string>()
@@ -52,7 +91,13 @@ export default function ImageDialog(props: { session: MountedSession; onClose: (
     setFailure(undefined)
     setBusy(true)
     void client.experimental.generate
-      .image({ model: modelRef(value), prompt: text, aspect: aspect(), n: Number(count()) })
+      .image({
+        model: modelRef(value),
+        prompt: text,
+        aspect: aspect(),
+        n: Number(count()),
+        images: accepts() && references().length > 0 ? references() : undefined,
+      })
       .then((output) =>
         Promise.all(
           output.images.map((image, index) =>
@@ -150,6 +195,36 @@ export default function ImageDialog(props: { session: MountedSession; onClose: (
                 />
               </label>
             </div>
+            <Show when={accepts()}>
+              <div class="flex flex-wrap items-center gap-2">
+                <label class="cursor-pointer text-12-medium text-v2-text-text-muted underline">
+                  {ctx.t("references.add")}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    multiple
+                    class="sr-only"
+                    onChange={(event) => {
+                      addReferences([...(event.currentTarget.files ?? [])])
+                      event.currentTarget.value = ""
+                    }}
+                  />
+                </label>
+                <Show when={references().length > 0}>
+                  <span class="min-w-0 truncate text-12-regular text-v2-text-text-faint">
+                    {ctx.t("references.count", {
+                      count: references().length,
+                      names: references()
+                        .map((reference) => reference.name)
+                        .join(", "),
+                    })}
+                  </span>
+                  <ui.Button variant="ghost" size="small" onClick={() => setReferences([])}>
+                    {ctx.t("references.clear")}
+                  </ui.Button>
+                </Show>
+              </div>
+            </Show>
             <Show when={failure()}>
               {(message) => <span class="text-12-regular text-v2-state-fg-danger">{message()}</span>}
             </Show>
@@ -174,6 +249,21 @@ export default function ImageDialog(props: { session: MountedSession; onClose: (
                           ? ctx.t("saved", { path: result.saved.path })
                           : ctx.t("save.failed", { error: result.saved.error })}
                       </span>
+                      <Show when={"path" in result.saved && result.saved.path}>
+                        {(path) => (
+                          <ui.Button
+                            variant="ghost"
+                            size="small"
+                            class="self-start"
+                            onClick={() => {
+                              ctx.screen.current()?.composer.insert(path())
+                              props.onClose()
+                            }}
+                          >
+                            {ctx.t("insert")}
+                          </ui.Button>
+                        )}
+                      </Show>
                     </li>
                   )}
                 </For>

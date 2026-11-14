@@ -16781,6 +16781,9 @@
               "properties": {
                 "name": {
                   "type": "string"
+                },
+                "images": {
+                  "type": "boolean"
                 }
               },
               "additionalProperties": false
@@ -16793,6 +16796,9 @@
               "properties": {
                 "name": {
                   "type": "string"
+                },
+                "images": {
+                  "type": "boolean"
                 }
               },
               "additionalProperties": false
