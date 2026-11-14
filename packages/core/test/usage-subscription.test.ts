@@ -34,7 +34,7 @@ const usage = {
 const ask = <A>(
   run: (subscriptions: UsageSubscription.Interface) => Effect.Effect<A, UsageSubscription.UnavailableError>,
   providers: readonly Provider.Info[],
-  respond: (url: string) => Response,
+  respond: (url: string, request: HttpClientRequest.HttpClientRequest) => Response,
   requests: HttpClientRequest.HttpClientRequest[] = [],
   stored?: string,
 ) =>
@@ -76,7 +76,7 @@ const ask = <A>(
               HttpClient.make((request: HttpClientRequest.HttpClientRequest) =>
                 Effect.sync(() => {
                   requests.push(request)
-                  return HttpClientResponse.fromWeb(request, respond(request.url))
+                  return HttpClientResponse.fromWeb(request, respond(request.url, request))
                 }),
               ),
             ),
@@ -88,7 +88,7 @@ const ask = <A>(
 
 const list = (
   providers: readonly Provider.Info[],
-  respond: (url: string) => Response,
+  respond: (url: string, request: HttpClientRequest.HttpClientRequest) => Response,
   requests: HttpClientRequest.HttpClientRequest[] = [],
   stored?: string,
 ) => ask((subscriptions) => subscriptions.list(), providers, respond, requests, stored)
@@ -165,6 +165,23 @@ it.effect("lists nothing and sends no key without a NanoGPT provider, a key, or 
 
     expect(subscriptions).toEqual([])
     expect(requests).toEqual([])
+  }),
+)
+
+it.effect("keeps the usage of providers that answer when another's key is refused", () =>
+  Effect.gen(function* () {
+    const subscriptions = yield* list(
+      [
+        provider("bad", { baseURL: "https://nano-gpt.com/api/subscription/v1", apiKey: "bad-key" }),
+        provider("good", { baseURL: "https://nano-gpt.com/api/subscription/v1", apiKey: "good-key" }),
+      ],
+      (_url, request) =>
+        request.headers.authorization === "Bearer bad-key"
+          ? new Response("unauthorized", { status: 401 })
+          : Response.json(usage),
+    )
+
+    expect(subscriptions.map((subscription) => subscription.providerID)).toEqual([Provider.ID.make("good")])
   }),
 )
 

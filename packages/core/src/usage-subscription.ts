@@ -4,7 +4,7 @@ import { Money } from "@opencode/schema/money"
 import { UsageSubscription } from "@opencode/schema/usage-subscription"
 import { makeLocationNode } from "@opencode/util/effect/app-node"
 import { httpClient } from "@opencode/util/effect/app-node-platform"
-import { Clock, Context, Duration, Effect, Layer, Schema } from "effect"
+import { Clock, Context, Duration, Effect, Exit, Layer, Schema } from "effect"
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http"
 import { Integration } from "./integration.js"
 import { Provider } from "./provider.js"
@@ -53,18 +53,14 @@ export const layer = Layer.effect(
 
     const list = Effect.fn("UsageSubscription.list")(function* () {
       const entries = yield* subscribed()
-      return yield* Effect.forEach(entries, (entry) => readNanoGPT(http, entry.provider, entry.key), {
-        concurrency: 4,
-      }).pipe(Effect.timeoutOrElse(timedOut))
+      return yield* readable(entries.map((entry) => readNanoGPT(http, entry.provider, entry.key)))
     })
 
     const history = Effect.fn("UsageSubscription.history")(function* () {
       const to = yield* Clock.currentTimeMillis
       const days = { from: day(to - 29 * Duration.toMillis(Duration.days(1))), to: day(to) }
       const entries = yield* subscribed()
-      return yield* Effect.forEach(entries, (entry) => readNanoGPTHistory(http, entry.provider, entry.key, days), {
-        concurrency: 4,
-      }).pipe(Effect.timeoutOrElse(timedOut))
+      return yield* readable(entries.map((entry) => readNanoGPTHistory(http, entry.provider, entry.key, days)))
     })
 
     return Service.of({ list, history })
@@ -80,6 +76,20 @@ export const node = makeLocationNode({
 const timedOut = {
   duration: Duration.seconds(15),
   orElse: () => Effect.fail(new UnavailableError({ message: "NanoGPT usage timed out", service: "nanogpt" })),
+}
+
+/**
+ * What the providers that answer report. One provider's failure, such as a wrong key, leaves the others' usage
+ * readable; only when none answers is usage unavailable.
+ */
+function readable<A>(reads: readonly Effect.Effect<A, UnavailableError>[]) {
+  return Effect.gen(function* () {
+    const exits = yield* Effect.forEach(reads, Effect.exit, { concurrency: 4 })
+    const read = exits.filter(Exit.isSuccess).map((exit) => exit.value)
+    const failed = exits.find(Exit.isFailure)
+    if (failed && read.length === 0) return yield* Effect.failCause(failed.cause)
+    return read
+  }).pipe(Effect.timeoutOrElse(timedOut))
 }
 
 /** The UTC day of an instant, as NanoGPT's usage API takes it. */
