@@ -15632,6 +15632,204 @@
         "summary": "Get usage limits"
       }
     },
+    "/api/experimental/usage/subscriptions": {
+      "get": {
+        "tags": ["usage"],
+        "operationId": "experimental.usage.subscriptions",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/Location.PublicRef"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UsageSubscription.Info"
+                      }
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "LocationNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationNotFoundErrorEncoded"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "ServiceUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Experimental: may change without compatibility guarantees. Return what the flat-rate subscriptions of the location's loaded providers have used of their allowances; empty when no provider reports one.",
+        "summary": "Get subscription usage"
+      }
+    },
+    "/api/experimental/usage/history": {
+      "get": {
+        "tags": ["usage"],
+        "operationId": "experimental.usage.history",
+        "parameters": [
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/Location.PublicRef"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/UsageSubscription.History"
+                      }
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "LocationNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationNotFoundErrorEncoded"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "ServiceUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableErrorEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Experimental: may change without compatibility guarantees. Return what the subscription providers of the location recorded by model over the last 30 days, for the API key each is used with; empty when no provider reports it.",
+        "summary": "Get usage history"
+      }
+    },
     "/api/config": {
       "get": {
         "tags": ["config"],
@@ -25359,6 +25557,107 @@
           }
         },
         "required": ["percent", "limited", "resetsAt"],
+        "additionalProperties": false
+      },
+      "UsageSubscription.History": {
+        "type": "object",
+        "properties": {
+          "providerID": {
+            "$ref": "#/components/schemas/Provider.ID"
+          },
+          "name": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "models": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UsageSubscription.ModelUsage"
+            }
+          }
+        },
+        "required": ["providerID", "name", "from", "to", "models"],
+        "additionalProperties": false
+      },
+      "UsageSubscription.Info": {
+        "type": "object",
+        "properties": {
+          "providerID": {
+            "$ref": "#/components/schemas/Provider.ID"
+          },
+          "name": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "meters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UsageSubscription.Meter"
+            }
+          }
+        },
+        "required": ["providerID", "name", "active", "meters"],
+        "additionalProperties": false
+      },
+      "UsageSubscription.Meter": {
+        "type": "object",
+        "properties": {
+          "unit": {
+            "type": "string",
+            "enum": ["input_tokens", "images"]
+          },
+          "window": {
+            "type": "string",
+            "enum": ["daily", "weekly"]
+          },
+          "used": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "resetsAt": {
+            "type": "number",
+            "description": "Milliseconds since the Unix epoch"
+          }
+        },
+        "required": ["unit", "window", "used", "limit", "resetsAt"],
+        "additionalProperties": false
+      },
+      "UsageSubscription.ModelUsage": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string"
+          },
+          "requests": {
+            "type": "number"
+          },
+          "tokens": {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "number"
+              },
+              "output": {
+                "type": "number"
+              }
+            },
+            "required": ["input", "output"],
+            "additionalProperties": false
+          },
+          "cost": {
+            "$ref": "#/components/schemas/Money.USD"
+          }
+        },
+        "required": ["model", "requests", "tokens", "cost"],
         "additionalProperties": false
       },
       "V2Event": {

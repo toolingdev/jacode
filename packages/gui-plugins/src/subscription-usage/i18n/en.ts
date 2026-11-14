@@ -1,0 +1,16 @@
+export default {
+  view: "Subscription usage",
+  "short.weekly": "{{percent}}% of week",
+  "short.daily": "{{percent}}% of day",
+  "meter.input_tokens.weekly": "Weekly input tokens",
+  "meter.input_tokens.daily": "Daily input tokens",
+  "meter.images.weekly": "Weekly images",
+  "meter.images.daily": "Daily images",
+  resets: "Resets {{time}}",
+  "history.title": "Last 30 days · this API key",
+  "history.tokens": "{{input}} in · {{output}} out",
+  "history.requests": "{{count}} req",
+  "history.empty": "No requests from this API key",
+  "history.failed": "Usage history is unavailable",
+  inactive: "{{name}} subscription is not active",
+}

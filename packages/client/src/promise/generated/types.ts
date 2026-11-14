@@ -370,6 +370,14 @@ export type WebSearchResult = { url: string; title?: string; content?: string; t
 
 export type UsageLimitsMeter = { percent: number; limited: boolean; resetsAt: number }
 
+export type UsageSubscriptionMeter = {
+  unit: "input_tokens" | "images"
+  window: "daily" | "weekly"
+  used: number
+  limit: number
+  resetsAt: number
+}
+
 export type McpProtocol = "legacy" | "auto" | "2026-07-28"
 
 export type ConfigCompactionPercent = string
@@ -455,6 +463,13 @@ export type SessionMessageCompactionRunning = {
 }
 
 export type UsageLimitsBudgetModel = { providerID: ProviderID; modelID: string; name: string; spent?: MoneyUSD }
+
+export type UsageSubscriptionModelUsage = {
+  model: string
+  requests: number
+  tokens: { input: number; output: number }
+  cost: MoneyUSD
+}
 
 export type SessionGenerateResponse = { data: { text: string; tokens: TokenUsageInfo; cost: MoneyUSD } }
 
@@ -991,6 +1006,13 @@ export type WebSearchProvider = { id: WebSearchID; name: string }
 
 export type UsageLimitsGo = { rolling: UsageLimitsMeter; weekly: UsageLimitsMeter; monthly: UsageLimitsMeter }
 
+export type UsageSubscriptionInfo = {
+  providerID: ProviderID
+  name: string
+  active: boolean
+  meters: Array<UsageSubscriptionMeter>
+}
+
 export type ConfigModelCapabilities = {
   tools?: boolean
   freeform?: Array<ToolFreeformFormat>
@@ -1113,6 +1135,14 @@ export type UsageLimitsBudget = {
   picked: boolean
   shared: boolean
   resetsAt: number
+}
+
+export type UsageSubscriptionHistory = {
+  providerID: ProviderID
+  name: string
+  from: string
+  to: string
+  models: Array<UsageSubscriptionModelUsage>
 }
 
 export type GenerateImageResult = {
@@ -4900,6 +4930,18 @@ export type ExperimentalUsageLimitsInput = {
 
 export type ExperimentalUsageLimitsOutput = { location: LocationPublicRef; data: UsageLimitsInfo | null }
 
+export type ExperimentalUsageSubscriptionsInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+
+export type ExperimentalUsageSubscriptionsOutput = { location: LocationPublicRef; data: Array<UsageSubscriptionInfo> }
+
+export type ExperimentalUsageHistoryInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+
+export type ExperimentalUsageHistoryOutput = { location: LocationPublicRef; data: Array<UsageSubscriptionHistory> }
+
 export type ConfigGetInput = { readonly location?: { readonly directory?: string | undefined } | undefined }
 
 export type ConfigGetOutput = Array<ConfigEntry>
@@ -5053,6 +5095,18 @@ export type UsageLimitsInput = ExperimentalUsageLimitsInput
 
 /** @deprecated Use `ExperimentalUsageLimitsOutput`. Removed in the next minor. */
 export type UsageLimitsOutput = ExperimentalUsageLimitsOutput
+
+/** @deprecated Use `ExperimentalUsageSubscriptionsInput`. Removed in the next minor. */
+export type UsageSubscriptionsInput = ExperimentalUsageSubscriptionsInput
+
+/** @deprecated Use `ExperimentalUsageSubscriptionsOutput`. Removed in the next minor. */
+export type UsageSubscriptionsOutput = ExperimentalUsageSubscriptionsOutput
+
+/** @deprecated Use `ExperimentalUsageHistoryInput`. Removed in the next minor. */
+export type UsageHistoryInput = ExperimentalUsageHistoryInput
+
+/** @deprecated Use `ExperimentalUsageHistoryOutput`. Removed in the next minor. */
+export type UsageHistoryOutput = ExperimentalUsageHistoryOutput
 
 /** @deprecated Use `ExperimentalConfigUpdateInput`. Removed in the next minor. */
 export type ConfigUpdateInput = ExperimentalConfigUpdateInput

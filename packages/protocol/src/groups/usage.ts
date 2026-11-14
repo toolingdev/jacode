@@ -1,5 +1,6 @@
 import { Location } from "@opencode/schema/location"
 import { UsageLimits } from "@opencode/schema/usage-limits"
+import { UsageSubscription } from "@opencode/schema/usage-subscription"
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/http-api"
 import { ServiceUnavailableError } from "../errors.js"
@@ -19,6 +20,38 @@ export const UsageGroup = HttpApiGroup.make("server.usage")
           summary: "Get usage limits",
           description:
             "Return the OpenCode Go allowance and Console budgets of the OpenCode Console workspace the location is signed in to, or null when it isn't signed in.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.get("usage.subscriptions", "/api/experimental/usage/subscriptions", {
+      query: LocationQuery,
+      success: Location.response(Schema.Array(UsageSubscription.Info)),
+      error: ServiceUnavailableError,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "experimental.usage.subscriptions",
+          summary: "Get subscription usage",
+          description:
+            "Experimental: may change without compatibility guarantees. Return what the flat-rate subscriptions of the location's loaded providers have used of their allowances; empty when no provider reports one.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.get("usage.history", "/api/experimental/usage/history", {
+      query: LocationQuery,
+      success: Location.response(Schema.Array(UsageSubscription.History)),
+      error: ServiceUnavailableError,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "experimental.usage.history",
+          summary: "Get usage history",
+          description:
+            "Experimental: may change without compatibility guarantees. Return what the subscription providers of the location recorded by model over the last 30 days, for the API key each is used with; empty when no provider reports it.",
         }),
       ),
   )

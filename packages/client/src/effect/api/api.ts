@@ -45,6 +45,7 @@ import type { Worktree } from "@opencode/schema/worktree"
 import type { Vcs } from "@opencode/schema/vcs"
 import type { WebSearch } from "@opencode/schema/websearch"
 import type { UsageLimits } from "@opencode/schema/usage-limits"
+import type { UsageSubscription } from "@opencode/schema/usage-subscription"
 import type { Config } from "@opencode/schema/config"
 
 export type ServerInfoOutput = {
@@ -2784,8 +2785,32 @@ export type ExperimentalUsageLimitsOperation<E = never> = (
   input?: ExperimentalUsageLimitsInput,
 ) => Effect.Effect<ExperimentalUsageLimitsOutput, E>
 
+export type ExperimentalUsageSubscriptionsInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ExperimentalUsageSubscriptionsOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<UsageSubscription.Info>
+}
+export type ExperimentalUsageSubscriptionsOperation<E = never> = (
+  input?: ExperimentalUsageSubscriptionsInput,
+) => Effect.Effect<ExperimentalUsageSubscriptionsOutput, E>
+
+export type ExperimentalUsageHistoryInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ExperimentalUsageHistoryOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<UsageSubscription.History>
+}
+export type ExperimentalUsageHistoryOperation<E = never> = (
+  input?: ExperimentalUsageHistoryInput,
+) => Effect.Effect<ExperimentalUsageHistoryOutput, E>
+
 export interface ExperimentalUsageApi<E = never> {
   readonly limits: ExperimentalUsageLimitsOperation<E>
+  readonly subscriptions: ExperimentalUsageSubscriptionsOperation<E>
+  readonly history: ExperimentalUsageHistoryOperation<E>
 }
 
 export type ConfigGetInput = { readonly location?: { readonly directory?: string | undefined } | undefined }
@@ -3027,6 +3052,24 @@ export type UsageLimitsOutput = ExperimentalUsageLimitsOutput
 /** @deprecated Use `ExperimentalUsageLimitsOperation`. Removed in the next minor. */
 export type UsageLimitsOperation<E = never> = ExperimentalUsageLimitsOperation<E>
 
+/** @deprecated Use `ExperimentalUsageSubscriptionsInput`. Removed in the next minor. */
+export type UsageSubscriptionsInput = ExperimentalUsageSubscriptionsInput
+
+/** @deprecated Use `ExperimentalUsageSubscriptionsOutput`. Removed in the next minor. */
+export type UsageSubscriptionsOutput = ExperimentalUsageSubscriptionsOutput
+
+/** @deprecated Use `ExperimentalUsageSubscriptionsOperation`. Removed in the next minor. */
+export type UsageSubscriptionsOperation<E = never> = ExperimentalUsageSubscriptionsOperation<E>
+
+/** @deprecated Use `ExperimentalUsageHistoryInput`. Removed in the next minor. */
+export type UsageHistoryInput = ExperimentalUsageHistoryInput
+
+/** @deprecated Use `ExperimentalUsageHistoryOutput`. Removed in the next minor. */
+export type UsageHistoryOutput = ExperimentalUsageHistoryOutput
+
+/** @deprecated Use `ExperimentalUsageHistoryOperation`. Removed in the next minor. */
+export type UsageHistoryOperation<E = never> = ExperimentalUsageHistoryOperation<E>
+
 /** @deprecated Use `ExperimentalConfigUpdateInput`. Removed in the next minor. */
 export type ConfigUpdateInput = ExperimentalConfigUpdateInput
 
@@ -3122,5 +3165,11 @@ export interface AppApi<E = never> {
   readonly usage: {
     /** @deprecated Use `client.experimental.usage.limits`. Removed in the next minor. */
     readonly limits: ExperimentalUsageLimitsOperation<E>
+
+    /** @deprecated Use `client.experimental.usage.subscriptions`. Removed in the next minor. */
+    readonly subscriptions: ExperimentalUsageSubscriptionsOperation<E>
+
+    /** @deprecated Use `client.experimental.usage.history`. Removed in the next minor. */
+    readonly history: ExperimentalUsageHistoryOperation<E>
   }
 }
