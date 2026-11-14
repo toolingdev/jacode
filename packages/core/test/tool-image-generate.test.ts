@@ -250,7 +250,7 @@ describe("experimental_image_generate", () => {
       ])
       // The notice carries the job ID from the start result, like shell notices.
       expect(yield* notice(result)).toBe(
-        `<image id="${id}" state="completed">\nImage request finished. Saved image: ${file} (test/painter).\nUse the read tool on this path to view the image.\n</image>`,
+        `<image id="${id}" state="completed">\nImage request finished. Saved image: ${file} (test/painter).\nShow it to the user by writing ![short description](${file}) in your reply.\nOnly use the read tool on this path if you need to look at the image yourself and you accept image input.\n</image>`,
       )
       expect((yield* Effect.promise(() => fs.readFile(file))).toString("base64")).toBe(PNG)
       expect(fixture.requests).toEqual([
@@ -288,7 +288,7 @@ describe("experimental_image_generate", () => {
       expect(path.dirname(result.output.path)).toBe(path.join(global.tmp, "images", session.id))
       const saved = `${result.output.path}.jpg`
       expect(yield* notice(result)).toContain(
-        `Image request finished. Saved image: ${saved} (test/painter).\nUse the read tool on this path to view the image.`,
+        `Image request finished. Saved image: ${saved} (test/painter).\nShow it to the user by writing ![short description](${saved}) in your reply.\nOnly use the read tool on this path if you need to look at the image yourself and you accept image input.`,
       )
       expect(yield* Effect.promise(() => Bun.file(saved).exists())).toBe(true)
 

@@ -332,7 +332,13 @@ export const Plugin = {
                   yield* replaces ? permission.assert({ ...request, save: ["*"] }) : permission.assertNotDenied(request)
                 }
                 yield* environment.files.write(file, bytes)
-                return `Image request finished. Saved image: ${file} (${ref}).\nUse the read tool on this path to view the image.`
+                return [
+                  `Image request finished. Saved image: ${file} (${ref}).`,
+                  // The app renders a Markdown image of a local path inline, which shows the result without the
+                  // model reading it; a model that cannot take image input fails its next request if it does.
+                  `Show it to the user by writing ![short description](${file}) in your reply.`,
+                  "Only use the read tool on this path if you need to look at the image yourself and you accept image input.",
+                ].join("\n")
               }).pipe(
                 // The job keeps this text, so a restart can still deliver the outcome.
                 Effect.mapError((error) => new Error(`Image request failed for ${stem}: ${error.message}`)),
