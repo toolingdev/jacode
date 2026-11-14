@@ -6,6 +6,7 @@ import { isDeepStrictEqual } from "node:util"
 import { applyEdits, modify, type ParseError, parse } from "jsonc-parser"
 import { Context, Effect, FiberMap, Layer, Option, PubSub, Ref, Schema, Semaphore, Stream } from "effect"
 import { Directory, Document, Info, type Patch, type Entry, Event } from "@opencode/schema/config"
+import type { Mcp } from "@opencode/schema/mcp"
 import { Credential } from "./credential.js"
 import { Bus } from "./bus.js"
 import { Watcher } from "./filesystem/watcher.js"
@@ -46,6 +47,11 @@ export interface Interface {
   readonly changes: () => Stream.Stream<Watcher.Update>
   /** Updates supported global config fields while preserving unrelated JSONC content. */
   readonly update?: (patch: Patch) => Effect.Effect<void, FSUtil.Error>
+  /**
+   * Sets, or removes with `undefined`, one MCP server in the highest-precedence global config document, preserving
+   * unrelated JSONC content. Removing a server another document defines leaves that definition in place.
+   */
+  readonly mcp?: (server: string, config: Mcp.ServerConfig | undefined) => Effect.Effect<void, FSUtil.Error>
   /**
    * Replaces, or clears with `undefined`, the document an integration connection contributes. It loads right after
    * managed policies: its settings layer below remote, user, and project config, while its policies outrank theirs.
@@ -186,13 +192,15 @@ export const layer = (options?: Options) =>
         // Logging out drops the saved remote config, so the source supplies nothing until a fresh fetch succeeds.
         if (!variables) return yield* wellknown.clearCached(entry.origin).pipe(Effect.as([]))
         // A failed refresh keeps the last resolved config so remote providers and allowlists do not disappear.
-        const configs = yield* wellknown.resolve(entry, variables).pipe(
-          Effect.catch((error) =>
-            Effect.logWarning("failed to load wellknown config", { source: entry.origin, error }).pipe(
-              Effect.andThen(wellknown.cached(entry.origin)),
+        const configs = yield* wellknown
+          .resolve(entry, variables)
+          .pipe(
+            Effect.catch((error) =>
+              Effect.logWarning("failed to load wellknown config", { source: entry.origin, error }).pipe(
+                Effect.andThen(wellknown.cached(entry.origin)),
+              ),
             ),
-          ),
-        )
+          )
         return yield* Effect.forEach(configs, (config) =>
           ConfigVariable.substitute({
             type: "virtual",
@@ -489,6 +497,32 @@ export const layer = (options?: Options) =>
         (effect) => updateLock.withPermit(effect),
       )
 
+      const mcp = Effect.fn("Config.mcp")(
+        function* (server: string, config: Mcp.ServerConfig | undefined) {
+          const directory = initial.global ?? AbsolutePath.make(globalService.config)
+          const candidates = ConfigDiscovery.names.map((name) => path.join(directory, name))
+          const filepath =
+            (yield* Effect.filter(candidates, fs.isFile)).at(-1) ?? path.join(directory, "opencode.jsonc")
+          const text = (yield* fs.readFileStringSafe(filepath)) ?? "{}\n"
+          const formatting = { formattingOptions: { tabSize: 2, insertSpaces: true } }
+          const updated = yield* Effect.try({
+            try: () => {
+              // A V1 document lists servers directly under `mcp`; drop that entry so the name is not defined twice.
+              // `servers` and `timeout` are the current format's own keys there, never a V1 server.
+              const cleared =
+                server === "servers" || server === "timeout"
+                  ? text
+                  : applyEdits(text, modify(text, ["mcp", server], undefined, formatting))
+              return applyEdits(cleared, modify(cleared, ["mcp", "servers", server], config, formatting))
+            },
+            catch: (cause) => new FSUtil.FileSystemError({ method: "config.mcp", cause }),
+          })
+          yield* fs.writeWithDirs(filepath, updated.endsWith("\n") ? updated : `${updated}\n`)
+          yield* requestReload
+        },
+        (effect) => updateLock.withPermit(effect),
+      )
+
       return Service.of({
         entries: Effect.fnUntraced(function* () {
           return configs
@@ -500,6 +534,7 @@ export const layer = (options?: Options) =>
           }),
         changes: () => Stream.fromPubSub(updates),
         update,
+        mcp,
         integration: Effect.fn("Config.integration")(function* (integrationID, document) {
           if (isDeepStrictEqual(integrations.get(integrationID), document)) return
           integrations.delete(integrationID)

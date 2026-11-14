@@ -123,6 +123,14 @@ export const Server = Schema.Struct({
   integrationID: optional(IntegrationID),
 }).annotate({ identifier: "Mcp.Server" })
 
+/** A tool a connected MCP server offers, as a client lists it. */
+export interface ToolSummary extends Schema.Schema.Type<typeof ToolSummary> {}
+export const ToolSummary = Schema.Struct({
+  name: Schema.String,
+  title: optional(Schema.String),
+  description: optional(Schema.String),
+}).annotate({ identifier: "Mcp.ToolSummary" })
+
 export interface Resource extends Schema.Schema.Type<typeof Resource> {}
 export const Resource = Schema.Struct({
   server: Schema.String,

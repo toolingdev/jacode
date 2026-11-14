@@ -103,6 +103,22 @@ export const makeMcpGroup = <LocationId extends HttpApiMiddleware.AnyId, Locatio
         ),
     )
     .add(
+      HttpApiEndpoint.get("mcp.tools", "/api/experimental/mcp/:server/tools", {
+        params: { server: Schema.String },
+        query: LocationQuery,
+        success: Location.response(Schema.Array(Mcp.ToolSummary)),
+      })
+        .annotateMerge(locationQueryOpenApi)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "experimental.mcp.tools",
+            summary: "List MCP server tools",
+            description:
+              "Experimental: may change without compatibility guarantees. Return the tools the MCP server offers at the location; empty while it is not connected.",
+          }),
+        ),
+    )
+    .add(
       HttpApiEndpoint.get("mcp.resource.catalog", "/api/mcp/resource", {
         query: LocationQuery,
         success: Location.response(Mcp.ResourceCatalog),

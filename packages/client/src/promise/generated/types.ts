@@ -276,6 +276,8 @@ export type McpResourceTemplate = {
   mimeType?: string
 }
 
+export type McpToolSummary = { name: string; title?: string; description?: string }
+
 export type PtyTicketConnectToken = { ticket: string; expires_in: number }
 
 export type CredentialKey = { type: "key"; key: string; metadata?: { [x: string]: JsonValue } }
@@ -4241,6 +4243,13 @@ export type ExperimentalMcpDisconnectInput = {
 
 export type ExperimentalMcpDisconnectOutput = void
 
+export type ExperimentalMcpToolsInput = {
+  readonly server: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+
+export type ExperimentalMcpToolsOutput = { location: LocationPublicRef; data: Array<McpToolSummary> }
+
 export type ExperimentalMcpClientTokenInput = {
   readonly location?: { readonly directory?: string | undefined } | undefined
   readonly name: string
@@ -4952,6 +4961,48 @@ export type ExperimentalConfigUpdateInput = { readonly shell: string | null }
 
 export type ExperimentalConfigUpdateOutput = void
 
+export type ExperimentalConfigMcpSetInput = {
+  readonly server: string
+  readonly config:
+    | {
+        readonly type: "local"
+        readonly command: ReadonlyArray<string>
+        readonly cwd?: string
+        readonly environment?: { readonly [x: string]: string }
+        readonly disabled?: boolean
+        readonly codemode?: boolean
+        readonly timeout?: { readonly startup?: number; readonly catalog?: number; readonly execution?: number }
+        readonly protocol?: "legacy" | "auto" | "2026-07-28"
+        readonly pool?: boolean
+      }
+    | {
+        readonly type: "remote"
+        readonly url: string
+        readonly headers?: { readonly [x: string]: string }
+        readonly oauth?:
+          | {
+              readonly client_id?: string
+              readonly client_secret?: string
+              readonly scope?: string
+              readonly callback_port?: number
+              readonly redirect_uri?: string
+              readonly auth_server_metadata_url?: string
+            }
+          | false
+        readonly disabled?: boolean
+        readonly codemode?: boolean
+        readonly timeout?: { readonly startup?: number; readonly catalog?: number; readonly execution?: number }
+        readonly protocol?: "legacy" | "auto" | "2026-07-28"
+        readonly pool?: boolean
+      }
+}
+
+export type ExperimentalConfigMcpSetOutput = void
+
+export type ExperimentalConfigMcpRemoveInput = { readonly server: string }
+
+export type ExperimentalConfigMcpRemoveOutput = void
+
 /** @deprecated Use `ExperimentalSessionStatsInput`. Removed in the next minor. */
 export type SessionStatsInput = ExperimentalSessionStatsInput
 
@@ -5063,6 +5114,12 @@ export type McpDisconnectInput = ExperimentalMcpDisconnectInput
 /** @deprecated Use `ExperimentalMcpDisconnectOutput`. Removed in the next minor. */
 export type McpDisconnectOutput = ExperimentalMcpDisconnectOutput
 
+/** @deprecated Use `ExperimentalMcpToolsInput`. Removed in the next minor. */
+export type McpToolsInput = ExperimentalMcpToolsInput
+
+/** @deprecated Use `ExperimentalMcpToolsOutput`. Removed in the next minor. */
+export type McpToolsOutput = ExperimentalMcpToolsOutput
+
 /** @deprecated Use `ExperimentalMcpClientTokenInput`. Removed in the next minor. */
 export type McpClientTokenInput = ExperimentalMcpClientTokenInput
 
@@ -5113,3 +5170,15 @@ export type ConfigUpdateInput = ExperimentalConfigUpdateInput
 
 /** @deprecated Use `ExperimentalConfigUpdateOutput`. Removed in the next minor. */
 export type ConfigUpdateOutput = ExperimentalConfigUpdateOutput
+
+/** @deprecated Use `ExperimentalConfigMcpSetInput`. Removed in the next minor. */
+export type ConfigMcpSetInput = ExperimentalConfigMcpSetInput
+
+/** @deprecated Use `ExperimentalConfigMcpSetOutput`. Removed in the next minor. */
+export type ConfigMcpSetOutput = ExperimentalConfigMcpSetOutput
+
+/** @deprecated Use `ExperimentalConfigMcpRemoveInput`. Removed in the next minor. */
+export type ConfigMcpRemoveInput = ExperimentalConfigMcpRemoveInput
+
+/** @deprecated Use `ExperimentalConfigMcpRemoveOutput`. Removed in the next minor. */
+export type ConfigMcpRemoveOutput = ExperimentalConfigMcpRemoveOutput

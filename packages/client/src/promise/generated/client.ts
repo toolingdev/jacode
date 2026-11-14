@@ -158,6 +158,8 @@ import type {
   ExperimentalMcpConnectOutput,
   ExperimentalMcpDisconnectInput,
   ExperimentalMcpDisconnectOutput,
+  ExperimentalMcpToolsInput,
+  ExperimentalMcpToolsOutput,
   ExperimentalMcpClientTokenInput,
   ExperimentalMcpClientTokenOutput,
   CredentialListOutput,
@@ -324,6 +326,10 @@ import type {
   ConfigShellsOutput,
   ExperimentalConfigUpdateInput,
   ExperimentalConfigUpdateOutput,
+  ExperimentalConfigMcpSetInput,
+  ExperimentalConfigMcpSetOutput,
+  ExperimentalConfigMcpRemoveInput,
+  ExperimentalConfigMcpRemoveOutput,
 } from "./types.js"
 import { ClientError } from "./client-error.js"
 
@@ -1314,6 +1320,18 @@ export function make(options: ClientOptions) {
             },
             requestOptions,
           ),
+        tools: (input: ExperimentalMcpToolsInput, requestOptions?: RequestOptions) =>
+          request<ExperimentalMcpToolsOutput>(
+            {
+              method: "GET",
+              path: `/api/experimental/mcp/${encodeURIComponent(input.server)}/tools`,
+              query: { location: input["location"] },
+              successStatus: 200,
+              declaredStatuses: [400, 401, 404],
+              empty: false,
+            },
+            requestOptions,
+          ),
         client: {
           token: (input: ExperimentalMcpClientTokenInput, requestOptions?: RequestOptions) =>
             request<ExperimentalMcpClientTokenOutput>(
@@ -1772,6 +1790,31 @@ export function make(options: ClientOptions) {
             },
             requestOptions,
           ),
+        mcp: {
+          set: (input: ExperimentalConfigMcpSetInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigMcpSetOutput>(
+              {
+                method: "PUT",
+                path: `/api/experimental/config/mcp/${encodeURIComponent(input.server)}`,
+                body: { config: input["config"] },
+                successStatus: 204,
+                declaredStatuses: [400, 401, 404],
+                empty: true,
+              },
+              requestOptions,
+            ),
+          remove: (input: ExperimentalConfigMcpRemoveInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigMcpRemoveOutput>(
+              {
+                method: "DELETE",
+                path: `/api/experimental/config/mcp/${encodeURIComponent(input.server)}`,
+                successStatus: 204,
+                declaredStatuses: [400, 401, 404],
+                empty: true,
+              },
+              requestOptions,
+            ),
+        },
       },
     },
     message: {
@@ -2780,6 +2823,8 @@ export function make(options: ClientOptions) {
       connect: client.experimental.mcp.connect,
       /** @deprecated Use `client.experimental.mcp.disconnect`. Removed in the next minor. */
       disconnect: client.experimental.mcp.disconnect,
+      /** @deprecated Use `client.experimental.mcp.tools`. Removed in the next minor. */
+      tools: client.experimental.mcp.tools,
       /** @deprecated Use `client.experimental.mcp.client`. Removed in the next minor. */
       client: {
         /** @deprecated Use `client.experimental.mcp.client.token`. Removed in the next minor. */
@@ -2816,6 +2861,13 @@ export function make(options: ClientOptions) {
       ...client.config,
       /** @deprecated Use `client.experimental.config.update`. Removed in the next minor. */
       update: client.experimental.config.update,
+      /** @deprecated Use `client.experimental.config.mcp`. Removed in the next minor. */
+      mcp: {
+        /** @deprecated Use `client.experimental.config.mcp.set`. Removed in the next minor. */
+        set: client.experimental.config.mcp.set,
+        /** @deprecated Use `client.experimental.config.mcp.remove`. Removed in the next minor. */
+        remove: client.experimental.config.mcp.remove,
+      },
     },
   }
 }

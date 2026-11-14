@@ -164,6 +164,8 @@ import type {
   ExperimentalMcpConnectOutput,
   ExperimentalMcpDisconnectInput,
   ExperimentalMcpDisconnectOutput,
+  ExperimentalMcpToolsInput,
+  ExperimentalMcpToolsOutput,
   ExperimentalMcpClientTokenInput,
   ExperimentalMcpClientTokenOutput,
   CredentialListOutput,
@@ -322,6 +324,10 @@ import type {
   ConfigShellsOutput,
   ExperimentalConfigUpdateInput,
   ExperimentalConfigUpdateOutput,
+  ExperimentalConfigMcpSetInput,
+  ExperimentalConfigMcpSetOutput,
+  ExperimentalConfigMcpRemoveInput,
+  ExperimentalConfigMcpRemoveOutput,
 } from "../api/api.js"
 import { ClientError } from "./client-error.js"
 
@@ -1181,6 +1187,13 @@ const EndpointExperimentalMcpDisconnect = (raw: RawClient["server.mcp"]) => (inp
     ),
   )
 
+const EndpointExperimentalMcpTools = (raw: RawClient["server.mcp"]) => (input: ExperimentalMcpToolsInput) =>
+  preserveEffect<ExperimentalMcpToolsOutput>()(
+    raw["mcp.tools"]({ params: { server: input["server"] }, query: { location: input["location"] } }).pipe(
+      Effect.mapError(mapClientError),
+    ),
+  )
+
 const EndpointExperimentalMcpClientToken = (raw: RawClient["server.mcp"]) => (input: ExperimentalMcpClientTokenInput) =>
   preserveEffect<ExperimentalMcpClientTokenOutput>()(
     raw["mcp.clientToken"]({
@@ -1194,6 +1207,7 @@ const adaptGroupExperimentalMcp = (raw: RawClient["server.mcp"]) => ({
   remove: EndpointExperimentalMcpRemove(raw),
   connect: EndpointExperimentalMcpConnect(raw),
   disconnect: EndpointExperimentalMcpDisconnect(raw),
+  tools: EndpointExperimentalMcpTools(raw),
   client: { token: EndpointExperimentalMcpClientToken(raw) },
 })
 
@@ -1974,8 +1988,22 @@ const EndpointExperimentalConfigUpdate = (raw: RawClient["server.config"]) => (i
     raw["config.update"]({ payload: { shell: input["shell"] } }).pipe(Effect.mapError(mapClientError)),
   )
 
+const EndpointExperimentalConfigMcpSet = (raw: RawClient["server.config"]) => (input: ExperimentalConfigMcpSetInput) =>
+  preserveEffect<ExperimentalConfigMcpSetOutput>()(
+    raw["config.mcp.set"]({ params: { server: input["server"] }, payload: { config: input["config"] } }).pipe(
+      Effect.mapError(mapClientError),
+    ),
+  )
+
+const EndpointExperimentalConfigMcpRemove =
+  (raw: RawClient["server.config"]) => (input: ExperimentalConfigMcpRemoveInput) =>
+    preserveEffect<ExperimentalConfigMcpRemoveOutput>()(
+      raw["config.mcp.remove"]({ params: { server: input["server"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
 const adaptGroupExperimentalConfig = (raw: RawClient["server.config"]) => ({
   update: EndpointExperimentalConfigUpdate(raw),
+  mcp: { set: EndpointExperimentalConfigMcpSet(raw), remove: EndpointExperimentalConfigMcpRemove(raw) },
 })
 
 const adaptClient = (raw: RawClient) => {
@@ -2083,6 +2111,8 @@ const adaptClient = (raw: RawClient) => {
       connect: client.experimental.mcp.connect,
       /** @deprecated Use `client.experimental.mcp.disconnect`. Removed in the next minor. */
       disconnect: client.experimental.mcp.disconnect,
+      /** @deprecated Use `client.experimental.mcp.tools`. Removed in the next minor. */
+      tools: client.experimental.mcp.tools,
       /** @deprecated Use `client.experimental.mcp.client`. Removed in the next minor. */
       client: {
         /** @deprecated Use `client.experimental.mcp.client.token`. Removed in the next minor. */
@@ -2117,6 +2147,13 @@ const adaptClient = (raw: RawClient) => {
       ...client.config,
       /** @deprecated Use `client.experimental.config.update`. Removed in the next minor. */
       update: client.experimental.config.update,
+      /** @deprecated Use `client.experimental.config.mcp`. Removed in the next minor. */
+      mcp: {
+        /** @deprecated Use `client.experimental.config.mcp.set`. Removed in the next minor. */
+        set: client.experimental.config.mcp.set,
+        /** @deprecated Use `client.experimental.config.mcp.remove`. Removed in the next minor. */
+        remove: client.experimental.config.mcp.remove,
+      },
     },
   }
 }

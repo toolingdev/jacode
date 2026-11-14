@@ -99,6 +99,91 @@ it.live("updates the global shell without replacing unrelated JSONC", () =>
   }),
 )
 
+it.live("saves an MCP server to the global config, replacing a V1 entry of the same name", () =>
+  Effect.gen(function* () {
+    const tmp = yield* Effect.acquireDisposable(Effect.promise(() => tmpdir("opencode-config-mcp-set-")))
+    const global = path.join(tmp.path, "global")
+    const config = path.join(global, "opencode.jsonc")
+    yield* Effect.promise(() => fs.mkdir(global, { recursive: true }))
+    yield* Effect.promise(() =>
+      fs.writeFile(
+        config,
+        `{
+  // keep this comment
+  "mcp": {
+    "docs": { "type": "remote", "url": "https://old.example.com/mcp", "enabled": false },
+    "other": { "type": "remote", "url": "https://other.example.com/mcp", "enabled": false }
+  }
+}
+`,
+      ),
+    )
+    const server = yield* startServer(global)
+    const saved = yield* Effect.promise(() =>
+      fetch(new URL("/api/experimental/config/mcp/docs", server.base), {
+        method: "PUT",
+        headers: { ...server.headers, "content-type": "application/json" },
+        body: JSON.stringify({ config: { type: "remote", url: "https://new.example.com/mcp", disabled: true } }),
+      }),
+    )
+
+    expect(saved.status).toBe(204)
+    const text = yield* Effect.promise(() => fs.readFile(config, "utf8"))
+    expect(text).toContain("// keep this comment")
+    expect(text).toContain("https://other.example.com/mcp")
+    expect(text).not.toContain("https://old.example.com/mcp")
+    expect(parse(text).mcp).toEqual({
+      other: { type: "remote", url: "https://other.example.com/mcp", enabled: false },
+      servers: { docs: { type: "remote", url: "https://new.example.com/mcp", disabled: true } },
+    })
+  }),
+)
+
+it.live("removes a saved MCP server in either format and leaves the others", () =>
+  Effect.gen(function* () {
+    const tmp = yield* Effect.acquireDisposable(Effect.promise(() => tmpdir("opencode-config-mcp-remove-")))
+    const global = path.join(tmp.path, "global")
+    const config = path.join(global, "opencode.json")
+    yield* Effect.promise(() => fs.mkdir(global, { recursive: true }))
+    yield* Effect.promise(() =>
+      fs.writeFile(
+        config,
+        JSON.stringify({
+          mcp: {
+            legacy: { type: "remote", url: "https://legacy.example.com/mcp", enabled: false },
+            servers: {
+              native: { type: "remote", url: "https://native.example.com/mcp", disabled: true },
+              kept: { type: "remote", url: "https://kept.example.com/mcp", disabled: true },
+            },
+          },
+        }),
+      ),
+    )
+    const server = yield* startServer(global)
+    const remove = (name: string) =>
+      Effect.promise(() =>
+        fetch(new URL(`/api/experimental/config/mcp/${name}`, server.base), {
+          method: "DELETE",
+          headers: server.headers,
+        }),
+      )
+
+    expect((yield* remove("legacy")).status).toBe(204)
+    expect((yield* remove("native")).status).toBe(204)
+    // `servers` is the current format's own key, never a V1 server to clear.
+    expect((yield* remove("servers")).status).toBe(204)
+    const text = yield* Effect.promise(() => fs.readFile(config, "utf8"))
+    expect(parse(text).mcp).toEqual({
+      servers: { kept: { type: "remote", url: "https://kept.example.com/mcp", disabled: true } },
+    })
+  }),
+)
+
+// The fixtures' only JSONC is this one comment, so the rest parses as JSON.
+function parse(text: string): { mcp?: unknown } {
+  return JSON.parse(text.replace("// keep this comment", ""))
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }

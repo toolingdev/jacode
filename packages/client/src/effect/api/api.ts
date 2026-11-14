@@ -1776,6 +1776,9 @@ export interface McpApi<E = never> {
   /** @deprecated Use `client.experimental.mcp.disconnect`. Removed in the next minor. */
   readonly disconnect: ExperimentalMcpDisconnectOperation<E>
 
+  /** @deprecated Use `client.experimental.mcp.tools`. Removed in the next minor. */
+  readonly tools: ExperimentalMcpToolsOperation<E>
+
   /** @deprecated Use `client.experimental.mcp.client`. Removed in the next minor. */
   readonly client: {
     /** @deprecated Use `client.experimental.mcp.client.token`. Removed in the next minor. */
@@ -1820,6 +1823,18 @@ export type ExperimentalMcpDisconnectOperation<E = never> = (
   input: ExperimentalMcpDisconnectInput,
 ) => Effect.Effect<ExperimentalMcpDisconnectOutput, E>
 
+export type ExperimentalMcpToolsInput = {
+  readonly server: string
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ExperimentalMcpToolsOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<Mcp.ToolSummary>
+}
+export type ExperimentalMcpToolsOperation<E = never> = (
+  input: ExperimentalMcpToolsInput,
+) => Effect.Effect<ExperimentalMcpToolsOutput, E>
+
 export type ExperimentalMcpClientTokenInput = {
   readonly location?: { readonly directory?: string | undefined } | undefined
   readonly name: string
@@ -1838,6 +1853,7 @@ export interface ExperimentalMcpApi<E = never> {
   readonly remove: ExperimentalMcpRemoveOperation<E>
   readonly connect: ExperimentalMcpConnectOperation<E>
   readonly disconnect: ExperimentalMcpDisconnectOperation<E>
+  readonly tools: ExperimentalMcpToolsOperation<E>
   readonly client: { readonly token: ExperimentalMcpClientTokenOperation<E> }
 }
 
@@ -2830,6 +2846,15 @@ export interface ConfigApi<E = never> {
 
   /** @deprecated Use `client.experimental.config.update`. Removed in the next minor. */
   readonly update: ExperimentalConfigUpdateOperation<E>
+
+  /** @deprecated Use `client.experimental.config.mcp`. Removed in the next minor. */
+  readonly mcp: {
+    /** @deprecated Use `client.experimental.config.mcp.set`. Removed in the next minor. */
+    readonly set: ExperimentalConfigMcpSetOperation<E>
+
+    /** @deprecated Use `client.experimental.config.mcp.remove`. Removed in the next minor. */
+    readonly remove: ExperimentalConfigMcpRemoveOperation<E>
+  }
 }
 
 export type ExperimentalConfigUpdateInput = { readonly shell: string | null }
@@ -2838,8 +2863,27 @@ export type ExperimentalConfigUpdateOperation<E = never> = (
   input: ExperimentalConfigUpdateInput,
 ) => Effect.Effect<ExperimentalConfigUpdateOutput, E>
 
+export type ExperimentalConfigMcpSetInput = {
+  readonly server: string
+  readonly config: Mcp.LocalConfig | Mcp.RemoteConfig
+}
+export type ExperimentalConfigMcpSetOutput = void
+export type ExperimentalConfigMcpSetOperation<E = never> = (
+  input: ExperimentalConfigMcpSetInput,
+) => Effect.Effect<ExperimentalConfigMcpSetOutput, E>
+
+export type ExperimentalConfigMcpRemoveInput = { readonly server: string }
+export type ExperimentalConfigMcpRemoveOutput = void
+export type ExperimentalConfigMcpRemoveOperation<E = never> = (
+  input: ExperimentalConfigMcpRemoveInput,
+) => Effect.Effect<ExperimentalConfigMcpRemoveOutput, E>
+
 export interface ExperimentalConfigApi<E = never> {
   readonly update: ExperimentalConfigUpdateOperation<E>
+  readonly mcp: {
+    readonly set: ExperimentalConfigMcpSetOperation<E>
+    readonly remove: ExperimentalConfigMcpRemoveOperation<E>
+  }
 }
 
 /** @deprecated Use `ExperimentalSessionStatsInput`. Removed in the next minor. */
@@ -3010,6 +3054,15 @@ export type McpDisconnectOutput = ExperimentalMcpDisconnectOutput
 /** @deprecated Use `ExperimentalMcpDisconnectOperation`. Removed in the next minor. */
 export type McpDisconnectOperation<E = never> = ExperimentalMcpDisconnectOperation<E>
 
+/** @deprecated Use `ExperimentalMcpToolsInput`. Removed in the next minor. */
+export type McpToolsInput = ExperimentalMcpToolsInput
+
+/** @deprecated Use `ExperimentalMcpToolsOutput`. Removed in the next minor. */
+export type McpToolsOutput = ExperimentalMcpToolsOutput
+
+/** @deprecated Use `ExperimentalMcpToolsOperation`. Removed in the next minor. */
+export type McpToolsOperation<E = never> = ExperimentalMcpToolsOperation<E>
+
 /** @deprecated Use `ExperimentalMcpClientTokenInput`. Removed in the next minor. */
 export type McpClientTokenInput = ExperimentalMcpClientTokenInput
 
@@ -3078,6 +3131,24 @@ export type ConfigUpdateOutput = ExperimentalConfigUpdateOutput
 
 /** @deprecated Use `ExperimentalConfigUpdateOperation`. Removed in the next minor. */
 export type ConfigUpdateOperation<E = never> = ExperimentalConfigUpdateOperation<E>
+
+/** @deprecated Use `ExperimentalConfigMcpSetInput`. Removed in the next minor. */
+export type ConfigMcpSetInput = ExperimentalConfigMcpSetInput
+
+/** @deprecated Use `ExperimentalConfigMcpSetOutput`. Removed in the next minor. */
+export type ConfigMcpSetOutput = ExperimentalConfigMcpSetOutput
+
+/** @deprecated Use `ExperimentalConfigMcpSetOperation`. Removed in the next minor. */
+export type ConfigMcpSetOperation<E = never> = ExperimentalConfigMcpSetOperation<E>
+
+/** @deprecated Use `ExperimentalConfigMcpRemoveInput`. Removed in the next minor. */
+export type ConfigMcpRemoveInput = ExperimentalConfigMcpRemoveInput
+
+/** @deprecated Use `ExperimentalConfigMcpRemoveOutput`. Removed in the next minor. */
+export type ConfigMcpRemoveOutput = ExperimentalConfigMcpRemoveOutput
+
+/** @deprecated Use `ExperimentalConfigMcpRemoveOperation`. Removed in the next minor. */
+export type ConfigMcpRemoveOperation<E = never> = ExperimentalConfigMcpRemoveOperation<E>
 
 /** @deprecated Use `ExperimentalGenerateApi`. Removed in the next minor. */
 export type GenerateApi<E = never> = ExperimentalGenerateApi<E>
