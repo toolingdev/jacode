@@ -7,6 +7,8 @@
 export type Sprite = {
   readonly id: string
   readonly name: string
+  /** What the character is and how it carries itself, told to the model so the assistant is the character on screen. */
+  readonly persona: string
   readonly palette: Readonly<Record<string, string>>
   /** The palette key eyes take while closed. */
   readonly lid: string
@@ -21,6 +23,7 @@ export const sprites: readonly Sprite[] = [
   {
     id: "bolt",
     name: "Bolt",
+    persona: "a small steel-blue robot with a red antenna: eager, literal, quick to plug in and get to work",
     lid: "b",
     neck: 10,
     palette: { k: OUTLINE, b: "#7f93b8", l: "#c9d6ef", e: "#3df2c8", a: "#ff5a5a", d: "#56678a", y: "#ffd23d" },
@@ -46,6 +49,7 @@ export const sprites: readonly Sprite[] = [
   {
     id: "boo",
     name: "Boo",
+    persona: "a small white ghost: quiet, gentle, appears exactly when needed and never makes a fuss",
     lid: "w",
     neck: 9,
     palette: { k: OUTLINE, w: "#f1f0ff", e: "#2b2b45", p: "#ff9ec4" },
@@ -71,6 +75,7 @@ export const sprites: readonly Sprite[] = [
   {
     id: "mochi",
     name: "Mochi",
+    persona: "a small orange cat: curious, independent, playful, and unbothered by setbacks",
     lid: "o",
     neck: 10,
     palette: { k: OUTLINE, o: "#f59a3c", e: "#1d2b1d", p: "#ff8fb0", w: "#fff3df" },
@@ -96,6 +101,7 @@ export const sprites: readonly Sprite[] = [
   {
     id: "merl",
     name: "Merl",
+    persona: "a small wizard in a purple hat: thoughtful, a little theatrical, fond of an elegant trick",
     lid: "f",
     neck: 7,
     palette: { k: OUTLINE, v: "#7b5cff", s: "#ffd84a", f: "#f2c7a0", g: "#e6e6f0", e: "#22223a" },
@@ -121,6 +127,7 @@ export const sprites: readonly Sprite[] = [
   {
     id: "goop",
     name: "Goop",
+    persona: "a small green slime: easygoing, adaptable, cheerfully unbreakable",
     lid: "g",
     neck: 10,
     palette: { k: OUTLINE, g: "#4fd66b", l: "#b6f5c0", e: "#123b1c" },
@@ -146,6 +153,7 @@ export const sprites: readonly Sprite[] = [
   {
     id: "cap",
     name: "Cap",
+    persona: "a small red-capped mushroom: warm, steady, quietly cheerful",
     lid: "c",
     neck: 9,
     palette: { k: OUTLINE, r: "#e5484d", w: "#fff6ea", c: "#f4e2c4", e: "#2a1e1e", p: "#e58a8a" },
@@ -171,6 +179,7 @@ export const sprites: readonly Sprite[] = [
   {
     id: "sirbit",
     name: "Sir Bit",
+    persona: "a small armored knight with a red plume: dutiful, formal, protective of the user's work",
     lid: "d",
     neck: 3,
     palette: { k: OUTLINE, s: "#b9c2d0", d: "#2a2f3d", r: "#e5484d", e: "#ffd23d", y: "#ffd23d" },
@@ -196,6 +205,7 @@ export const sprites: readonly Sprite[] = [
   {
     id: "ribbit",
     name: "Ribbit",
+    persona: "a small green frog: calm, patient, watchful, then strikes once and precisely",
     lid: "w",
     neck: 8,
     palette: { k: OUTLINE, g: "#58c26a", w: "#f6fff2", e: "#16301a", m: "#1f5a2c", y: "#d9f2a0" },
@@ -221,6 +231,7 @@ export const sprites: readonly Sprite[] = [
   {
     id: "orbit",
     name: "Orbit",
+    persona: "a small astronaut: adventurous, composed under pressure, methodical with checklists",
     lid: "v",
     neck: 9,
     palette: { k: OUTLINE, w: "#eef1f7", v: "#22355e", e: "#8fd3ff", o: "#ff8a3d" },
@@ -246,6 +257,7 @@ export const sprites: readonly Sprite[] = [
   {
     id: "hoot",
     name: "Hoot",
+    persona: "a small brown owl: studious, observant, awake long after everyone else",
     lid: "w",
     neck: 8,
     palette: { k: OUTLINE, b: "#8a5a3c", t: "#e8c99a", w: "#fffbe8", e: "#1c1410", y: "#ffb02e" },

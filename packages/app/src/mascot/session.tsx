@@ -3,11 +3,17 @@ import { useLanguage } from "@/runtime/i18n/language"
 import { Mascot } from "./mascot"
 import { findSprite } from "./sprites"
 import { useMascot } from "./store"
+import { useCompanionSync } from "./sync"
 
-/** The user's chosen character, thinking beside the timeline's working status. Nothing when turned off. */
-export const SessionMascot: Component<{ working: boolean }> = (props) => {
+/**
+ * The user's chosen character, thinking beside the timeline's working status. Nothing when turned off. Given a
+ * session, it also tells that session's assistant which character it is.
+ */
+export const SessionMascot: Component<{ working: boolean; sessionID?: string }> = (props) => {
   const language = useLanguage()
   const mascot = useMascot()
+
+  useCompanionSync(() => props.sessionID)
 
   return (
     <Show when={mascot.chosen.enabled && props.working}>
