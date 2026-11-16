@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { idle, nextAnimation, paint, shared, signature, STAGE, thinking } from "./animations"
+import { idle, nextAnimation, paint, STAGE, thinking, tinkering } from "./animations"
 import { sprites } from "./sprites"
 
 test("every sprite is 16 rows of 8 cells drawn only with its palette", () => {
@@ -15,22 +15,24 @@ test("every sprite is 16 rows of 8 cells drawn only with its palette", () => {
   }
 })
 
-test("every character has ten shared thinking animations and two of its own", () => {
-  expect(shared).toHaveLength(10)
+test("every character has ten thinking animations and shares none with another", () => {
+  for (const sprite of sprites) expect(thinking(sprite)).toHaveLength(10)
 
-  for (const sprite of sprites) {
-    expect(signature[sprite.id]).toHaveLength(2)
-    const ids = thinking(sprite).map((animation) => animation.id)
+  expect(new Set(sprites.flatMap((sprite) => thinking(sprite).map((animation) => animation.id))).size).toBe(100)
+})
 
-    expect(new Set(ids).size).toBe(12)
-  }
+test("every character has three technical animations, and no animation shares its id with any other", () => {
+  for (const sprite of sprites) expect(tinkering(sprite)).toHaveLength(3)
 
-  expect(new Set(Object.values(signature).flatMap((own) => own.map((animation) => animation.id))).size).toBe(20)
+  expect(
+    new Set(sprites.flatMap((sprite) => [...thinking(sprite), ...tinkering(sprite)].map((animation) => animation.id)))
+      .size,
+  ).toBe(130)
 })
 
 test("every frame of every animation stays on the stage and draws the character", () => {
   for (const sprite of sprites) {
-    for (const animation of [idle, ...thinking(sprite)]) {
+    for (const animation of [idle, ...thinking(sprite), ...tinkering(sprite)]) {
       for (const tick of Array.from({ length: animation.length * 2 }, (_, index) => index)) {
         const pixels = paint(sprite, animation.frame(tick, sprite))
 
@@ -38,7 +40,12 @@ test("every frame of every animation stays on the stage and draws the character"
         expect(pixels.every(([, , color]) => color !== "#ff00ff")).toBe(true)
       }
 
-      expect(paint(sprite, animation.frame(0, sprite)).length).toBeGreaterThan(20)
+      // Some animations start or pass through an empty stage, but none stays empty.
+      expect(
+        Math.max(
+          ...Array.from({ length: animation.length }, (_, tick) => paint(sprite, animation.frame(tick, sprite)).length),
+        ),
+      ).toBeGreaterThan(20)
     }
   }
 })
@@ -46,7 +53,7 @@ test("every frame of every animation stays on the stage and draws the character"
 test("the next animation is never the one that just played", () => {
   const sprite = sprites[0]
 
-  for (const previous of thinking(sprite)) {
+  for (const previous of [...thinking(sprite), ...tinkering(sprite)]) {
     for (const roll of [0, 0.5, 0.999]) {
       expect(nextAnimation(sprite, previous.id, () => roll).id).not.toBe(previous.id)
     }
