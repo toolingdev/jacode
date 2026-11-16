@@ -40,6 +40,7 @@ import {
 import { SessionHeaderSpacer } from "@/session/header/session-header"
 import { SessionHeaderGap } from "@/session/header/drag-area"
 import { SessionWorkingIndicator } from "@/session/header/session-working-indicator"
+import { SessionMascot } from "@/mascot/session"
 
 type BlockingTask = { type: "shell"; partID: string; id?: string; label?: string; started: number }
 
@@ -524,6 +525,7 @@ function MessageTimelineView(
         when={props.next}
         fallback={
           <div class={`flex h-9 items-center gap-2 pt-3 text-[13px] font-[530] leading-text-compact ${turnPadding()}`}>
+            <SessionMascot working={live() && showWorking()} />
             <Show when={live() && showWorking()}>
               <div data-component="session-working" role="status">
                 <TextShimmer text={language.t("session.timeline.working")} active />
@@ -542,6 +544,7 @@ function MessageTimelineView(
           label={live() && working() ? language.t(`session.timeline.status.${nextStatus() ?? "working"}`) : undefined}
           collapsed={live() && liveThought() && !working() && !backgroundHintPresence.present()}
         >
+          <SessionMascot working={live() && working()} />
           {hint(live)}
         </StatusLane>
       </Show>
