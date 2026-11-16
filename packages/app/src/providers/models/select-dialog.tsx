@@ -56,6 +56,7 @@ import {
 import { formatKeybindParts, matchKeybind, parseKeybind } from "@/shell/commands/command"
 import { createEventListener } from "@solid-primitives/event-listener"
 import { matchesModelSearch } from "./search"
+import { AUTO, isAutoModel } from "./auto"
 import { SettingsList } from "@/settings/list"
 import {
   CONSOLE_GROUP_KEY,
@@ -505,9 +506,27 @@ function createModelSelectorController(input: {
       return Array.from(byProvider, ([category, items]) => ({ category, items })).sort(sortModelGroups)
     },
     current: () => {
+      const chosen = model.key()
+
+      if (chosen && isAutoModel(chosen)) return `${chosen.providerID}:${chosen.modelID}`
       const value = model.current()
 
       return value ? modelKey(value) : undefined
+    },
+    // Auto rows: one for every provider, then one leading each provider's own models.
+    withAuto: (groups: { category: string; items: ModelItem[] }[], title: string) => {
+      const all = model.auto?.({ providerID: AUTO, modelID: AUTO })
+
+      return [
+        ...(all && !input.provider()
+          ? [{ category: AUTO, title, items: [{ ...all, id: AUTO, provider: { ...all.provider, id: AUTO, name: title } }] }]
+          : []),
+        ...groups.map((group) => {
+          const own = model.auto?.({ providerID: group.category, modelID: AUTO })
+
+          return own ? { ...group, items: [{ ...own, id: AUTO }, ...group.items] } : group
+        }),
+      ]
     },
     select: (item: ModelItem, variant?: string | null) => {
       model.set({ modelID: item.id, providerID: item.provider.id }, { recent: true })
@@ -657,7 +676,7 @@ export function DialogSelectModel(props: { provider?: string; model?: ModelState
     if (query.search.trim()) return providers
 
     return withSections({
-      groups: providers,
+      groups: controller.withAuto(providers, language.t("dialog.model.auto")),
       favorites: controller.favorites(),
       recent: controller.recent(),
       titles: { favorite: language.t("dialog.model.favorites"), recent: language.t("dialog.model.recent") },

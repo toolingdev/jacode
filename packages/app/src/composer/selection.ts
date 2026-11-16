@@ -7,6 +7,7 @@ import { useProviders } from "@/providers/catalog/providers"
 import { useData } from "@/runtime/server/current"
 import { normalizeAgentList, normalizeProviderList } from "@/runtime/server/global-sync/utils"
 import { useModels } from "@/providers/models/models"
+import { createAutoSelection, isAutoModel } from "@/providers/models/auto"
 import {
   cycleModelVariant,
   durableVariantSelection,
@@ -115,7 +116,8 @@ export function createComposerControls(input: { model?: ModelSelection } = {}) {
         providerName:
           key &&
           composerProviderName(
-            key.providerID,
+            // Auto across providers names the provider it chose.
+            (isAutoModel(key) ? selection.current()?.provider.id : undefined) ?? key.providerID,
             providers.all(),
             providers.connected().map((provider) => provider.id),
           ),
@@ -154,13 +156,16 @@ export function createComposerModelSelection(input: {
   const providers = useProviders(() => sdk().directory)
   const connected = createMemo(() => new Set(providers.connected().map((item) => item.id)))
 
-  const valid = (model: Pick<ModelKey, "providerID" | "modelID">) => {
+  const catalogModel = (model: Pick<ModelKey, "providerID" | "modelID">) => {
     const provider = providers.all().get(model.providerID)
 
     return !!provider?.models[model.modelID] && connected().has(model.providerID)
   }
 
-  const recent = () => models.recent.list().find(valid)
+  // An Auto choice is as valid as a catalog model, so a draft keeps it like any other selection.
+  const valid = (model: Pick<ModelKey, "providerID" | "modelID">): boolean => auto.valid(model)
+
+  const recent = () => models.recent.list().find(catalogModel)
 
   const fallback = () =>
     providers.connected().flatMap((provider) => {
@@ -168,6 +173,15 @@ export function createComposerModelSelection(input: {
 
       return modelID ? [{ providerID: provider.id, modelID }] : []
     })[0]
+
+  const auto = createAutoSelection({
+    valid: catalogModel,
+    connected: (providerID) => connected().has(providerID),
+    fallback: () =>
+      [input.agent()?.model, configuredModel(), recent(), fallback()].find(
+        (item): item is ModelKey => !!item && catalogModel(item),
+      ),
+  })
 
   const key = () => {
     if (!configuredModel.ready()) return
@@ -180,7 +194,7 @@ export function createComposerModelSelection(input: {
   const current = () => {
     const item = key()
 
-    return item ? models.find(item) : undefined
+    return item ? auto.find(item) : undefined
   }
 
   const recentModels = createMemo(() =>
@@ -207,6 +221,7 @@ export function createComposerModelSelection(input: {
       ),
     ready: Object.assign(() => models.ready() && configuredModel.ready(), { promise: models.ready.promise }),
     key,
+    auto: auto.resolve,
     current,
     recent: recentModels,
     favorite: { list: favoriteModels, toggle: models.favorite.toggle },
@@ -234,7 +249,8 @@ export function createComposerModelSelection(input: {
           item ? { ...item, variant: same ? (selection.variant.current() ?? null) : undefined } : undefined,
         )
 
-        if (!item) return
+        // Auto is a choice, not a catalog model: it has no visibility and is not a recent model.
+        if (!item || isAutoModel(item)) return
         models.setVisibility(item, true)
 
         if (options?.recent) models.recent.push(item)

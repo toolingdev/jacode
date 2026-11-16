@@ -10,6 +10,7 @@ import { Persist, persisted } from "@/runtime/persistence/storage"
 import { Persistence } from "@/runtime/persistence/schema"
 import { usePlatform, type Platform } from "@/runtime/platform/platform"
 import { hasCustomAgent, resolveAgent } from "./agent"
+import { createAutoSelection, isAutoModel } from "./auto"
 import {
   createModelSelectionState,
   editSelection,
@@ -358,11 +359,14 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
     // A draft's selection is this provider's own, so two drafts on one workspace choose independently.
     const [draft, setDraft] = createSignal<Selection>()
 
-    const validModel = (model: Pick<ModelKey, "providerID" | "modelID">) => {
+    const catalogModel = (model: Pick<ModelKey, "providerID" | "modelID">) => {
       const provider = providers.all().get(model.providerID)
 
       return !!provider?.models[model.modelID] && connected().has(model.providerID)
     }
+
+    // An Auto choice is as valid as a catalog model, so it survives everywhere a selection is checked.
+    const validModel = (model: Pick<ModelKey, "providerID" | "modelID">): boolean => auto.valid(model)
 
     const firstModel = (...items: Array<() => ModelKey | undefined>) => {
       for (const item of items) {
@@ -400,6 +404,17 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         if (validModel(model)) return model
       }
     }
+
+    // Declared before `fallback`, whose first run already validates models.
+    const auto = createAutoSelection({
+      valid: catalogModel,
+      connected: (providerID) => connected().has(providerID),
+      fallback: () => {
+        const model = fallback()
+
+        return model && !isAutoModel(model) ? model : undefined
+      },
+    })
 
     const fallback = createMemo(() => firstModel(configuredModel, recentModel, defaultModel))
 
@@ -476,7 +491,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
 
       if (!item) return
 
-      return models.find(item)
+      return auto.find(item)
     })
 
     const ready = () => workspace().ready()
@@ -560,6 +575,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
     const model = {
       ready: Object.assign(() => models.ready() && configuredModel.ready(), { promise: models.ready.promise }),
       key,
+      auto: auto.resolve,
       preview,
       current,
       recent,
@@ -620,6 +636,9 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
 
           // A session selection owns its variant even when preferences change in another session.
           if (id() && !same) choose(item, durableVariantSelection(model.variant.current()))
+
+          // Auto is a choice, not a catalog model: it has no visibility and is not a recent model.
+          if (isAutoModel(item)) return
           models.setVisibility(item, true)
 
           if (!options?.recent) return
@@ -730,5 +749,5 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
   },
 })
 
-export type ModelSelection = Omit<ReturnType<typeof useLocal>["model"], "trackSessionCommit" | "preview"> &
-  Partial<Pick<ReturnType<typeof useLocal>["model"], "trackSessionCommit" | "preview">>
+export type ModelSelection = Omit<ReturnType<typeof useLocal>["model"], "trackSessionCommit" | "preview" | "auto"> &
+  Partial<Pick<ReturnType<typeof useLocal>["model"], "trackSessionCommit" | "preview" | "auto">>
