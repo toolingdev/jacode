@@ -15,6 +15,16 @@ export const WEATHER_CARD_STYLES = [
 
 export type WeatherCardStyle = (typeof WEATHER_CARD_STYLES)[number]
 
+/** What can be picked: a look, or a different one for every visual. */
+export const RANDOM = "random"
+
+/** The look a visual takes for a pick: the pick itself, or the look `roll` (0 up to 1) lands on when it is random. */
+export function resolveLook<Look extends string>(pick: Look | typeof RANDOM, looks: readonly Look[], roll: number) {
+  if (pick !== RANDOM) return pick
+
+  return looks[Math.min(Math.floor(roll * looks.length), looks.length - 1)] ?? looks[0]
+}
+
 export const CHART_STYLES = [
   "clean",
   "pixel",

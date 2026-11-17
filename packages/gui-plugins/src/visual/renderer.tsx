@@ -3,6 +3,7 @@ import { onIdle } from "@opencode/plugin/gui/builtin"
 import { lazy, onCleanup, Suspense } from "solid-js"
 import { VisualFrame } from "./frame"
 import type definition from "./index"
+import { CHART_STYLES, resolveLook, WEATHER_CARD_STYLES } from "./styles"
 
 /**
  * Fork feature: a reply can carry a live visual. A fenced code block with the language `visual` holds an HTML
@@ -15,15 +16,20 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
   ctx.add(CodeBlock, {
     languages: ["visual"],
-    render: (props) => (
-      <VisualFrame
-        id={`visual-${(next += 1)}`}
-        title={ctx.t("title")}
-        fragment={props.code}
-        weather={ctx.stores.looks.value.weather}
-        chart={ctx.stores.looks.value.chart}
-      />
-    ),
+    render: (props) => {
+      // Rolled once for this visual, so a random look stays put while the message is on screen.
+      const roll = Math.random()
+
+      return (
+        <VisualFrame
+          id={`visual-${(next += 1)}`}
+          title={ctx.t("title")}
+          fragment={props.code}
+          weather={resolveLook(ctx.stores.looks.value.weather, WEATHER_CARD_STYLES, roll)}
+          chart={resolveLook(ctx.stores.looks.value.chart, CHART_STYLES, roll)}
+        />
+      )
+    },
   })
 
   const Page = lazy(() => import("./page"))

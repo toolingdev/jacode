@@ -3,7 +3,7 @@ import { visualDocument, visualHeight, wantsChart, withChart } from "./document"
 import { WEATHER_CARD_SCRIPT } from "./card"
 import { CHART_STYLE_SCRIPT } from "./charts"
 import { WEATHER_ICON_NAMES, WEATHER_ICONS_SCRIPT } from "./icons"
-import { CHART_STYLES, WEATHER_CARD_STYLES } from "./styles"
+import { CHART_STYLES, RANDOM, resolveLook, WEATHER_CARD_STYLES } from "./styles"
 
 describe("visual document", () => {
   const page = visualDocument({ fragment: "<p>hi</p>", id: "v1", colors: { text: "#fff", blue: undefined }, dark: true })
@@ -56,5 +56,17 @@ describe("visual document", () => {
     expect(visualHeight(0)).toBe(40)
     expect(visualHeight(312.4)).toBe(312)
     expect(visualHeight(99999)).toBe(1600)
+  })
+})
+
+describe("picking a look", () => {
+  test("a picked look is itself; random lands on one of the looks by its roll", () => {
+    const looks = ["a", "b", "c", "d"] as const
+
+    expect(resolveLook("c", looks, 0.99)).toBe("c")
+    expect(resolveLook(RANDOM, looks, 0)).toBe("a")
+    expect(resolveLook(RANDOM, looks, 0.5)).toBe("c")
+    expect(resolveLook(RANDOM, looks, 0.999)).toBe("d")
+    expect(resolveLook(RANDOM, looks, 1)).toBe("d")
   })
 })

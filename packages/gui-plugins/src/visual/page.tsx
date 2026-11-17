@@ -1,9 +1,10 @@
 import { usePlugin } from "@opencode/plugin/gui"
-import { For, type JSX } from "solid-js"
+import { createSignal, For, onCleanup, type JSX } from "solid-js"
 import { VisualFrame } from "./frame"
 import type definition from "./index"
 import {
   CHART_STYLES,
+  RANDOM,
   SAMPLE_CHART_FRAGMENT,
   SAMPLE_WEATHER_FRAGMENT,
   WEATHER_CARD_STYLES,
@@ -17,19 +18,47 @@ export default function VisualsPage() {
   const ui = ctx.ui
   const looks = ctx.stores.looks
 
-  const tile = (input: { name: string; label: string; picked: boolean; pick: () => void; sample: JSX.Element }) => (
+  // The Random tiles show what they mean by stepping through the looks.
+  const [step, setStep] = createSignal(0)
+  const timer = setInterval(() => setStep((current) => current + 1), 2200)
+  onCleanup(() => clearInterval(timer))
+
+  // `picked` is read when it is shown, not when the tile is made, so the highlight follows a click.
+  const tile = (input: { label: string; picked: () => boolean; pick: () => void; sample: JSX.Element }) => (
     <button
       type="button"
       role="radio"
-      aria-checked={input.picked}
+      aria-checked={input.picked()}
       data-action="settings-visual-style"
-      class="flex min-w-0 flex-col gap-2 rounded-md border border-v2-border-border-muted p-2 text-12-regular text-v2-text-text-muted aria-checked:border-v2-border-border-strong aria-checked:bg-v2-background-bg-layer-01 aria-checked:text-v2-text-text-base"
+      class="flex min-w-0 cursor-pointer flex-col gap-2 rounded-md border border-v2-border-border-muted p-2 text-12-regular text-v2-text-text-muted hover:border-v2-border-border-strong aria-checked:border-v2-border-border-strong aria-checked:bg-v2-background-bg-layer-01 aria-checked:text-v2-text-text-base"
       onClick={input.pick}
     >
       {/* The sample is a picture here: a click on it picks the tile. */}
       <div class="pointer-events-none w-full overflow-hidden rounded-sm">{input.sample}</div>
       {input.label}
     </button>
+  )
+
+  const weatherSample = (id: string, style: () => WeatherCardStyle) => (
+    <VisualFrame
+      id={`sample-weather-${id}`}
+      title={ctx.t(`weather.${id === RANDOM ? RANDOM : style()}`)}
+      fragment={SAMPLE_WEATHER_FRAGMENT}
+      weather={style()}
+      chart="clean"
+      fixed={256}
+    />
+  )
+
+  const chartSample = (id: string, style: () => ChartStyle) => (
+    <VisualFrame
+      id={`sample-chart-${id}`}
+      title={ctx.t(`chart.${id === RANDOM ? RANDOM : style()}`)}
+      fragment={SAMPLE_CHART_FRAGMENT}
+      weather="clean"
+      chart={style()}
+      fixed={160}
+    />
   )
 
   return (
@@ -41,26 +70,25 @@ export default function VisualsPage() {
           aria-label={ctx.t("weather.title")}
           class="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-2"
         >
+          {tile({
+            label: ctx.t("weather.random"),
+            picked: () => looks.value.weather === RANDOM,
+            pick: () =>
+              looks.update((draft) => {
+                draft.weather = RANDOM
+              }),
+            sample: weatherSample(RANDOM, () => WEATHER_CARD_STYLES[step() % WEATHER_CARD_STYLES.length] ?? "clean"),
+          })}
           <For each={WEATHER_CARD_STYLES}>
-            {(style: WeatherCardStyle) =>
+            {(style) =>
               tile({
-                name: style,
                 label: ctx.t(`weather.${style}`),
-                picked: looks.value.weather === style,
+                picked: () => looks.value.weather === style,
                 pick: () =>
                   looks.update((draft) => {
                     draft.weather = style
                   }),
-                sample: (
-                  <VisualFrame
-                    id={`sample-weather-${style}`}
-                    title={ctx.t(`weather.${style}`)}
-                    fragment={SAMPLE_WEATHER_FRAGMENT}
-                    weather={style}
-                    chart="clean"
-                    fixed={256}
-                  />
-                ),
+                sample: weatherSample(style, () => style),
               })
             }
           </For>
@@ -73,26 +101,25 @@ export default function VisualsPage() {
           aria-label={ctx.t("chart.title")}
           class="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2"
         >
+          {tile({
+            label: ctx.t("chart.random"),
+            picked: () => looks.value.chart === RANDOM,
+            pick: () =>
+              looks.update((draft) => {
+                draft.chart = RANDOM
+              }),
+            sample: chartSample(RANDOM, () => CHART_STYLES[step() % CHART_STYLES.length] ?? "clean"),
+          })}
           <For each={CHART_STYLES}>
-            {(style: ChartStyle) =>
+            {(style) =>
               tile({
-                name: style,
                 label: ctx.t(`chart.${style}`),
-                picked: looks.value.chart === style,
+                picked: () => looks.value.chart === style,
                 pick: () =>
                   looks.update((draft) => {
                     draft.chart = style
                   }),
-                sample: (
-                  <VisualFrame
-                    id={`sample-chart-${style}`}
-                    title={ctx.t(`chart.${style}`)}
-                    fragment={SAMPLE_CHART_FRAGMENT}
-                    weather="clean"
-                    chart={style}
-                    fixed={160}
-                  />
-                ),
+                sample: chartSample(style, () => style),
               })
             }
           </For>

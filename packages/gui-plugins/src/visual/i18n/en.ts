@@ -6,6 +6,8 @@ export default {
   "command.group": "Settings",
   "weather.title": "Weather cards",
   "chart.title": "Charts and graphs",
+  "weather.random": "Random: a different look each time",
+  "chart.random": "Random: a different look each time",
   "weather.clean": "Clean",
   "weather.pixel": "16-bit",
   "weather.glass": "Glass",
