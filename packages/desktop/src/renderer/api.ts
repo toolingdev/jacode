@@ -27,6 +27,7 @@ export const api: ElectronAPI = {
   finishFirstLaunchOnboarding: (createDefaultProject) =>
     invoke("AppFinishFirstLaunchOnboarding", { createDefaultProject }),
   chatDirectory: () => invoke("AppChatDirectory"),
+  setKeepAwake: (enabled) => invoke("AppSetKeepAwake", { enabled }),
   checkAppExists: (appName) => invoke("AppCheckAppExists", { appName }),
   resolveAppPath: (appName) => invoke("AppResolveAppPath", { appName }),
   getStorageSnapshot: () => window.electron.storageSnapshot,

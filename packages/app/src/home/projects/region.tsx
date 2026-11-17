@@ -1,3 +1,4 @@
+import { useChatFolder } from "@/new-session/chat-folder"
 import type { HomeProjectsController } from "./controller"
 import { HomeProjectsView } from "./view"
 import type { HomeScrollController } from "../scroll"
@@ -7,16 +8,21 @@ export function HomeProjects(props: {
   scroll: HomeScrollController
   dropdown?: boolean
 }) {
+  // Fork feature: the folder that chats without a project run in is shown as Chats, not as one of the projects.
+  const chat = useChatFolder()
+
   return (
     <HomeProjectsView
       dropdown={props.dropdown}
       language={props.projects.copy.language}
       servers={props.projects.server.list()}
-      projects={props.projects.project.list()}
+      projects={props.projects.project.list().filter((project) => !chat.is(project.worktree))}
       selection={props.projects.selection.value()}
       serverHealth={props.projects.server.health}
       serverLabel={props.projects.server.label}
-      projectsForServer={props.projects.server.projects}
+      projectsForServer={(server) =>
+        props.projects.server.projects(server).filter((project) => !chat.is(project.worktree))
+      }
       collapsed={props.projects.server.collapsed}
       canRevealProject={props.projects.project.canReveal}
       hasUnread={props.projects.project.hasUnread}

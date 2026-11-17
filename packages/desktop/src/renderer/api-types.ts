@@ -22,6 +22,7 @@ export type ElectronAPI = {
   isFirstLaunchOnboardingPending(): Promise<boolean>
   finishFirstLaunchOnboarding(createDefaultProject: boolean): Promise<string | null>
   chatDirectory(): Promise<string>
+  setKeepAwake(enabled: boolean): Promise<void>
   checkAppExists(appName: string): Promise<boolean>
   resolveAppPath(appName: string): Promise<string | null>
   /** The namespaces the preload read before the page ran; `createDesktopStorage` serves each first read from it. */

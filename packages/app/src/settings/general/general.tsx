@@ -1,3 +1,4 @@
+import { KeepAwakeSetting } from "@/runtime/keep-awake"
 import { Component, Show, createMemo } from "solid-js"
 import { createMediaQuery } from "@solid-primitives/media"
 import { Select } from "@opencode/ui/select"
@@ -289,6 +290,8 @@ export const SettingsGeneral: Component = () => {
             </div>
           </SettingsRow>
         </Show>
+
+        <KeepAwakeSetting />
 
         <PluginSettingsSections page="general" section="general" />
 

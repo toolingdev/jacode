@@ -637,6 +637,8 @@ export const dict = {
 
   "home.title": "Home",
   "home.projects": "Projects",
+  "home.chats": "Chats",
+  "home.chats.new": "New chat",
   "home.projects.all": "All projects",
   "home.project.add": "Add project",
   "home.project.missing.title": "Project folder not found",
@@ -1174,6 +1176,8 @@ export const dict = {
   "settings.timeline.category.commentary": "Commentary",
 
   "settings.general.row.language.title": "Language",
+  "settings.general.row.keepAwake.title": "Keep computer awake while working",
+  "settings.general.row.keepAwake.description": "Stop this computer from sleeping while a session on it is working. The display may still turn off.",
   "settings.general.row.language.description": "Change the display language for JaCode",
   "settings.general.row.shell.title": "Terminal shell",
   "settings.general.row.shell.description": "Shell used by the terminal and agent tools",

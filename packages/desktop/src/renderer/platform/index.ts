@@ -52,6 +52,7 @@ export function createDesktopPlatform(api: ElectronAPI, windowState: DesktopWind
     },
     runDesktopMenuAction: createDesktopMenuAction(api),
     chatDirectory: () => api.chatDirectory(),
+    setKeepAwake: (enabled) => api.setKeepAwake(enabled),
     checkAppExists: async (appName) => {
       return api.checkAppExists(appName)
     },

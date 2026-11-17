@@ -74,6 +74,11 @@ export const AppSetNativeTranslations = Rpc.make("AppSetNativeTranslations", {
 
 export const AppRelaunch = Rpc.make("AppRelaunch")
 
+// Fork feature: a window asks for the computer to stay awake, or stops asking.
+export const AppSetKeepAwake = Rpc.make("AppSetKeepAwake", {
+  payload: { enabled: Schema.Boolean },
+})
+
 export const AppRpcs = RpcGroup.make(
   AppAwaitInitialization,
   AppReconnectService,
@@ -92,4 +97,5 @@ export const AppRpcs = RpcGroup.make(
   AppRecordFatalRendererError,
   AppSetNativeTranslations,
   AppRelaunch,
+  AppSetKeepAwake,
 )

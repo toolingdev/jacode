@@ -28,6 +28,7 @@ import {
   selectServerVersion,
   type ServerHealth,
 } from "@/runtime/server/health-machine"
+import { HomeChats } from "./chats"
 import { ProjectMenuItems } from "./menu"
 import { CollapsedSidebarToggleSpace } from "@/shell/sidebar-toggle"
 import "./view.css"
@@ -233,6 +234,8 @@ function HomeProjectsPanel(props: HomeProjectsViewProps) {
           }}
           onScroll={(event) => updateFades(event.currentTarget)}
         >
+          {/* Fork feature: chats that belong to no project come first, apart from the projects. */}
+          <HomeChats servers={props.servers} selection={props.selection} onSelect={props.onSelectProject} />
           <Show when={props.dropdown && props.servers.length === 1}>
             <HomeProjectNavButton
               type="button"

@@ -1,4 +1,5 @@
 import { useChatFolder } from "@/new-session/chat-folder"
+import { useKeepAwake } from "@/runtime/keep-awake"
 import { createEffect, createMemo, createSignal, Match, on, onCleanup, Show, Switch, untrack } from "solid-js"
 import { Portal } from "solid-js/web"
 import { useLocation } from "@solidjs/router"
@@ -205,6 +206,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
 
             const tabs = useTabs()
             const chat = useChatFolder()
+            useKeepAwake()
             const tabsStore = tabs.store
 
             createEffect(() => {

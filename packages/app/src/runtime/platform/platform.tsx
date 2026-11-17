@@ -120,6 +120,9 @@ type PlatformBase = {
   /** Fork feature: the folder that chats started without a project run in, made on first use (desktop only) */
   chatDirectory?(): Promise<string>
 
+  /** Fork feature: hold the computer awake, or let it sleep again (desktop only) */
+  setKeepAwake?(enabled: boolean): Promise<void>
+
   /** Check if an editor app exists (desktop only) */
   checkAppExists?(appName: string): Promise<boolean>
 
