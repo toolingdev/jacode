@@ -390,6 +390,13 @@ export type ConfigModelReasoning =
   | { supported: false }
   | { supported: true; toggle?: boolean; effort?: Array<string>; budget?: { min?: number; max?: number } }
 
+export type ConfigExperimentalDecisions = {
+  model?: string
+  models?: { [x: string]: string }
+  plan?: boolean
+  confidence?: number
+}
+
 export type ConfigShellOption = { path: string; name: string; acceptable: boolean }
 
 export type LocationPublicRef = { directory: AbsolutePath }
@@ -2629,12 +2636,7 @@ export type ConfigEntry =
           mcp_events?: boolean
           part_rows?: boolean
           image_generate?: boolean | { model?: string | { providerID: string; model: string; variant?: string } }
-          decisions?: {
-            model?: string | { providerID: string; model: string; variant?: string }
-            models?: { [x: string]: string }
-            plan?: boolean
-            confidence?: number
-          }
+          decisions?: ConfigExperimentalDecisions
           subagent_depth?: number
           location_idle_timeout?: string | false
           policies?: Array<{
@@ -5024,6 +5026,33 @@ export type ExperimentalConfigProviderRemoveInput = { readonly provider: string 
 
 export type ExperimentalConfigProviderRemoveOutput = void
 
+export type ExperimentalConfigDecisionsSetInput = {
+  readonly model?: string | undefined
+  readonly models?: { readonly [x: string]: string } | undefined
+  readonly plan?: boolean | undefined
+  readonly confidence?: number | undefined
+}
+
+export type ExperimentalConfigDecisionsSetOutput = void
+
+export type ExperimentalConfigDecisionsRemoveOutput = void
+
+export type ExperimentalConfigPluginAddInput = { readonly package: string }
+
+export type ExperimentalConfigPluginAddOutput = void
+
+export type ExperimentalConfigPluginRemoveInput = { readonly package: string }
+
+export type ExperimentalConfigPluginRemoveOutput = void
+
+export type ExperimentalConfigSkillAddInput = { readonly source: string }
+
+export type ExperimentalConfigSkillAddOutput = void
+
+export type ExperimentalConfigSkillRemoveInput = { readonly source: string }
+
+export type ExperimentalConfigSkillRemoveOutput = void
+
 /** @deprecated Use `ExperimentalSessionStatsInput`. Removed in the next minor. */
 export type SessionStatsInput = ExperimentalSessionStatsInput
 
@@ -5215,3 +5244,36 @@ export type ConfigProviderRemoveInput = ExperimentalConfigProviderRemoveInput
 
 /** @deprecated Use `ExperimentalConfigProviderRemoveOutput`. Removed in the next minor. */
 export type ConfigProviderRemoveOutput = ExperimentalConfigProviderRemoveOutput
+
+/** @deprecated Use `ExperimentalConfigDecisionsSetInput`. Removed in the next minor. */
+export type ConfigDecisionsSetInput = ExperimentalConfigDecisionsSetInput
+
+/** @deprecated Use `ExperimentalConfigDecisionsSetOutput`. Removed in the next minor. */
+export type ConfigDecisionsSetOutput = ExperimentalConfigDecisionsSetOutput
+
+/** @deprecated Use `ExperimentalConfigDecisionsRemoveOutput`. Removed in the next minor. */
+export type ConfigDecisionsRemoveOutput = ExperimentalConfigDecisionsRemoveOutput
+
+/** @deprecated Use `ExperimentalConfigPluginAddInput`. Removed in the next minor. */
+export type ConfigPluginAddInput = ExperimentalConfigPluginAddInput
+
+/** @deprecated Use `ExperimentalConfigPluginAddOutput`. Removed in the next minor. */
+export type ConfigPluginAddOutput = ExperimentalConfigPluginAddOutput
+
+/** @deprecated Use `ExperimentalConfigPluginRemoveInput`. Removed in the next minor. */
+export type ConfigPluginRemoveInput = ExperimentalConfigPluginRemoveInput
+
+/** @deprecated Use `ExperimentalConfigPluginRemoveOutput`. Removed in the next minor. */
+export type ConfigPluginRemoveOutput = ExperimentalConfigPluginRemoveOutput
+
+/** @deprecated Use `ExperimentalConfigSkillAddInput`. Removed in the next minor. */
+export type ConfigSkillAddInput = ExperimentalConfigSkillAddInput
+
+/** @deprecated Use `ExperimentalConfigSkillAddOutput`. Removed in the next minor. */
+export type ConfigSkillAddOutput = ExperimentalConfigSkillAddOutput
+
+/** @deprecated Use `ExperimentalConfigSkillRemoveInput`. Removed in the next minor. */
+export type ConfigSkillRemoveInput = ExperimentalConfigSkillRemoveInput
+
+/** @deprecated Use `ExperimentalConfigSkillRemoveOutput`. Removed in the next minor. */
+export type ConfigSkillRemoveOutput = ExperimentalConfigSkillRemoveOutput

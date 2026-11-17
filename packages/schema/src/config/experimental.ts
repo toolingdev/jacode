@@ -6,6 +6,27 @@ import { ConfigFlag } from "./flag.js"
 import { ConfigModel } from "./model.js"
 import { ConfigPolicy } from "./policy.js"
 
+// Fork feature: a decision model answers small questions about each prompt before the session model runs.
+export interface Decisions extends Schema.Schema.Type<typeof Decisions> {}
+export const Decisions = Schema.Struct({
+  // A plain string, not a model selection: the client codegen cannot carry a selection's branded IDs in a payload.
+  model: Schema.String.pipe(optional).annotate({
+    description:
+      "The decision model that answers, as providerID/modelID. Any connected model of type decision works. Defaults to openrouter/~typesafe/jev-latest.",
+  }),
+  models: Schema.Record(Schema.String, Schema.String).pipe(optional).annotate({
+    description:
+      "Models a prompt may be routed between, as providerID/modelID, each with a sentence saying what it is best for. A session is rerouted only while its own model is one of these, and only within that model's provider.",
+  }),
+  plan: Schema.Boolean.pipe(optional).annotate({
+    description:
+      "Ask whether a prompt is a large task, and have the assistant reply with a short plan and wait before starting one. Defaults to true.",
+  }),
+  confidence: Schema.Finite.pipe(optional).annotate({
+    description: "How sure the decision model must be, from 0 to 1, before its answer is acted on. Defaults to 0.7.",
+  }),
+}).annotate({ identifier: "ConfigExperimental.Decisions" })
+
 export class Info extends Schema.Class<Info>("ConfigExperimental.Info")({
   portable_shell_scanner: Schema.Boolean.pipe(optional).annotate({
     description: "Deprecated: the built-in shell permission scanner is now always enabled.",
@@ -40,29 +61,10 @@ export class Info extends Schema.Class<Info>("ConfigExperimental.Info")({
       description:
         "Settings for the experimental_image_generate tool, which is offered while a connected provider has an image model.",
     }),
-  // Fork feature: a decision model answers small questions about each prompt before the session model runs.
-  decisions: Schema.Struct({
-    model: ConfigModel.Selection.pipe(optional).annotate({
-      description:
-        "The decision model that answers, as providerID/modelID. Any connected model of type decision works. Defaults to openrouter/~typesafe/jev-latest.",
-    }),
-    models: Schema.Record(Schema.String, Schema.String).pipe(optional).annotate({
-      description:
-        "Models a prompt may be routed between, as providerID/modelID, each with a sentence saying what it is best for. A session is rerouted only while its own model is one of these, and only within that model's provider.",
-    }),
-    plan: Schema.Boolean.pipe(optional).annotate({
-      description:
-        "Ask whether a prompt is a large task, and have the assistant reply with a short plan and wait before starting one. Defaults to true.",
-    }),
-    confidence: Schema.Finite.pipe(optional).annotate({
-      description: "How sure the decision model must be, from 0 to 1, before its answer is acted on. Defaults to 0.7.",
-    }),
-  })
-    .pipe(optional)
-    .annotate({
-      description:
-        "Experimental: route each prompt with a decision model. When the decision model cannot be reached or paid for, the prompt runs unrouted and the session says so.",
-    }),
+  decisions: Decisions.pipe(optional).annotate({
+    description:
+      "Experimental: route each prompt with a decision model. When the decision model cannot be reached or paid for, the prompt runs unrouted and the session says so.",
+  }),
   subagent_depth: NonNegativeInt.pipe(optional).annotate({
     description: "Maximum subagent nesting depth. Defaults to 1.",
   }),

@@ -173,6 +173,24 @@ export const dict = {
   "settings.mascot.enabled.title": "Thinking companion",
   "settings.mascot.enabled.description": "Show a pixel character while the model works.",
   "settings.mascot.character": "Companion character",
+  "settings.decisions.title": "Smart routing",
+  "settings.decisions.enabled.title": "Route each prompt",
+  "settings.decisions.enabled.description":
+    "A fast decision model reads each prompt first and picks which model should answer it. If it can't be reached or paid for, the prompt runs as usual and the session says so.",
+  "settings.decisions.decider.title": "Decision model",
+  "settings.decisions.decider.description":
+    "The model that makes the pick. It needs a connected provider that offers one.",
+  "settings.decisions.decider.default": "Jev (default)",
+  "settings.decisions.plan.title": "Plan before large tasks",
+  "settings.decisions.plan.description":
+    "When a prompt is a large task, the assistant replies with a short plan and waits for your OK before starting.",
+  "settings.decisions.models.use.description": "What this model is best for. The decision model reads this to choose.",
+  "settings.decisions.models.use.placeholder": "Quick questions and small edits",
+  "settings.decisions.models.use.label": "What {{model}} is best for",
+  "settings.decisions.models.add.title": "Add a model to route between",
+  "settings.decisions.models.add.description":
+    "A session is rerouted only while it is on one of these models, and only between models of the same provider.",
+  "settings.decisions.models.add.choose": "Choose a model",
   "settings.models.auto.title": "Auto",
   "settings.models.auto.all.title": "Auto, every provider",
   "settings.models.auto.all.description": "The model Auto uses when it may choose from every provider.",
@@ -1036,6 +1054,13 @@ export const dict = {
   "settings.extensions.availableAll": "Available to all projects",
   "settings.extensions.manageConfig": "Manage in opencode.json",
   "settings.extensions.addSkills": "How to add skills",
+  "settings.extensions.add": "Add",
+  "settings.extensions.remove": "Remove",
+  "settings.extensions.added": "Added by you",
+  "settings.extensions.plugins.add.placeholder": "Package name, git URL, or folder path",
+  "settings.extensions.plugins.add.label": "Plugin to add",
+  "settings.extensions.skills.add.placeholder": "Folder of skills, or a skills index URL",
+  "settings.extensions.skills.add.label": "Skill source to add",
   "settings.extensions.plugins.loadFailed": "Could not load plugins",
   "settings.extensions.sources.loadFailed": "Could not load extension sources",
   "settings.extensions.console.temporary":

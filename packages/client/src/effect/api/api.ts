@@ -2864,6 +2864,33 @@ export interface ConfigApi<E = never> {
     /** @deprecated Use `client.experimental.config.provider.remove`. Removed in the next minor. */
     readonly remove: ExperimentalConfigProviderRemoveOperation<E>
   }
+
+  /** @deprecated Use `client.experimental.config.decisions`. Removed in the next minor. */
+  readonly decisions: {
+    /** @deprecated Use `client.experimental.config.decisions.set`. Removed in the next minor. */
+    readonly set: ExperimentalConfigDecisionsSetOperation<E>
+
+    /** @deprecated Use `client.experimental.config.decisions.remove`. Removed in the next minor. */
+    readonly remove: ExperimentalConfigDecisionsRemoveOperation<E>
+  }
+
+  /** @deprecated Use `client.experimental.config.plugin`. Removed in the next minor. */
+  readonly plugin: {
+    /** @deprecated Use `client.experimental.config.plugin.add`. Removed in the next minor. */
+    readonly add: ExperimentalConfigPluginAddOperation<E>
+
+    /** @deprecated Use `client.experimental.config.plugin.remove`. Removed in the next minor. */
+    readonly remove: ExperimentalConfigPluginRemoveOperation<E>
+  }
+
+  /** @deprecated Use `client.experimental.config.skill`. Removed in the next minor. */
+  readonly skill: {
+    /** @deprecated Use `client.experimental.config.skill.add`. Removed in the next minor. */
+    readonly add: ExperimentalConfigSkillAddOperation<E>
+
+    /** @deprecated Use `client.experimental.config.skill.remove`. Removed in the next minor. */
+    readonly remove: ExperimentalConfigSkillRemoveOperation<E>
+  }
 }
 
 export type ExperimentalConfigUpdateInput = { readonly shell: string | null }
@@ -2910,6 +2937,47 @@ export type ExperimentalConfigProviderRemoveOperation<E = never> = (
   input: ExperimentalConfigProviderRemoveInput,
 ) => Effect.Effect<ExperimentalConfigProviderRemoveOutput, E>
 
+export type ExperimentalConfigDecisionsSetInput = {
+  readonly model?: string | undefined
+  readonly models?: { readonly [x: string]: string } | undefined
+  readonly plan?: boolean | undefined
+  readonly confidence?: number | undefined
+}
+export type ExperimentalConfigDecisionsSetOutput = void
+export type ExperimentalConfigDecisionsSetOperation<E = never> = (
+  input?: ExperimentalConfigDecisionsSetInput,
+) => Effect.Effect<ExperimentalConfigDecisionsSetOutput, E>
+
+export type ExperimentalConfigDecisionsRemoveOutput = void
+export type ExperimentalConfigDecisionsRemoveOperation<E = never> = () => Effect.Effect<
+  ExperimentalConfigDecisionsRemoveOutput,
+  E
+>
+
+export type ExperimentalConfigPluginAddInput = { readonly package: string }
+export type ExperimentalConfigPluginAddOutput = void
+export type ExperimentalConfigPluginAddOperation<E = never> = (
+  input: ExperimentalConfigPluginAddInput,
+) => Effect.Effect<ExperimentalConfigPluginAddOutput, E>
+
+export type ExperimentalConfigPluginRemoveInput = { readonly package: string }
+export type ExperimentalConfigPluginRemoveOutput = void
+export type ExperimentalConfigPluginRemoveOperation<E = never> = (
+  input: ExperimentalConfigPluginRemoveInput,
+) => Effect.Effect<ExperimentalConfigPluginRemoveOutput, E>
+
+export type ExperimentalConfigSkillAddInput = { readonly source: string }
+export type ExperimentalConfigSkillAddOutput = void
+export type ExperimentalConfigSkillAddOperation<E = never> = (
+  input: ExperimentalConfigSkillAddInput,
+) => Effect.Effect<ExperimentalConfigSkillAddOutput, E>
+
+export type ExperimentalConfigSkillRemoveInput = { readonly source: string }
+export type ExperimentalConfigSkillRemoveOutput = void
+export type ExperimentalConfigSkillRemoveOperation<E = never> = (
+  input: ExperimentalConfigSkillRemoveInput,
+) => Effect.Effect<ExperimentalConfigSkillRemoveOutput, E>
+
 export interface ExperimentalConfigApi<E = never> {
   readonly update: ExperimentalConfigUpdateOperation<E>
   readonly mcp: {
@@ -2919,6 +2987,18 @@ export interface ExperimentalConfigApi<E = never> {
   readonly provider: {
     readonly set: ExperimentalConfigProviderSetOperation<E>
     readonly remove: ExperimentalConfigProviderRemoveOperation<E>
+  }
+  readonly decisions: {
+    readonly set: ExperimentalConfigDecisionsSetOperation<E>
+    readonly remove: ExperimentalConfigDecisionsRemoveOperation<E>
+  }
+  readonly plugin: {
+    readonly add: ExperimentalConfigPluginAddOperation<E>
+    readonly remove: ExperimentalConfigPluginRemoveOperation<E>
+  }
+  readonly skill: {
+    readonly add: ExperimentalConfigSkillAddOperation<E>
+    readonly remove: ExperimentalConfigSkillRemoveOperation<E>
   }
 }
 
@@ -3203,6 +3283,57 @@ export type ConfigProviderRemoveOutput = ExperimentalConfigProviderRemoveOutput
 
 /** @deprecated Use `ExperimentalConfigProviderRemoveOperation`. Removed in the next minor. */
 export type ConfigProviderRemoveOperation<E = never> = ExperimentalConfigProviderRemoveOperation<E>
+
+/** @deprecated Use `ExperimentalConfigDecisionsSetInput`. Removed in the next minor. */
+export type ConfigDecisionsSetInput = ExperimentalConfigDecisionsSetInput
+
+/** @deprecated Use `ExperimentalConfigDecisionsSetOutput`. Removed in the next minor. */
+export type ConfigDecisionsSetOutput = ExperimentalConfigDecisionsSetOutput
+
+/** @deprecated Use `ExperimentalConfigDecisionsSetOperation`. Removed in the next minor. */
+export type ConfigDecisionsSetOperation<E = never> = ExperimentalConfigDecisionsSetOperation<E>
+
+/** @deprecated Use `ExperimentalConfigDecisionsRemoveOutput`. Removed in the next minor. */
+export type ConfigDecisionsRemoveOutput = ExperimentalConfigDecisionsRemoveOutput
+
+/** @deprecated Use `ExperimentalConfigDecisionsRemoveOperation`. Removed in the next minor. */
+export type ConfigDecisionsRemoveOperation<E = never> = ExperimentalConfigDecisionsRemoveOperation<E>
+
+/** @deprecated Use `ExperimentalConfigPluginAddInput`. Removed in the next minor. */
+export type ConfigPluginAddInput = ExperimentalConfigPluginAddInput
+
+/** @deprecated Use `ExperimentalConfigPluginAddOutput`. Removed in the next minor. */
+export type ConfigPluginAddOutput = ExperimentalConfigPluginAddOutput
+
+/** @deprecated Use `ExperimentalConfigPluginAddOperation`. Removed in the next minor. */
+export type ConfigPluginAddOperation<E = never> = ExperimentalConfigPluginAddOperation<E>
+
+/** @deprecated Use `ExperimentalConfigPluginRemoveInput`. Removed in the next minor. */
+export type ConfigPluginRemoveInput = ExperimentalConfigPluginRemoveInput
+
+/** @deprecated Use `ExperimentalConfigPluginRemoveOutput`. Removed in the next minor. */
+export type ConfigPluginRemoveOutput = ExperimentalConfigPluginRemoveOutput
+
+/** @deprecated Use `ExperimentalConfigPluginRemoveOperation`. Removed in the next minor. */
+export type ConfigPluginRemoveOperation<E = never> = ExperimentalConfigPluginRemoveOperation<E>
+
+/** @deprecated Use `ExperimentalConfigSkillAddInput`. Removed in the next minor. */
+export type ConfigSkillAddInput = ExperimentalConfigSkillAddInput
+
+/** @deprecated Use `ExperimentalConfigSkillAddOutput`. Removed in the next minor. */
+export type ConfigSkillAddOutput = ExperimentalConfigSkillAddOutput
+
+/** @deprecated Use `ExperimentalConfigSkillAddOperation`. Removed in the next minor. */
+export type ConfigSkillAddOperation<E = never> = ExperimentalConfigSkillAddOperation<E>
+
+/** @deprecated Use `ExperimentalConfigSkillRemoveInput`. Removed in the next minor. */
+export type ConfigSkillRemoveInput = ExperimentalConfigSkillRemoveInput
+
+/** @deprecated Use `ExperimentalConfigSkillRemoveOutput`. Removed in the next minor. */
+export type ConfigSkillRemoveOutput = ExperimentalConfigSkillRemoveOutput
+
+/** @deprecated Use `ExperimentalConfigSkillRemoveOperation`. Removed in the next minor. */
+export type ConfigSkillRemoveOperation<E = never> = ExperimentalConfigSkillRemoveOperation<E>
 
 /** @deprecated Use `ExperimentalGenerateApi`. Removed in the next minor. */
 export type GenerateApi<E = never> = ExperimentalGenerateApi<E>

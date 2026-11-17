@@ -93,6 +93,60 @@ export const ConfigHandler = HttpApiBuilder.group(Api, "server.config", (handler
       }),
     )
     .handle(
+      "config.decisions.set",
+      Effect.fn(function* (ctx) {
+        const config = yield* Config.Service
+        if (!config.decisions) return yield* Effect.die(new Error("Config updates are unavailable"))
+        yield* config.decisions(ctx.payload).pipe(Effect.orDie)
+        return HttpApiSchema.NoContent.make()
+      }),
+    )
+    .handle(
+      "config.decisions.remove",
+      Effect.fn(function* () {
+        const config = yield* Config.Service
+        if (!config.decisions) return yield* Effect.die(new Error("Config updates are unavailable"))
+        yield* config.decisions(undefined).pipe(Effect.orDie)
+        return HttpApiSchema.NoContent.make()
+      }),
+    )
+    .handle(
+      "config.plugin.add",
+      Effect.fn(function* (ctx) {
+        const config = yield* Config.Service
+        if (!config.listed) return yield* Effect.die(new Error("Config updates are unavailable"))
+        yield* config.listed("plugins", ctx.payload.package.trim(), true).pipe(Effect.orDie)
+        return HttpApiSchema.NoContent.make()
+      }),
+    )
+    .handle(
+      "config.plugin.remove",
+      Effect.fn(function* (ctx) {
+        const config = yield* Config.Service
+        if (!config.listed) return yield* Effect.die(new Error("Config updates are unavailable"))
+        yield* config.listed("plugins", ctx.payload.package.trim(), false).pipe(Effect.orDie)
+        return HttpApiSchema.NoContent.make()
+      }),
+    )
+    .handle(
+      "config.skill.add",
+      Effect.fn(function* (ctx) {
+        const config = yield* Config.Service
+        if (!config.listed) return yield* Effect.die(new Error("Config updates are unavailable"))
+        yield* config.listed("skills", ctx.payload.source.trim(), true).pipe(Effect.orDie)
+        return HttpApiSchema.NoContent.make()
+      }),
+    )
+    .handle(
+      "config.skill.remove",
+      Effect.fn(function* (ctx) {
+        const config = yield* Config.Service
+        if (!config.listed) return yield* Effect.die(new Error("Config updates are unavailable"))
+        yield* config.listed("skills", ctx.payload.source.trim(), false).pipe(Effect.orDie)
+        return HttpApiSchema.NoContent.make()
+      }),
+    )
+    .handle(
       "config.shells",
       Effect.fn(function* () {
         const shell = yield* ShellSelect.Service

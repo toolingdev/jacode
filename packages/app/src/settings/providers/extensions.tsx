@@ -20,6 +20,7 @@ import { SettingsList } from "@/settings/list"
 import { createExtensionLoad, ExtensionLoadFailed } from "@/settings/extension-load"
 import type { SettingsView } from "@/settings/surface"
 import { ConsoleName, ConsoleReplaced, createConsoleSources } from "./console-link"
+import { ExtensionSources } from "./extension-sources"
 import "@/settings/settings.css"
 import "@/shell/search-list.css"
 
@@ -247,10 +248,8 @@ export const SettingsExtensions: Component<{
                 <span class="settings-extension-heading text-13-medium">
                   {language.t("settings.extensions.availableAll")}
                 </span>
-                <span class="text-13-regular text-v2-text-text-muted">
-                  {language.t("settings.extensions.manageConfig")}
-                </span>
               </div>
+              <ExtensionSources kind="plugins" />
               {/* The desktop's own server also lists the plugins main runs, so its rows stay while the list loads. */}
               <Show when={own() || pluginList()}>
                 <ExtensionPlugins plugins={pluginList() ?? []} own={own()} />
@@ -278,6 +277,7 @@ export const SettingsExtensions: Component<{
                   {language.t("settings.extensions.addSkills")}
                 </ExternalLink>
               </div>
+              <ExtensionSources kind="skills" />
               <SettingsList variant="catalog">
                 <For each={skills()}>
                   {(skill) => {

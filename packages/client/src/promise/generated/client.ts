@@ -334,6 +334,17 @@ import type {
   ExperimentalConfigProviderSetOutput,
   ExperimentalConfigProviderRemoveInput,
   ExperimentalConfigProviderRemoveOutput,
+  ExperimentalConfigDecisionsSetInput,
+  ExperimentalConfigDecisionsSetOutput,
+  ExperimentalConfigDecisionsRemoveOutput,
+  ExperimentalConfigPluginAddInput,
+  ExperimentalConfigPluginAddOutput,
+  ExperimentalConfigPluginRemoveInput,
+  ExperimentalConfigPluginRemoveOutput,
+  ExperimentalConfigSkillAddInput,
+  ExperimentalConfigSkillAddOutput,
+  ExperimentalConfigSkillRemoveInput,
+  ExperimentalConfigSkillRemoveOutput,
 } from "./types.js"
 import { ClientError } from "./client-error.js"
 
@@ -1850,6 +1861,88 @@ export function make(options: ClientOptions) {
               requestOptions,
             ),
         },
+        decisions: {
+          set: (input?: ExperimentalConfigDecisionsSetInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigDecisionsSetOutput>(
+              {
+                method: "PUT",
+                path: `/api/experimental/config/decisions`,
+                body: {
+                  model: input?.["model"],
+                  models: input?.["models"],
+                  plan: input?.["plan"],
+                  confidence: input?.["confidence"],
+                },
+                successStatus: 204,
+                declaredStatuses: [400, 401, 404],
+                empty: true,
+              },
+              requestOptions,
+            ),
+          remove: (requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigDecisionsRemoveOutput>(
+              {
+                method: "DELETE",
+                path: `/api/experimental/config/decisions`,
+                successStatus: 204,
+                declaredStatuses: [400, 401, 404],
+                empty: true,
+              },
+              requestOptions,
+            ),
+        },
+        plugin: {
+          add: (input: ExperimentalConfigPluginAddInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigPluginAddOutput>(
+              {
+                method: "POST",
+                path: `/api/experimental/config/plugin/add`,
+                body: { package: input["package"] },
+                successStatus: 204,
+                declaredStatuses: [400, 401, 404],
+                empty: true,
+              },
+              requestOptions,
+            ),
+          remove: (input: ExperimentalConfigPluginRemoveInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigPluginRemoveOutput>(
+              {
+                method: "POST",
+                path: `/api/experimental/config/plugin/remove`,
+                body: { package: input["package"] },
+                successStatus: 204,
+                declaredStatuses: [400, 401, 404],
+                empty: true,
+              },
+              requestOptions,
+            ),
+        },
+        skill: {
+          add: (input: ExperimentalConfigSkillAddInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigSkillAddOutput>(
+              {
+                method: "POST",
+                path: `/api/experimental/config/skill/add`,
+                body: { source: input["source"] },
+                successStatus: 204,
+                declaredStatuses: [400, 401, 404],
+                empty: true,
+              },
+              requestOptions,
+            ),
+          remove: (input: ExperimentalConfigSkillRemoveInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigSkillRemoveOutput>(
+              {
+                method: "POST",
+                path: `/api/experimental/config/skill/remove`,
+                body: { source: input["source"] },
+                successStatus: 204,
+                declaredStatuses: [400, 401, 404],
+                empty: true,
+              },
+              requestOptions,
+            ),
+        },
       },
     },
     message: {
@@ -2909,6 +3002,27 @@ export function make(options: ClientOptions) {
         set: client.experimental.config.provider.set,
         /** @deprecated Use `client.experimental.config.provider.remove`. Removed in the next minor. */
         remove: client.experimental.config.provider.remove,
+      },
+      /** @deprecated Use `client.experimental.config.decisions`. Removed in the next minor. */
+      decisions: {
+        /** @deprecated Use `client.experimental.config.decisions.set`. Removed in the next minor. */
+        set: client.experimental.config.decisions.set,
+        /** @deprecated Use `client.experimental.config.decisions.remove`. Removed in the next minor. */
+        remove: client.experimental.config.decisions.remove,
+      },
+      /** @deprecated Use `client.experimental.config.plugin`. Removed in the next minor. */
+      plugin: {
+        /** @deprecated Use `client.experimental.config.plugin.add`. Removed in the next minor. */
+        add: client.experimental.config.plugin.add,
+        /** @deprecated Use `client.experimental.config.plugin.remove`. Removed in the next minor. */
+        remove: client.experimental.config.plugin.remove,
+      },
+      /** @deprecated Use `client.experimental.config.skill`. Removed in the next minor. */
+      skill: {
+        /** @deprecated Use `client.experimental.config.skill.add`. Removed in the next minor. */
+        add: client.experimental.config.skill.add,
+        /** @deprecated Use `client.experimental.config.skill.remove`. Removed in the next minor. */
+        remove: client.experimental.config.skill.remove,
       },
     },
   }

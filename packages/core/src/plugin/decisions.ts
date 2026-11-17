@@ -83,12 +83,7 @@ export const Plugin = define({
         picks.set(event.sessionID, { model: only, pool: keys(routed), plan: false })
 
         if (questions.length === 0) return
-        const decider = settings.model
-          ? Model.Ref.make({
-              providerID: Provider.ID.make(settings.model.providerID),
-              id: Model.ID.make(settings.model.model),
-            })
-          : defaultDecider
+        const decider = settings.model ? Model.Ref.parse(settings.model) : defaultDecider
 
         const outcome = yield* generate
           .decisions({ model: decider, input: [{ type: "text", text: describe(event.prompt) }], questions })

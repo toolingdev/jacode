@@ -332,6 +332,17 @@ import type {
   ExperimentalConfigProviderSetOutput,
   ExperimentalConfigProviderRemoveInput,
   ExperimentalConfigProviderRemoveOutput,
+  ExperimentalConfigDecisionsSetInput,
+  ExperimentalConfigDecisionsSetOutput,
+  ExperimentalConfigDecisionsRemoveOutput,
+  ExperimentalConfigPluginAddInput,
+  ExperimentalConfigPluginAddOutput,
+  ExperimentalConfigPluginRemoveInput,
+  ExperimentalConfigPluginRemoveOutput,
+  ExperimentalConfigSkillAddInput,
+  ExperimentalConfigSkillAddOutput,
+  ExperimentalConfigSkillRemoveInput,
+  ExperimentalConfigSkillRemoveOutput,
 } from "../api/api.js"
 import { ClientError } from "./client-error.js"
 
@@ -2026,10 +2037,58 @@ const EndpointExperimentalConfigProviderRemove =
       raw["config.provider.remove"]({ params: { provider: input["provider"] } }).pipe(Effect.mapError(mapClientError)),
     )
 
+const EndpointExperimentalConfigDecisionsSet =
+  (raw: RawClient["server.config"]) => (input?: ExperimentalConfigDecisionsSetInput) =>
+    preserveEffect<ExperimentalConfigDecisionsSetOutput>()(
+      raw["config.decisions.set"]({
+        payload: {
+          model: input?.["model"],
+          models: input?.["models"],
+          plan: input?.["plan"],
+          confidence: input?.["confidence"],
+        },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointExperimentalConfigDecisionsRemove = (raw: RawClient["server.config"]) => () =>
+  preserveEffect<ExperimentalConfigDecisionsRemoveOutput>()(
+    raw["config.decisions.remove"]({}).pipe(Effect.mapError(mapClientError)),
+  )
+
+const EndpointExperimentalConfigPluginAdd =
+  (raw: RawClient["server.config"]) => (input: ExperimentalConfigPluginAddInput) =>
+    preserveEffect<ExperimentalConfigPluginAddOutput>()(
+      raw["config.plugin.add"]({ payload: { package: input["package"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointExperimentalConfigPluginRemove =
+  (raw: RawClient["server.config"]) => (input: ExperimentalConfigPluginRemoveInput) =>
+    preserveEffect<ExperimentalConfigPluginRemoveOutput>()(
+      raw["config.plugin.remove"]({ payload: { package: input["package"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointExperimentalConfigSkillAdd =
+  (raw: RawClient["server.config"]) => (input: ExperimentalConfigSkillAddInput) =>
+    preserveEffect<ExperimentalConfigSkillAddOutput>()(
+      raw["config.skill.add"]({ payload: { source: input["source"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointExperimentalConfigSkillRemove =
+  (raw: RawClient["server.config"]) => (input: ExperimentalConfigSkillRemoveInput) =>
+    preserveEffect<ExperimentalConfigSkillRemoveOutput>()(
+      raw["config.skill.remove"]({ payload: { source: input["source"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
 const adaptGroupExperimentalConfig = (raw: RawClient["server.config"]) => ({
   update: EndpointExperimentalConfigUpdate(raw),
   mcp: { set: EndpointExperimentalConfigMcpSet(raw), remove: EndpointExperimentalConfigMcpRemove(raw) },
   provider: { set: EndpointExperimentalConfigProviderSet(raw), remove: EndpointExperimentalConfigProviderRemove(raw) },
+  decisions: {
+    set: EndpointExperimentalConfigDecisionsSet(raw),
+    remove: EndpointExperimentalConfigDecisionsRemove(raw),
+  },
+  plugin: { add: EndpointExperimentalConfigPluginAdd(raw), remove: EndpointExperimentalConfigPluginRemove(raw) },
+  skill: { add: EndpointExperimentalConfigSkillAdd(raw), remove: EndpointExperimentalConfigSkillRemove(raw) },
 })
 
 const adaptClient = (raw: RawClient) => {
@@ -2186,6 +2245,27 @@ const adaptClient = (raw: RawClient) => {
         set: client.experimental.config.provider.set,
         /** @deprecated Use `client.experimental.config.provider.remove`. Removed in the next minor. */
         remove: client.experimental.config.provider.remove,
+      },
+      /** @deprecated Use `client.experimental.config.decisions`. Removed in the next minor. */
+      decisions: {
+        /** @deprecated Use `client.experimental.config.decisions.set`. Removed in the next minor. */
+        set: client.experimental.config.decisions.set,
+        /** @deprecated Use `client.experimental.config.decisions.remove`. Removed in the next minor. */
+        remove: client.experimental.config.decisions.remove,
+      },
+      /** @deprecated Use `client.experimental.config.plugin`. Removed in the next minor. */
+      plugin: {
+        /** @deprecated Use `client.experimental.config.plugin.add`. Removed in the next minor. */
+        add: client.experimental.config.plugin.add,
+        /** @deprecated Use `client.experimental.config.plugin.remove`. Removed in the next minor. */
+        remove: client.experimental.config.plugin.remove,
+      },
+      /** @deprecated Use `client.experimental.config.skill`. Removed in the next minor. */
+      skill: {
+        /** @deprecated Use `client.experimental.config.skill.add`. Removed in the next minor. */
+        add: client.experimental.config.skill.add,
+        /** @deprecated Use `client.experimental.config.skill.remove`. Removed in the next minor. */
+        remove: client.experimental.config.skill.remove,
       },
     },
   }

@@ -1,5 +1,6 @@
 import { Config } from "@opencode/schema/config"
 import { ConfigCustomProvider } from "@opencode/schema/config/custom-provider"
+import { ConfigExperimental } from "@opencode/schema/config/experimental"
 import { ConfigShell } from "@opencode/schema/config/shell"
 import { Mcp } from "@opencode/schema/mcp"
 import { Schema } from "effect"
@@ -97,6 +98,84 @@ export const ConfigGroup = HttpApiGroup.make("server.config")
         summary: "Delete saved provider",
         description:
           "Experimental: may change without compatibility guarantees. Remove a provider from the highest-precedence global configuration document. A provider another document defines stays configured.",
+      }),
+    ),
+  )
+  // Fork feature: the app saves these settings itself, so nobody has to edit the config file by hand.
+  .add(
+    HttpApiEndpoint.put("config.decisions.set", "/api/experimental/config/decisions", {
+      payload: ConfigExperimental.Decisions,
+      success: HttpApiSchema.NoContent,
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.decisions.set",
+        summary: "Save decision layer settings",
+        description:
+          "Experimental: may change without compatibility guarantees. Set the decision layer's settings in the highest-precedence global configuration document, replacing the ones there.",
+      }),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.delete("config.decisions.remove", "/api/experimental/config/decisions", {
+      success: HttpApiSchema.NoContent,
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.decisions.remove",
+        summary: "Turn the decision layer off",
+        description:
+          "Experimental: may change without compatibility guarantees. Remove the decision layer's settings from the highest-precedence global configuration document. Settings another document defines stay configured.",
+      }),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.post("config.plugin.add", "/api/experimental/config/plugin/add", {
+      payload: Schema.Struct({ package: Schema.String.check(Schema.isMinLength(1)) }),
+      success: HttpApiSchema.NoContent,
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.plugin.add",
+        summary: "Add plugin",
+        description:
+          "Experimental: may change without compatibility guarantees. List a plugin, as an npm or git package spec or a local path, in the highest-precedence global configuration document. The plugin is installed and loaded when configuration reloads; one already listed there is left as it is.",
+      }),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.post("config.plugin.remove", "/api/experimental/config/plugin/remove", {
+      payload: Schema.Struct({ package: Schema.String.check(Schema.isMinLength(1)) }),
+      success: HttpApiSchema.NoContent,
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.plugin.remove",
+        summary: "Remove plugin",
+        description:
+          "Experimental: may change without compatibility guarantees. Remove a plugin from the highest-precedence global configuration document. A plugin another document lists stays configured.",
+      }),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.post("config.skill.add", "/api/experimental/config/skill/add", {
+      payload: Schema.Struct({ source: Schema.String.check(Schema.isMinLength(1)) }),
+      success: HttpApiSchema.NoContent,
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.skill.add",
+        summary: "Add skill source",
+        description:
+          "Experimental: may change without compatibility guarantees. List a folder path or a skill index URL to discover skills from in the highest-precedence global configuration document. One already listed there is left as it is.",
+      }),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.post("config.skill.remove", "/api/experimental/config/skill/remove", {
+      payload: Schema.Struct({ source: Schema.String.check(Schema.isMinLength(1)) }),
+      success: HttpApiSchema.NoContent,
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.skill.remove",
+        summary: "Remove skill source",
+        description:
+          "Experimental: may change without compatibility guarantees. Remove a skill source from the highest-precedence global configuration document. A source another document lists stays configured.",
       }),
     ),
   )

@@ -6,6 +6,7 @@ import { isDeepStrictEqual } from "node:util"
 import { applyEdits, modify, type ParseError, parse } from "jsonc-parser"
 import { Context, Effect, FiberMap, Layer, Option, PubSub, Ref, Schema, Semaphore, Stream } from "effect"
 import { Directory, Document, Info, type Patch, type Entry, Event } from "@opencode/schema/config"
+import type { ConfigExperimental } from "@opencode/schema/config/experimental"
 import type { ConfigProvider } from "@opencode/schema/config/provider"
 import type { Mcp } from "@opencode/schema/mcp"
 import { Credential } from "./credential.js"
@@ -13,6 +14,7 @@ import { Bus } from "./bus.js"
 import { Watcher } from "./filesystem/watcher.js"
 import { FSUtil } from "@opencode/util/fs-util"
 import { Global } from "@opencode/util/global"
+import { isRecord } from "@opencode/util/record"
 import { Location } from "./location.js"
 import { AbsolutePath } from "./schema.js"
 import { ConfigVariable } from "./config/variable.js"
@@ -58,6 +60,17 @@ export interface Interface {
    * unrelated JSONC content. Removing a provider another document defines leaves that definition in place.
    */
   readonly provider?: (id: string, config: ConfigProvider.Info | undefined) => Effect.Effect<void, FSUtil.Error>
+  /**
+   * Fork feature: sets, or removes with `undefined`, the decision layer's settings in the highest-precedence global
+   * config document, preserving unrelated JSONC content.
+   */
+  readonly decisions?: (settings: ConfigExperimental.Decisions | undefined) => Effect.Effect<void, FSUtil.Error>
+  /**
+   * Fork feature: adds or removes one entry of the `plugins` or `skills` list in the highest-precedence global config
+   * document, preserving unrelated JSONC content. Adding an entry already listed and removing one that is not change
+   * nothing; an entry another document lists stays configured.
+   */
+  readonly listed?: (key: "plugins" | "skills", entry: string, present: boolean) => Effect.Effect<void, FSUtil.Error>
   /**
    * Replaces, or clears with `undefined`, the document an integration connection contributes. It loads right after
    * managed policies: its settings layer below remote, user, and project config, while its policies outrank theirs.
@@ -542,6 +555,26 @@ export const layer = (options?: Options) =>
         })
       })
 
+      const decisions = Effect.fn("Config.decisions")(function* (settings: ConfigExperimental.Decisions | undefined) {
+        yield* editGlobal("config.decisions", (text) =>
+          applyEdits(text, modify(text, ["experimental", "decisions"], settings, formatting)),
+        )
+      })
+
+      const listed = Effect.fn("Config.listed")(function* (key: "plugins" | "skills", entry: string, present: boolean) {
+        yield* editGlobal("config.listed", (text) => {
+          const document: unknown = parse(text, [], { allowTrailingComma: true })
+          const current = isRecord(document) && Array.isArray(document[key]) ? document[key] : []
+          // A plugin may be listed with options, as `{ package }`; it is the same plugin either way.
+          const same = (item: unknown) => item === entry || (isRecord(item) && item.package === entry)
+
+          if (current.some(same) === present) return text
+          const next = present ? [...current, entry] : current.filter((item) => !same(item))
+
+          return applyEdits(text, modify(text, [key], next.length === 0 ? undefined : next, formatting))
+        })
+      })
+
       return Service.of({
         entries: Effect.fnUntraced(function* () {
           return configs
@@ -555,6 +588,8 @@ export const layer = (options?: Options) =>
         update,
         mcp,
         provider,
+        decisions,
+        listed,
         integration: Effect.fn("Config.integration")(function* (integrationID, document) {
           if (isDeepStrictEqual(integrations.get(integrationID), document)) return
           integrations.delete(integrationID)
