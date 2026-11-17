@@ -113,3 +113,33 @@ describe("editing a saved server", () => {
     expect(readMcpForm(mcpFormOf("web", config), [], config)).toEqual({ ok: true, name: "web", config })
   })
 })
+
+describe("startup wait", () => {
+  test("is saved in milliseconds and read back in seconds", () => {
+    const result = readMcpForm({ ...emptyMcpForm, name: "trade", command: "/run.sh", startup: "120" }, [])
+
+    expect(result).toEqual({
+      ok: true,
+      name: "trade",
+      config: { type: "local", command: ["/run.sh"], timeout: { startup: 120000 } },
+    })
+    expect(result.ok && mcpFormOf("trade", result.config).startup).toBe("120")
+  })
+
+  test("clearing it drops only the startup wait of an edited server", () => {
+    const original = { type: "local" as const, command: ["/run.sh"], timeout: { startup: 60000, execution: 5000 } }
+
+    expect(readMcpForm({ ...mcpFormOf("trade", original), startup: "" }, [], original)).toEqual({
+      ok: true,
+      name: "trade",
+      config: { type: "local", command: ["/run.sh"], timeout: { execution: 5000 } },
+    })
+  })
+
+  test("rejects anything but a whole number of seconds", () => {
+    expect(readMcpForm({ ...emptyMcpForm, name: "trade", command: "/run.sh", startup: "soon" }, [])).toEqual({
+      ok: false,
+      errors: { name: undefined, command: undefined, environment: undefined, startup: "startup.invalid" },
+    })
+  })
+})

@@ -8,6 +8,8 @@ export type McpForm = {
   readonly environment: string
   readonly url: string
   readonly headers: string
+  /** Fork feature: how many seconds the server gets to start, for one that waits on an approval prompt. */
+  readonly startup: string
 }
 
 /** What is wrong with one field, as an i18n key suffix under `error.`. */
@@ -17,6 +19,7 @@ export type McpFormErrors = {
   readonly environment?: "environment.invalid" | undefined
   readonly url?: "url.invalid" | undefined
   readonly headers?: "headers.invalid" | undefined
+  readonly startup?: "startup.invalid" | undefined
 }
 
 export type McpConfig = ExperimentalConfigMcpSetInput["config"]
@@ -25,7 +28,15 @@ export type McpFormResult =
   | { readonly ok: true; readonly name: string; readonly config: McpConfig }
   | { readonly ok: false; readonly errors: McpFormErrors }
 
-export const emptyMcpForm: McpForm = { name: "", type: "local", command: "", environment: "", url: "", headers: "" }
+export const emptyMcpForm: McpForm = {
+  name: "",
+  type: "local",
+  command: "",
+  environment: "",
+  url: "",
+  headers: "",
+  startup: "",
+}
 
 /**
  * The server config a filled form describes, or what to fix. Only the fields of the chosen type are read. Values are
@@ -42,28 +53,39 @@ export function readMcpForm(form: McpForm, taken: readonly string[], original?: 
         ? "name.taken"
         : undefined
 
+  const startup = form.startup.trim()
+  const seconds = Number(startup)
+  const startupError = startup !== "" && !(Number.isInteger(seconds) && seconds > 0) ? "startup.invalid" : undefined
+  // An empty box leaves the server its default wait; the other timeouts of an edited server stay as they were.
+  const { startup: _startup, ...waits } = original?.timeout ?? {}
+  const wait = startup === "" ? waits : { ...waits, startup: seconds * 1000 }
+  const timeout = Object.keys(wait).length > 0 ? { timeout: wait } : {}
+
   if (form.type === "remote") {
     const url = form.url.trim()
     const headers = pairs(form.headers, ":")
     const valid = URL.canParse(url) && /^https?:$/.test(new URL(url).protocol)
 
-    if (nameError || !valid || !headers)
+    if (nameError || !valid || !headers || startupError)
       return {
         ok: false,
         errors: {
           name: nameError,
           url: valid ? undefined : "url.invalid",
           headers: headers ? undefined : "headers.invalid",
+          startup: startupError,
         },
       }
 
     // An edit keeps what the form has no field for, such as timeouts; a cleared headers box removes the headers.
-    const { headers: _, ...kept } = original?.type === "remote" ? original : { type: "remote" as const, url }
+    const { headers: _, timeout: _timeout, ...kept } =
+      original?.type === "remote" ? original : { type: "remote" as const, url }
 
     return {
       ok: true,
       name,
-      config: Object.keys(headers).length > 0 ? { ...kept, url, headers } : { ...kept, url },
+      config:
+        Object.keys(headers).length > 0 ? { ...kept, ...timeout, url, headers } : { ...kept, ...timeout, url },
     }
   }
 
@@ -71,31 +93,39 @@ export function readMcpForm(form: McpForm, taken: readonly string[], original?: 
   const environment = pairs(form.environment, "=")
   const commandError = !command ? "command.quote" : command.length === 0 ? "command.required" : undefined
 
-  if (nameError || !command || commandError || !environment)
+  if (nameError || !command || commandError || !environment || startupError)
     return {
       ok: false,
       errors: {
         name: nameError,
         command: commandError,
         environment: environment ? undefined : "environment.invalid",
+        startup: startupError,
       },
     }
 
-  const { environment: _, ...kept } = original?.type === "local" ? original : { type: "local" as const, command }
+  const { environment: _, timeout: _timeout, ...kept } =
+    original?.type === "local" ? original : { type: "local" as const, command }
 
   return {
     ok: true,
     name,
-    config: Object.keys(environment).length > 0 ? { ...kept, command, environment } : { ...kept, command },
+    config:
+      Object.keys(environment).length > 0
+        ? { ...kept, ...timeout, command, environment }
+        : { ...kept, ...timeout, command },
   }
 }
 
 /** A saved server as the form shows it for editing. An argument that holds spaces is quoted, so it reads back whole. */
 export function mcpFormOf(name: string, config: McpConfig): McpForm {
+  const startup = config.timeout?.startup ? String(config.timeout.startup / 1000) : ""
+
   if (config.type === "remote")
     return {
       ...emptyMcpForm,
       name,
+      startup,
       type: "remote",
       url: config.url,
       headers: Object.entries(config.headers ?? {})
@@ -106,6 +136,7 @@ export function mcpFormOf(name: string, config: McpConfig): McpForm {
   return {
     ...emptyMcpForm,
     name,
+    startup,
     command: config.command
       .map((part) => (/^[^\s"']+$/.test(part) ? part : part.includes('"') ? `'${part}'` : `"${part}"`))
       .join(" "),

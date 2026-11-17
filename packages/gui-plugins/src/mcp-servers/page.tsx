@@ -88,6 +88,43 @@ export default function McpServersPage() {
     )
   }
 
+  // Fork feature: a server runs once per folder, so one that failed to start, say because an approval prompt was
+  // missed, is down in each folder on its own. This restarts it in every folder this app knows a session in, one
+  // after the other so that prompts come one at a time.
+  const reconnectEverywhere = (item: McpServer) => {
+    const current = server()
+    const where = location()
+
+    if (!current || !where) return
+
+    const places = [
+      ...new Map(
+        [
+          where,
+          current.data.location.default(),
+          ...current.data.session.list().map((session) => session.location),
+        ].flatMap((place) => (place.directory === "" ? [] : [[place.directory, place] as const])),
+      ).values(),
+    ]
+
+    act(item.name, () =>
+      places.reduce(
+        (done, place) =>
+          done.then(() =>
+            current.client.experimental.mcp
+              .disconnect({ server: item.name, location: place })
+              .then(() => current.client.experimental.mcp.connect({ server: item.name, location: place }))
+              // One folder that will not start must not keep the rest from trying.
+              .then(
+                () => undefined,
+                () => undefined,
+              ),
+          ),
+        Promise.resolve(),
+      ),
+    )
+  }
+
   const remove = async (item: McpServer) => {
     const client = server()?.client
 
@@ -204,6 +241,7 @@ export default function McpServersPage() {
                       items={[
                         { label: ctx.t("edit"), icon: "edit", onSelect: () => edit(item) },
                         { label: ctx.t("reconnect"), icon: "reset", onSelect: () => reconnect(item) },
+                        { label: ctx.t("reconnect.all"), icon: "reset", onSelect: () => reconnectEverywhere(item) },
                         { label: ctx.t("tools"), icon: "mcp", onSelect: () => void showTools(item) },
                         { type: "separator" },
                         { label: ctx.t("remove"), icon: "trash", onSelect: () => void remove(item) },
@@ -429,6 +467,20 @@ function AddDialog(props: {
             {problem("environment")}
           </div>
         </Show>
+        <label class="flex flex-col gap-1">
+          <span class="text-12-medium text-v2-text-text-muted">{ctx.t("form.startup")}</span>
+          <ui.TextInput
+            label={ctx.t("form.startup")}
+            placeholder={ctx.t("form.startup.placeholder")}
+            size="large"
+            class="w-full"
+            value={form().startup}
+            invalid={!!errors().startup}
+            onInput={(startup) => set({ startup })}
+            onSubmit={submit}
+          />
+          {problem("startup")}
+        </label>
         <Show when={failure()}>
           {(message) => <span class="text-12-regular text-v2-state-fg-danger">{message()}</span>}
         </Show>

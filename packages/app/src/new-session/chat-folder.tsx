@@ -59,6 +59,7 @@ export function useChatFolder() {
       const folder = directory()
 
       if (!local || !folder) return false
+
       // A server that has never seen the folder lists it from here on.
       if (!listed) void global.serverCtx(ServerConnection.key(local))?.projects.add(folder)
 
