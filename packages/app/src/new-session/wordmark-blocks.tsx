@@ -1,7 +1,7 @@
 import { For, Match, Switch } from "solid-js"
 import { defaultSprite, findSprite } from "@/mascot/sprites"
 import { useMascot } from "@/mascot/store"
-import { useWordmarkStyle } from "./wordmark-style"
+import { useWordmarkStyle, type WordmarkStyle } from "./wordmark-style"
 import "./wordmark-blocks.css"
 
 // Fork feature: the new session wordmark in colour and in motion. The letters are built from loose blocks, and the
@@ -59,14 +59,14 @@ const blocks = GLYPHS.map((rows, slot) =>
   })
 })
 
-/** The blocks of one letter slot. */
-export function WordmarkBlocks(props: { slot: number }) {
+/** The blocks of one letter slot, in the chosen style unless a preview names another. */
+export function WordmarkBlocks(props: { slot: number; style?: WordmarkStyle | "plain" }) {
   const wordmark = useWordmarkStyle()
 
   return (
     <g
       data-slot="wordmark-blocks"
-      data-style={wordmark.chosen.style}
+      data-style={props.style ?? wordmark.chosen.style}
       style={{ "--letter": COLORS[props.slot - 2], "--slot": `${props.slot - 2}` }}
     >
       <For each={blocks[props.slot]}>
@@ -86,17 +86,18 @@ export function WordmarkBlocks(props: { slot: number }) {
 }
 
 /** What some styles draw beside the letters: the cursor that types them, or the chosen companion hopping along. */
-export function WordmarkExtras() {
+export function WordmarkExtras(props: { style?: WordmarkStyle }) {
   const wordmark = useWordmarkStyle()
   const mascot = useMascot()
   const sprite = () => findSprite(mascot.chosen.character) ?? defaultSprite
+  const style = () => props.style ?? wordmark.chosen.style
 
   return (
     <Switch>
-      <Match when={wordmark.chosen.style === "typed"}>
-        <rect data-slot="wordmark-cursor" x="240" y="6" width="5" height="30" fill="var(--icon-base)" />
+      <Match when={style() === "typed"}>
+        <rect data-slot="wordmark-cursor" x="240" y="6" width="5" height="30" fill="var(--v2-icon-icon-base)" />
       </Match>
-      <Match when={wordmark.chosen.style === "companion"}>
+      <Match when={style() === "companion"}>
         <g data-slot="wordmark-companion">
           <g>
             {/* A sprite pixel is 1.5 units, so the 16-pixel character is one letter wide and stands on the x-height. */}

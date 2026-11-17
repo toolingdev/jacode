@@ -5,6 +5,12 @@
   opacity: 0.9;
 }
 
+/* The still, single-colour word a preview draws beneath its blocks, as the new session screen does. */
+[data-slot="wordmark-blocks"][data-style="plain"] rect {
+  fill: var(--v2-icon-icon-base);
+  opacity: 0.16;
+}
+
 /* Blocks drift together, hold, and drift apart, the way the startup mark does. */
 [data-slot="wordmark-blocks"][data-style="assemble"] rect {
   animation: wordmark-assemble 7s ease-in-out infinite both;
