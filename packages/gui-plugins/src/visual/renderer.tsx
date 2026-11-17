@@ -1,6 +1,7 @@
 import { CodeBlock, Command, SettingsPage, type Plugin } from "@opencode/plugin/gui"
 import { onIdle } from "@opencode/plugin/gui/builtin"
 import { lazy, onCleanup, Suspense } from "solid-js"
+import { CARD_LABEL_KEYS } from "./cards"
 import { VisualFrame } from "./frame"
 import type definition from "./index"
 import { CHART_STYLES, resolveLook, WEATHER_CARD_STYLES } from "./styles"
@@ -27,6 +28,7 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
           fragment={props.code}
           weather={resolveLook(ctx.stores.looks.value.weather, WEATHER_CARD_STYLES, roll)}
           chart={resolveLook(ctx.stores.looks.value.chart, CHART_STYLES, roll)}
+          labels={Object.fromEntries(CARD_LABEL_KEYS.map((key) => [key, ctx.t(`card.${key}`)]))}
         />
       )
     },

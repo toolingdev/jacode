@@ -1,4 +1,5 @@
 import { WEATHER_CARD_SCRIPT } from "./card"
+import { OUTLINE_CARD_SCRIPT, QUOTE_CARD_SCRIPT, USAGE_CARD_SCRIPT } from "./cards"
 import { CHART_STYLE_SCRIPT } from "./charts"
 import { WEATHER_ICONS_SCRIPT } from "./icons"
 import type { ChartStyle, WeatherCardStyle } from "./styles"
@@ -58,6 +59,8 @@ export function visualDocument(input: {
   /** The looks the user picked; the page's weather card and charts read them from its root element. */
   weather?: WeatherCardStyle
   chart?: ChartStyle
+  /** The words the usage and outline cards show, in the user's language; see CARD_LABEL_KEYS. */
+  labels?: Record<string, string>
 }) {
   const variables = Object.entries(input.colors)
     .flatMap(([name, value]) => (value ? [`--${name}:${value}`] : []))
@@ -84,6 +87,10 @@ body{color:var(--text);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-ser
 </style>
 <script>${WEATHER_ICONS_SCRIPT}</script>
 <script>${WEATHER_CARD_SCRIPT}</script>
+<script>window.visualLabels=${JSON.stringify(input.labels ?? {}).replaceAll("<", "\\u003c")}</script>
+<script>${USAGE_CARD_SCRIPT}</script>
+<script>${QUOTE_CARD_SCRIPT}</script>
+<script>${OUTLINE_CARD_SCRIPT}</script>
 </head>
 <body>
 <div id="visual-root">${input.fragment}</div>

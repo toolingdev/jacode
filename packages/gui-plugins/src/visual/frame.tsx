@@ -35,6 +35,8 @@ export function VisualFrame(props: {
   fragment: string
   weather: WeatherCardStyle
   chart: ChartStyle
+  /** The words the cards show; the settings samples, which show none of those cards, leave it out. */
+  labels?: Record<string, string>
   fixed?: number
 }) {
   const [height, setHeight] = createSignal(160)
@@ -71,6 +73,7 @@ export function VisualFrame(props: {
       dark,
       weather: props.weather,
       chart: props.chart,
+      labels: props.labels,
     })
   })
 

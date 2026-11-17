@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { visualDocument, visualHeight, wantsChart, withChart } from "./document"
 import { WEATHER_CARD_SCRIPT } from "./card"
+import { CARD_LABEL_KEYS, OUTLINE_CARD_SCRIPT, QUOTE_CARD_SCRIPT, USAGE_CARD_SCRIPT } from "./cards"
+import en from "./i18n/en"
 import { CHART_STYLE_SCRIPT } from "./charts"
 import { WEATHER_ICON_NAMES, WEATHER_ICONS_SCRIPT } from "./icons"
 import { CHART_STYLES, RANDOM, resolveLook, WEATHER_CARD_STYLES } from "./styles"
@@ -68,5 +70,25 @@ describe("picking a look", () => {
     expect(resolveLook(RANDOM, looks, 0.5)).toBe("c")
     expect(resolveLook(RANDOM, looks, 0.999)).toBe("d")
     expect(resolveLook(RANDOM, looks, 1)).toBe("d")
+  })
+})
+
+describe("visual cards", () => {
+  test("ride in every page, each a script that parses", () => {
+    const page = visualDocument({ fragment: "", id: "v3", colors: {}, dark: true })
+
+    expect(page).toContain(USAGE_CARD_SCRIPT)
+    expect(page).toContain(QUOTE_CARD_SCRIPT)
+    expect(page).toContain(OUTLINE_CARD_SCRIPT)
+    ;[USAGE_CARD_SCRIPT, QUOTE_CARD_SCRIPT, OUTLINE_CARD_SCRIPT].forEach((script) =>
+      expect(() => new Function(script)).not.toThrow(),
+    )
+  })
+
+  test("hands the cards their words, and has every word they ask for", () => {
+    const labelled = visualDocument({ fragment: "", id: "v2", colors: {}, dark: true, labels: { usage: "Uso </script>" } })
+
+    expect(labelled).toContain('window.visualLabels={"usage":"Uso \\u003c/script>"}')
+    expect(CARD_LABEL_KEYS.filter((key) => !(`card.${key}` in en))).toEqual([])
   })
 })

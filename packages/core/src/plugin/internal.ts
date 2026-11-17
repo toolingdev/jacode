@@ -53,6 +53,7 @@ import { Global } from "@opencode/util/global"
 import { Image } from "../image.js"
 import { InstructionDiscovery } from "../instruction-discovery.js"
 import { Integration } from "../integration.js"
+import { UsageSubscription } from "../usage-subscription.js"
 import { Job } from "../job.js"
 import { KV } from "../kv.js"
 import { Location } from "../location.js"
@@ -94,6 +95,8 @@ import { SubagentTool } from "../tool/plugin/subagent.js"
 import { TodoTool } from "../tool/plugin/todo.js"
 import { Tool } from "../tool.js"
 import { ToolOutput } from "../tool-output.js"
+import { UsageTool } from "../tool/plugin/usage.js"
+import { VerseTool } from "../tool/plugin/verse.js"
 import { WeatherTool } from "../tool/plugin/weather.js"
 import { WebFetchTool } from "../tool/plugin/webfetch.js"
 import { WebSearchTool } from "../tool/plugin/websearch.js"
@@ -177,6 +180,7 @@ const services = [
   SkillDiscovery.Service,
   Tool.Service,
   ToolOutput.Service,
+  UsageSubscription.Service,
   Watcher.Service,
   WellKnown.Service,
   Worktree.Service,
@@ -239,6 +243,7 @@ export const requirements = LayerNode.group([
   SkillDiscovery.node,
   Tool.node,
   ToolOutput.node,
+  UsageSubscription.node,
   Watcher.node,
   WellKnown.node,
   Worktree.node,
@@ -286,6 +291,8 @@ const pre = [
   SkillTool.Plugin,
   SubagentTool.Plugin,
   TodoTool.Plugin,
+  UsageTool.Plugin,
+  VerseTool.Plugin,
   WeatherTool.Plugin,
   WebFetchTool.Plugin,
   WebSearchTool.Plugin,
