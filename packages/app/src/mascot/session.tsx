@@ -4,6 +4,7 @@ import { Mascot } from "./mascot"
 import { findSprite } from "./sprites"
 import { useMascot } from "./store"
 import { useCompanionSync } from "./sync"
+import { useVisualsSync } from "@/visuals/sync"
 
 /**
  * The user's chosen character, thinking beside the timeline's working status. Nothing when turned off. Given a
@@ -14,6 +15,8 @@ export const SessionMascot: Component<{ working: boolean; sessionID?: string }> 
   const mascot = useMascot()
 
   useCompanionSync(() => props.sessionID)
+  // Mounted with the timeline of every session, which is where the visuals instruction is needed too.
+  useVisualsSync(() => props.sessionID)
 
   return (
     <Show when={mascot.chosen.enabled && props.working}>

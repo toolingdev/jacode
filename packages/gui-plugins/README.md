@@ -772,6 +772,7 @@ export const builtins = compose({
   "image-gen": imageGen,
   "mcp-servers": mcpServers,
   routing,
+  visual,
   "subscription-usage": subscriptionUsage,
 })
 ```
@@ -802,6 +803,7 @@ export const builtins = compose({
   "image-gen": { ...imageGen, windowEntry: eager(imageGenRenderer) },
   "mcp-servers": { ...mcpServers, windowEntry: eager(mcpServersRenderer) },
   routing: { ...routing, windowEntry: eager(routingRenderer) },
+  visual: { ...visual, windowEntry: eager(visualRenderer) },
   "subscription-usage": { ...subscriptionUsage, windowEntry: eager(subscriptionUsageRenderer) },
 })
 ```
