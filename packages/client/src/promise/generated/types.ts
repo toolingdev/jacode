@@ -2629,6 +2629,12 @@ export type ConfigEntry =
           mcp_events?: boolean
           part_rows?: boolean
           image_generate?: boolean | { model?: string | { providerID: string; model: string; variant?: string } }
+          decisions?: {
+            model?: string | { providerID: string; model: string; variant?: string }
+            models?: { [x: string]: string }
+            plan?: boolean
+            confidence?: number
+          }
           subagent_depth?: number
           location_idle_timeout?: string | false
           policies?: Array<{
