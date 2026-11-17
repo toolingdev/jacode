@@ -14,33 +14,26 @@ import {
   type WordmarkEvent,
   type WordmarkState,
 } from "./wordmark-machine"
+import { WordmarkBlocks, WordmarkExtras } from "./wordmark-blocks"
 import "./wordmark.css"
 
 // Each letter in the 234×42 logo viewBox, with its counter shadow, stem, and bottom-centre pivot.
 const LETTERS = [
-  {
-    cx: 12,
-    weak: "M18 30H6V18H18V30Z",
-    fill: "var(--icon-base)",
-    stem: "M18 12H6V30H18V12ZM24 36H0V6H24V36Z",
-  },
-  {
-    cx: 42,
-    weak: "M48 30H36V18H48V30Z",
-    fill: "var(--icon-base)",
-    stem: "M36 30H48V12H36V30ZM54 36H36V42H30V6H54V36Z",
-  },
+  // Fork feature: the wordmark reads "jacode". The first two slots stay empty so "code", and the lodger in its
+  // last letter, keep the places the pin board and the brick breaker measure from.
+  { cx: 12, weak: "", fill: "var(--icon-base)", stem: "" },
+  { cx: 42, weak: "", fill: "var(--icon-base)", stem: "" },
   {
     cx: 72,
-    weak: "M84 24V30H66V24H84Z",
+    weak: "",
     fill: "var(--icon-base)",
-    stem: "M84 24H66V30H84V36H60V6H84V24ZM66 18H78V12H66V18Z",
+    stem: "M66 6H84V42H60V30H66V36H78V12H66V6Z",
   },
   {
     cx: 102,
-    weak: "M108 36H96V18H108V36Z",
+    weak: "M108 12V18H90V12H108Z",
     fill: "var(--icon-base)",
-    stem: "M108 12H96V36H90V6H108V12ZM114 36H108V12H114V36Z",
+    stem: "M90 6H114V36H90V18H108V12H90V6ZM96 24V30H108V24H96Z",
   },
   {
     cx: 132,
@@ -175,7 +168,7 @@ export function NewSessionWordmark(props: {
           props.ref(el)
         }}
         data-slot="wordmark-box"
-        class="relative mx-auto aspect-[234/42] w-4/5"
+        class="relative mx-auto aspect-[234/42] w-4/5 -translate-x-[12.82%]"
       >
         <Show when={lodger}>
           <WordmarkLodger
@@ -241,6 +234,7 @@ function WordmarkLodger(props: {
                   <path d={item.weak} fill="var(--icon-weak-base)" />
                   <path d={item.stem} fill={item.fill} />
                 </g>
+                <WordmarkBlocks slot={i()} />
                 <Show when={i() === 7}>
                   <rect
                     ref={notch}
@@ -255,6 +249,7 @@ function WordmarkLodger(props: {
               </g>
             )}
           </For>
+          <WordmarkExtras />
         </svg>
         <Logo class="wordmark-shimmer absolute inset-0 size-full" />
       </div>

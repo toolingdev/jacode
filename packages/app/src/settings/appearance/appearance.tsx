@@ -5,6 +5,7 @@ import { useLanguage } from "@/runtime/i18n/language"
 import { ExternalLink } from "@/runtime/platform/external-link"
 import { SettingsList } from "@/settings/list"
 import { SettingsMascot } from "@/mascot/settings"
+import { SettingsWordmark } from "@/new-session/wordmark-settings"
 import { SettingsRow } from "@/settings/row"
 import { createAppearanceSettingsController, type AppearanceSettingsController } from "@/settings/general/controllers"
 import "@/settings/settings.css"
@@ -172,6 +173,7 @@ export const SettingsAppearance: Component = () => {
           </SettingsList>
         </div>
         <SettingsMascot />
+        <SettingsWordmark />
       </div>
     </>
   )
