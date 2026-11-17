@@ -1,14 +1,17 @@
 import { describe, expect, test } from "bun:test"
 import { visualDocument, visualHeight, wantsChart, withChart } from "./document"
+import { WEATHER_CARD_SCRIPT } from "./card"
+import { CHART_STYLE_SCRIPT } from "./charts"
 import { WEATHER_ICON_NAMES, WEATHER_ICONS_SCRIPT } from "./icons"
+import { CHART_STYLES, WEATHER_CARD_STYLES } from "./styles"
 
 describe("visual document", () => {
   const page = visualDocument({ fragment: "<p>hi</p>", id: "v1", colors: { text: "#fff", blue: undefined }, dark: true })
 
   test("carries the fragment, the theme colours it was given, and its id", () => {
     expect(page).toContain('<div id="visual-root"><p>hi</p></div>')
-    expect(page).toContain("--text:#fff")
-    expect(page).not.toContain("--blue:")
+    // Only the colours that were given are set; the rest fall back inside the page.
+    expect(page).toContain(":root{color-scheme:dark;--text:#fff}")
     expect(page).toContain('id: "v1"')
   })
 
@@ -24,15 +27,29 @@ describe("visual document", () => {
 
     expect(wantsChart(fragment)).toBe(true)
     expect(wantsChart("<p>no chart</p><script>1</script>")).toBe(false)
-    expect(withChart(fragment, "var Chart=1;'</script>'")).toBe(
-      `<canvas id="c"></canvas><script>var Chart=1;'<\\/script>'</script><script>new Chart(c, {})</script>`,
-    )
+    const filled = withChart(fragment, "var Chart=1;'</script>'")
+
+    expect(filled.startsWith(`<canvas id="c"></canvas><script>var Chart=1;'<\\/script>'</script><script>`)).toBe(true)
+    expect(filled).toContain("jacode-look")
+    expect(filled.endsWith("<script>new Chart(c, {})</script>")).toBe(true)
   })
 
   test("defines the weather icons without ending its own script early", () => {
     expect(page).toContain('customElements.define("weather-icon"')
     expect(WEATHER_ICONS_SCRIPT).not.toContain("</script")
     expect(WEATHER_ICON_NAMES.every((name) => WEATHER_ICONS_SCRIPT.includes(name))).toBe(true)
+  })
+
+  test("carries the picked looks and scripts that parse", () => {
+    const styled = visualDocument({ fragment: "", id: "v", colors: {}, dark: true, weather: "pixel", chart: "neon" })
+
+    expect(styled).toContain('data-weather-style="pixel" data-chart-style="neon"')
+    expect(page).toContain('data-weather-style="clean" data-chart-style="clean"')
+    expect(page).toContain('customElements.define("weather-card"')
+    expect(() => new Function(WEATHER_CARD_SCRIPT)).not.toThrow()
+    expect(() => new Function(CHART_STYLE_SCRIPT)).not.toThrow()
+    expect(WEATHER_CARD_STYLES.every((style) => WEATHER_CARD_SCRIPT.includes(`.s-${style}`))).toBe(true)
+    expect(CHART_STYLES.every((style) => CHART_STYLE_SCRIPT.includes(`${style}: {`))).toBe(true)
   })
 
   test("keeps the frame's height within bounds", () => {

@@ -1,0 +1,103 @@
+import { usePlugin } from "@opencode/plugin/gui"
+import { For, type JSX } from "solid-js"
+import { VisualFrame } from "./frame"
+import type definition from "./index"
+import {
+  CHART_STYLES,
+  SAMPLE_CHART_FRAGMENT,
+  SAMPLE_WEATHER_FRAGMENT,
+  WEATHER_CARD_STYLES,
+  type ChartStyle,
+  type WeatherCardStyle,
+} from "./styles"
+
+/** The Visuals settings page: one live sample per look, for weather cards and for charts; a click picks it. */
+export default function VisualsPage() {
+  const ctx = usePlugin<typeof definition>()
+  const ui = ctx.ui
+  const looks = ctx.stores.looks
+
+  const tile = (input: { name: string; label: string; picked: boolean; pick: () => void; sample: JSX.Element }) => (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={input.picked}
+      data-action="settings-visual-style"
+      class="flex min-w-0 flex-col gap-2 rounded-md border border-v2-border-border-muted p-2 text-12-regular text-v2-text-text-muted aria-checked:border-v2-border-border-strong aria-checked:bg-v2-background-bg-layer-01 aria-checked:text-v2-text-text-base"
+      onClick={input.pick}
+    >
+      {/* The sample is a picture here: a click on it picks the tile. */}
+      <div class="pointer-events-none w-full overflow-hidden rounded-sm">{input.sample}</div>
+      {input.label}
+    </button>
+  )
+
+  return (
+    <ui.SettingsLayout title={ctx.t("page.title")} description={ctx.t("page.description")}>
+      <div class="flex flex-col gap-2">
+        <h3 class="text-13-medium text-v2-text-text-base">{ctx.t("weather.title")}</h3>
+        <div
+          role="radiogroup"
+          aria-label={ctx.t("weather.title")}
+          class="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-2"
+        >
+          <For each={WEATHER_CARD_STYLES}>
+            {(style: WeatherCardStyle) =>
+              tile({
+                name: style,
+                label: ctx.t(`weather.${style}`),
+                picked: looks.value.weather === style,
+                pick: () =>
+                  looks.update((draft) => {
+                    draft.weather = style
+                  }),
+                sample: (
+                  <VisualFrame
+                    id={`sample-weather-${style}`}
+                    title={ctx.t(`weather.${style}`)}
+                    fragment={SAMPLE_WEATHER_FRAGMENT}
+                    weather={style}
+                    chart="clean"
+                    fixed={256}
+                  />
+                ),
+              })
+            }
+          </For>
+        </div>
+      </div>
+      <div class="flex flex-col gap-2 pt-4">
+        <h3 class="text-13-medium text-v2-text-text-base">{ctx.t("chart.title")}</h3>
+        <div
+          role="radiogroup"
+          aria-label={ctx.t("chart.title")}
+          class="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-2"
+        >
+          <For each={CHART_STYLES}>
+            {(style: ChartStyle) =>
+              tile({
+                name: style,
+                label: ctx.t(`chart.${style}`),
+                picked: looks.value.chart === style,
+                pick: () =>
+                  looks.update((draft) => {
+                    draft.chart = style
+                  }),
+                sample: (
+                  <VisualFrame
+                    id={`sample-chart-${style}`}
+                    title={ctx.t(`chart.${style}`)}
+                    fragment={SAMPLE_CHART_FRAGMENT}
+                    weather="clean"
+                    chart={style}
+                    fixed={160}
+                  />
+                ),
+              })
+            }
+          </For>
+        </div>
+      </div>
+    </ui.SettingsLayout>
+  )
+}

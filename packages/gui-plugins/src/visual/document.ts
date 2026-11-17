@@ -1,4 +1,7 @@
+import { WEATHER_CARD_SCRIPT } from "./card"
+import { CHART_STYLE_SCRIPT } from "./charts"
 import { WEATHER_ICONS_SCRIPT } from "./icons"
+import type { ChartStyle, WeatherCardStyle } from "./styles"
 
 // Fork feature: the page a `visual` code block runs as.
 
@@ -16,7 +19,11 @@ export function wantsChart(fragment: string) {
  */
 export function withChart(fragment: string, library: string) {
   // A closing script tag inside the library's text would end the inline script early.
-  return fragment.replace(CHART_SCRIPT, () => `<script>${library.replaceAll("</script", "<\\/script")}</script>`)
+  // The look follows the library at once, so it is in place before the fragment's own script draws a chart.
+  return fragment.replace(
+    CHART_SCRIPT,
+    () => `<script>${library.replaceAll("</script", "<\\/script")}</script><script>${CHART_STYLE_SCRIPT}</script>`,
+  )
 }
 
 /** The colours a visual is given as CSS variables, each read from one of the app's theme variables. */
@@ -43,7 +50,15 @@ export type VisualColors = Partial<Record<keyof typeof VISUAL_COLORS, string>>
  * nothing else. It cannot load, fetch or post anything over the network, so whatever it is shown stays in the frame.
  * The page reports its height under `id`, so the frame can fit it.
  */
-export function visualDocument(input: { fragment: string; id: string; colors: VisualColors; dark: boolean }) {
+export function visualDocument(input: {
+  fragment: string
+  id: string
+  colors: VisualColors
+  dark: boolean
+  /** The looks the user picked; the page's weather card and charts read them from its root element. */
+  weather?: WeatherCardStyle
+  chart?: ChartStyle
+}) {
   const variables = Object.entries(input.colors)
     .flatMap(([name, value]) => (value ? [`--${name}:${value}`] : []))
     .join(";")
@@ -57,7 +72,7 @@ export function visualDocument(input: { fragment: string; id: string; colors: Vi
   ].join("; ")
 
   return `<!doctype html>
-<html>
+<html data-weather-style="${input.weather ?? "clean"}" data-chart-style="${input.chart ?? "clean"}">
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="${policy}">
@@ -68,6 +83,7 @@ body{color:var(--text);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-ser
 *{box-sizing:border-box}
 </style>
 <script>${WEATHER_ICONS_SCRIPT}</script>
+<script>${WEATHER_CARD_SCRIPT}</script>
 </head>
 <body>
 <div id="visual-root">${input.fragment}</div>
