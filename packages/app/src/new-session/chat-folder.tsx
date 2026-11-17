@@ -1,8 +1,9 @@
 import { Icon } from "@opencode/ui/icon"
-import { createSignal, Match, Switch } from "solid-js"
+import { createEffect, createSignal, Match, Switch } from "solid-js"
 import { useLanguage } from "@/runtime/i18n/language"
 import { usePlatform } from "@/runtime/platform/platform"
 import { ServerConnection, useServers } from "@/runtime/server/registry"
+import { useGlobal } from "@/runtime/server/runtime"
 import { useTabs } from "@/shell/tabs/tabs"
 import { useWorkspaceLocation } from "@/workspaces/location"
 import { pathKey } from "@/workspaces/path-key"
@@ -16,10 +17,13 @@ const [directory, setDirectory] = createSignal<string>()
 
 let asked = false
 
+let listed = false
+
 export function useChatFolder() {
   const platform = usePlatform()
   const servers = useServers()
   const tabs = useTabs()
+  const global = useGlobal()
 
   if (!asked) {
     asked = true
@@ -29,6 +33,21 @@ export function useChatFolder() {
 
   // The folder is on this computer, so only the app's own server can run a chat in it.
   const server = () => servers.list.find(ServerConnection.builtin)
+
+  // The folder is listed with the projects, so its chats are found again where every other session is. A project is
+  // only listed once its server has resolved it, which adding does. Adding also makes it the last used project, so
+  // it is done once, the first time the server shows its projects, and not on every launch.
+  createEffect(() => {
+    const local = server()
+    const folder = directory()
+    const projects = local && global.serverCtx(ServerConnection.key(local))?.projects
+
+    if (listed || !folder || !projects || projects.list().length === 0) return
+    listed = true
+
+    if (projects.used().some((project) => pathKey(project.worktree) === pathKey(folder))) return
+    void projects.add(folder)
+  })
 
   return {
     directory,
@@ -40,6 +59,10 @@ export function useChatFolder() {
       const folder = directory()
 
       if (!local || !folder) return false
+      // A server that has never seen the folder lists it from here on.
+      if (!listed) void global.serverCtx(ServerConnection.key(local))?.projects.add(folder)
+
+      listed = true
       void tabs.newDraft({ server: ServerConnection.key(local), directory: folder, draftID }, "")
 
       return true
