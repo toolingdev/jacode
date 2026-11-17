@@ -1,3 +1,5 @@
+import { WEATHER_ICONS_SCRIPT } from "./icons"
+
 // Fork feature: the page a `visual` code block runs as.
 
 // A script tag that asks for Chart.js, from wherever a model is used to loading it.
@@ -65,6 +67,7 @@ html,body{margin:0;padding:0;background:transparent}
 body{color:var(--text);font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
 *{box-sizing:border-box}
 </style>
+<script>${WEATHER_ICONS_SCRIPT}</script>
 </head>
 <body>
 <div id="visual-root">${input.fragment}</div>
