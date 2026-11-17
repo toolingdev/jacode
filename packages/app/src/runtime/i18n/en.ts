@@ -72,6 +72,7 @@ export const dict = {
   "command.commands.search": "Search commands",
 
   "command.session.new": "New session",
+  "command.session.new.chat": "New chat without a folder",
   "command.session.search": "Search sessions",
   "command.session.previous": "Previous session",
   "command.session.next": "Next session",
@@ -767,6 +768,10 @@ export const dict = {
   "session.question.restore": "Restore question",
 
   "session.new.project.new": "New project",
+  "session.new.chat.offer": "Chat without a folder",
+  "session.new.chat.active": "No folder",
+  "session.new.chat.where": "This computer",
+  "session.new.chat.pick": "Choose a project instead",
   "session.new.project.search": "Search projects",
   "session.new.project.add": "Add project",
   "session.new.project.trigger.tooltip": "Choose project",

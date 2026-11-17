@@ -4,6 +4,7 @@ import { ServerConnection, useServers } from "@/runtime/server/registry"
 import { isServerFailed } from "@/runtime/server/health-machine"
 import { usePluginServers } from "@/runtime/plugin/servers"
 import { createProjectSessionActions } from "@/shell/tabs/project-sessions"
+import { useChatFolder } from "@/new-session/chat-folder"
 import { batch, createEffect, createMemo, createSignal, onCleanup, untrack } from "solid-js"
 import { pathKey } from "@/workspaces/path-key"
 import { addProjects } from "./projects/add"
@@ -23,6 +24,7 @@ export function createHomeController() {
   const servers = useServers()
   const pluginServers = usePluginServers()
   const sessions = createProjectSessionActions()
+  const chat = useChatFolder()
 
   const env = createMemo(
     (): HomeEnvSnapshot => ({
@@ -150,7 +152,13 @@ export function createHomeController() {
         const conn = focusedServer()
         const project = newSessionProject()
 
-        if (!conn || !project) return
+        // Fork feature: with no project to start in, a new session is a chat with no folder.
+        if (!conn || !project) {
+          chat.open()
+
+          return
+        }
+
         sessions.openProjectNewSession(conn, project.worktree)
       },
       openProjectNewSession: sessions.openProjectNewSession,

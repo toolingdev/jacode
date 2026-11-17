@@ -1,3 +1,4 @@
+import { useChatFolder } from "@/new-session/chat-folder"
 import { createEffect, createMemo, createSignal, Match, on, onCleanup, Show, Switch, untrack } from "solid-js"
 import { Portal } from "solid-js/web"
 import { useLocation } from "@solidjs/router"
@@ -203,6 +204,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
             const global = useGlobal()
 
             const tabs = useTabs()
+            const chat = useChatFolder()
             const tabsStore = tabs.store
 
             createEffect(() => {
@@ -298,7 +300,8 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                     return true
                   }
 
-                  return false
+                  // Fork feature: with no project to start in, a new session is a chat with no folder.
+                  return chat.open(draftID)
                 }
               }
             }
@@ -468,6 +471,14 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                   title: language.t("command.session.new"),
                   hidden: true,
                   onSelect: openNewTab,
+                },
+                {
+                  id: "session.new.chat",
+                  category: "tab",
+                  title: language.t("command.session.new.chat"),
+                  keybind: "mod+shift+n",
+                  disabled: !chat.available(),
+                  onSelect: () => void chat.open(),
                 },
                 current && {
                   id: "tab.close",

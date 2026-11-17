@@ -51,6 +51,7 @@ export function createDesktopPlatform(api: ElectronAPI, windowState: DesktopWind
       return () => window.removeEventListener(DragCancelEvent, callback)
     },
     runDesktopMenuAction: createDesktopMenuAction(api),
+    chatDirectory: () => api.chatDirectory(),
     checkAppExists: async (appName) => {
       return api.checkAppExists(appName)
     },

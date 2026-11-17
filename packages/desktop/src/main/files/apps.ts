@@ -1,6 +1,7 @@
 import { execFile } from "node:child_process"
 import util from "node:util"
 import { Effect, FileSystem, Path } from "effect"
+import { app } from "electron"
 
 const execFilePromise = util.promisify(execFile)
 
@@ -10,6 +11,19 @@ export const checkAppExists = Effect.fn("DesktopFiles.checkAppExists")(function*
   if (process.platform === "linux") return true
 
   return yield* checkMacosApp(appName)
+})
+
+/**
+ * Fork feature: the folder a chat runs in when the user starts one without choosing a project. It sits in the home
+ * folder, where files a chat writes are easy to find, and is made on first use.
+ */
+export const chatDirectory = Effect.fn("DesktopFiles.chatDirectory")(function* () {
+  const fs = yield* FileSystem.FileSystem
+  const path = yield* Path.Path
+  const directory = path.join(app.getPath("home"), "JaCode Chats")
+  yield* fs.makeDirectory(directory, { recursive: true })
+
+  return directory
 })
 
 export const resolveAppPath = Effect.fn("DesktopFiles.resolveAppPath")(function* (appName: string) {

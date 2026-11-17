@@ -26,6 +26,7 @@ export const api: ElectronAPI = {
   isFirstLaunchOnboardingPending: () => invoke("AppIsFirstLaunchOnboardingPending"),
   finishFirstLaunchOnboarding: (createDefaultProject) =>
     invoke("AppFinishFirstLaunchOnboarding", { createDefaultProject }),
+  chatDirectory: () => invoke("AppChatDirectory"),
   checkAppExists: (appName) => invoke("AppCheckAppExists", { appName }),
   resolveAppPath: (appName) => invoke("AppResolveAppPath", { appName }),
   getStorageSnapshot: () => window.electron.storageSnapshot,

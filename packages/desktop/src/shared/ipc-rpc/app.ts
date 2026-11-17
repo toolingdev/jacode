@@ -25,6 +25,11 @@ export const AppFinishFirstLaunchOnboarding = Rpc.make("AppFinishFirstLaunchOnbo
   success: Schema.NullOr(Schema.String),
 })
 
+// Fork feature: the folder that chats started without a project run in.
+export const AppChatDirectory = Rpc.make("AppChatDirectory", {
+  success: Schema.String,
+})
+
 export const AppCheckAppExists = Rpc.make("AppCheckAppExists", {
   payload: { appName: Schema.String },
   success: Schema.Boolean,
@@ -76,6 +81,7 @@ export const AppRpcs = RpcGroup.make(
   AppAcknowledgeDeepLinks,
   AppIsFirstLaunchOnboardingPending,
   AppFinishFirstLaunchOnboarding,
+  AppChatDirectory,
   AppCheckAppExists,
   AppResolveAppPath,
   AppSetBackgroundColor,

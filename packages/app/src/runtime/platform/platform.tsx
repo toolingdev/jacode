@@ -117,6 +117,9 @@ type PlatformBase = {
   /** Run a desktop-only menu action from the app chrome */
   runDesktopMenuAction?(action: DesktopMenuAction): Promise<void> | void
 
+  /** Fork feature: the folder that chats started without a project run in, made on first use (desktop only) */
+  chatDirectory?(): Promise<string>
+
   /** Check if an editor app exists (desktop only) */
   checkAppExists?(appName: string): Promise<boolean>
 

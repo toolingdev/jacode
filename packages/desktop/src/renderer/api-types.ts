@@ -21,6 +21,7 @@ export type ElectronAPI = {
   acknowledgeDeepLinks(attempt: number): void
   isFirstLaunchOnboardingPending(): Promise<boolean>
   finishFirstLaunchOnboarding(createDefaultProject: boolean): Promise<string | null>
+  chatDirectory(): Promise<string>
   checkAppExists(appName: string): Promise<boolean>
   resolveAppPath(appName: string): Promise<string | null>
   /** The namespaces the preload read before the page ran; `createDesktopStorage` serves each first read from it. */

@@ -2,7 +2,7 @@ import { BrowserWindow } from "electron"
 import { parseDesktopNativeBundle } from "@opencode/app/i18n/desktop-native"
 import { Effect } from "effect"
 import { AppRpcs } from "../../shared/ipc-rpc"
-import { checkAppExists, resolveAppPath } from "../files/apps"
+import { chatDirectory, checkAppExists, resolveAppPath } from "../files/apps"
 import { setForceFocus } from "../native/debug"
 import { DesktopLogging, scoped } from "../native/logging"
 import { getSpellcheckEnabled, setSpellcheckEnabled } from "../native/spellcheck"
@@ -39,6 +39,7 @@ export const appHandlers = AppRpcs.toLayer(
       AppIsFirstLaunchOnboardingPending: isFirstLaunchOnboardingPending,
       AppFinishFirstLaunchOnboarding: ({ createDefaultProject }) =>
         finishFirstLaunchOnboarding(createDefaultProject).pipe(Effect.orDie),
+      AppChatDirectory: () => chatDirectory().pipe(Effect.orDie),
       AppCheckAppExists: ({ appName }) => checkAppExists(appName).pipe(Effect.orDie),
       AppResolveAppPath: ({ appName }) => resolveAppPath(appName).pipe(Effect.orDie),
       AppSetBackgroundColor: ({ color }) => Effect.sync(() => setBackgroundColor(color)),

@@ -41,6 +41,7 @@ import {
 } from "./workspace/checkout-machine"
 import { NewSessionBranch } from "./workspace/selector"
 import { NewSessionBrickBreaker } from "./brick-breaker"
+import { NewSessionChatFolder, useChatFolder } from "./chat-folder"
 import { NewSessionPinBoard } from "./pin-board"
 import { NewSessionWordmark } from "./wordmark"
 import {
@@ -74,6 +75,8 @@ export function NewSessionView(props: {
   )
 
   const settings = useSettings()
+  const chat = useChatFolder()
+  const workspaceLocation = useWorkspaceLocation()
 
   const [wordmark, setWordmark] = createSignal(createWordmarkState(false))
   const [logo, setLogo] = createSignal<HTMLDivElement>()
@@ -126,7 +129,8 @@ export function NewSessionView(props: {
                 <div class="relative z-10">
                   <Composer model={props.composer} />
                 </div>
-                <Show when={props.project.selected()}>
+                {/* Fork feature: a chat with no project shows no project chip; it says "No folder" below instead. */}
+                <Show when={!chat.is(workspaceLocation().directory) && props.project.selected()}>
                   {(project) => (
                     <NewSessionLocation
                       project={project()}
@@ -149,6 +153,7 @@ export function NewSessionView(props: {
               <Show when={props.project.empty()}>
                 <PromptProjectAddButton controller={props.project} />
               </Show>
+              <NewSessionChatFolder project={props.project} onPick={() => location()} />
             </div>
           </div>
         </div>
