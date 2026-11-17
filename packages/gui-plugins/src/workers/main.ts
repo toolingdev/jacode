@@ -1,11 +1,20 @@
 import { readFile } from "node:fs/promises"
 import path from "node:path"
+import { Schema } from "effect"
 import { app } from "electron"
 import type { Plugin } from "@opencode/plugin/gui/main"
-import { Workers, type WorkerReport, type WorkerRequest } from "./contract"
+import { Workers, type DockerWorker, type WorkerCheck, type WorkerReport, type WorkerRequest } from "./contract"
+import { CONTAINER, docker, DockerError, ensureWorker } from "./docker"
 import { binaryName, EXIT_MARKER, readReport } from "./report"
 import script from "./setup.sh?raw"
 import { parseAddress, runOn, SshError } from "./ssh"
+
+/** How the Docker worker is doing right now, and the start that is under way, if any. */
+interface DockerLive {
+  state: DockerWorker["state"]
+  http?: DockerWorker["http"]
+  starting?: Promise<WorkerReport>
+}
 
 /**
  * Fork feature: the main-process half of the Workers settings page. It runs the worker setup script on a remote
@@ -69,10 +78,84 @@ const setup: Plugin.MainSetup = (ctx) => {
       error instanceof SshError ? failed(error.problem, error.message) : failed("connection", error.message),
     )
 
-  ctx.provide(Workers, {
+  // The Docker worker on this computer: its name and port are kept, where it answers is found out each time.
+  const saved = ctx.storage.store("docker", {
+    schema: Schema.NullOr(Schema.Struct({ name: Schema.String, port: Schema.Number })),
+    initial: null,
+  })
+
+  const live: DockerLive = { state: "stopped" }
+
+  const provider = ctx.provide(Workers, {
+    state: () => ({ docker: saved.value ? { name: saved.value.name, state: live.state, http: live.http } : null }),
     check: (request) => report(request, "check"),
     install: (request) => report(request, "install"),
+    dockerStart: (input) => start(input.name),
+    dockerResolve: async () => {
+      if (!saved.value) return null
+      await start(saved.value.name)
+
+      return live.http ?? null
+    },
+    dockerRemove: async () => {
+      await docker(["rm", "-f", CONTAINER]).catch(() => undefined)
+      saved.set(null)
+      live.state = "stopped"
+      live.http = undefined
+      provider.changed()
+    },
   })
+
+  const set = (state: DockerWorker["state"], http?: DockerWorker["http"]) => {
+    live.state = state
+    live.http = http
+    provider.changed()
+  }
+
+  // One start at a time: a second caller waits for the first one's outcome.
+  function start(name: string) {
+    if (live.starting) return live.starting
+    const checks: WorkerCheck[] = []
+
+    saved.set({ name, port: saved.value?.port ?? 0 })
+    set("starting")
+
+    live.starting = ensureWorker({
+      version: ctx.cli.version,
+      binaries,
+      port: saved.value?.port || undefined,
+      step: (step, detail) => checks.push({ status: "ok", name: step, detail }),
+    })
+      .then((worker): WorkerReport => {
+        saved.set({ name, port: worker.port })
+        set("ready", worker.http)
+
+        return { passed: true, checks, output: "" }
+      })
+      .catch((error: Error): WorkerReport => {
+        set("failed")
+
+        return {
+          passed: false,
+          checks,
+          output: error.message,
+          failure: error instanceof DockerError ? error.problem : "docker",
+        }
+      })
+      .finally(() => {
+        live.starting = undefined
+      })
+
+    return live.starting
+  }
+
+  // A worker set up before comes back with the app, but only when Docker is already running: opening the app
+  // should not start Docker on its own.
+  if (saved.value)
+    void docker(["version", "--format", "{{.Server.Arch}}"], 10_000).then(
+      () => (saved.value ? start(saved.value.name) : undefined),
+      () => undefined,
+    )
 }
 
 export default setup

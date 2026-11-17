@@ -47,7 +47,7 @@ export default {
   "connect.failed": "Installed, but the app could not connect yet. Close this, then choose Connect on its row.",
   "model.title": "One thing is left",
   "model.about":
-    "A new worker has no AI model yet. Open Settings, choose the worker at the top, and add a provider under Providers, the same way you did on this computer.",
+    "A new worker has no AI model yet. Choose Set up its models, pick the worker at the top of Settings, and add a provider the same way you did on this computer.",
   details: "Details",
   "failure.input": "That does not look like an SSH address. Use the form user@host.",
   "failure.connection":
@@ -55,10 +55,23 @@ export default {
   "failure.ssh-missing": "SSH is not installed on this computer.",
   "failure.binary":
     "This copy of JaCode does not carry the worker software for that computer's processor. Reinstall JaCode from source with the worker build.",
+  "docker.label": "Docker",
   "docker.about":
-    "A Docker worker is built from JaCode's source code, in Terminal. Run these three lines, one at a time, from the source folder:",
-  "docker.then": "The last one prints a pairing link. Close this, choose Add worker, then Connect one already set up, and paste it.",
+    "A sealed-off worker that runs on this computer, in Docker. It has its own files and its own web browser, so what it does stays apart from your own.",
+  "docker.need": "Needs Docker Desktop installed. If it is not running, it is started for you.",
+  "docker.run": "Create the worker",
+  "docker.running": "Creating the worker… the first time takes a few minutes, while its software is downloaded.",
+  "docker.passed": "The worker is running and connected. It is in the list on this page.",
+  "docker.failed": "The worker could not be created. The details below say where it stopped.",
+  "docker.exists": "This computer already has a Docker worker. Remove it from the list first to make a new one.",
+  "docker.start": "Start",
+  "docker.starting": "Starting…",
+  "docker.stopped": "Stopped",
+  "docker.menu": "Docker worker",
+  "docker.remove": "Remove",
+  "failure.docker-missing": "Docker is not installed on this computer. Install Docker Desktop, then try again.",
+  "failure.docker-stopped": "Docker did not start. Open Docker Desktop, wait until it says it is running, then try again.",
+  "failure.docker": "A Docker step failed.",
+  "models.run": "Set up its models",
   "link.about": "Close this, choose Add worker, then Connect one already set up, and paste the pairing link, or type the address and password.",
-  copy: "Copy",
-  copied: "Copied",
 }

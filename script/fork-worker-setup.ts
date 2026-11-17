@@ -57,7 +57,7 @@ if (docker) {
   const context = await mkdtemp(path.join(tmpdir(), "fork-worker-image-"))
 
   await $`cp ${built.binary} ${path.join(context, "opencode")}`
-  await $`cp ${path.join(import.meta.dir, "worker/Dockerfile")} ${path.join(import.meta.dir, "worker/entrypoint.sh")} ${context}`
+  await $`cp ${path.join(root, "packages/gui-plugins/src/workers/Dockerfile")} ${path.join(root, "packages/gui-plugins/src/workers/entrypoint.sh")} ${context}`
   await $`docker build -t jacode-worker ${context}`
   await rm(built.out, { recursive: true })
   await rm(context, { recursive: true })

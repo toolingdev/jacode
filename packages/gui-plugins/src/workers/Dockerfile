@@ -1,6 +1,7 @@
 # Fork feature: a worker as a container, for a machine that has Docker instead of systemd. It carries the server,
 # a real browser on a virtual screen, and the screen in a web page on port 6080. Built by
-# `bun script/fork-worker-setup.ts --docker`, which puts the server binary beside this file.
+# the app (Add worker, This computer inside Docker) or `bun script/fork-worker-setup.ts --docker`; either puts the
+# server binary beside this file.
 FROM debian:13-slim
 
 RUN apt-get update -qq \

@@ -10,12 +10,6 @@ const PLACES: readonly Where[] = ["server", "vps", "docker", "link"]
 
 const BROWSER: readonly WorkerRequest["browser"][] = ["auto", "yes", "no"]
 
-const DOCKER_COMMANDS = [
-  "bun script/fork-worker-setup.ts --docker",
-  "docker run -d --name jacode-worker --shm-size=1g -p 4096:4096 -p 127.0.0.1:6080:6080 -v jacode-worker:/home/worker jacode-worker",
-  "docker logs jacode-worker",
-]
-
 /** The guided way to add a worker: where it runs, then that place's own steps. */
 export default function AddWorker(props: { onClose: () => void }) {
   const ctx = usePlugin<typeof definition>()
@@ -28,11 +22,11 @@ export default function AddWorker(props: { onClose: () => void }) {
   const [name, setName] = createSignal("")
   const [browser, setBrowser] = createSignal<WorkerRequest["browser"]>("auto")
   // What is running now, and what each finished step came to.
-  const [busy, setBusy] = createSignal<"check" | "install" | "connect">()
+  const [busy, setBusy] = createSignal<"check" | "install" | "connect" | "docker">()
   const [checked, setChecked] = createSignal<WorkerReport>()
   const [installed, setInstalled] = createSignal<WorkerReport>()
   const [connected, setConnected] = createSignal<boolean>()
-  const [copied, setCopied] = createSignal<string>()
+  const [docked, setDocked] = createSignal<WorkerReport>()
 
   let body: HTMLDivElement | undefined
 
@@ -87,6 +81,39 @@ export default function AddWorker(props: { onClose: () => void }) {
     )
   }
 
+  // Builds and starts the Docker worker; the plugin's own server source then lists it, connected.
+  const dock = () => {
+    const live = workers()
+
+    if (live.status !== "active" || busy()) return
+    setBusy("docker")
+    reveal()
+    void live.value.dockerStart({ name: name().trim() || ctx.t("name.placeholder") }).then(
+      (found) => {
+        setDocked(found)
+        setBusy()
+        reveal()
+      },
+      () => {
+        setDocked({ passed: false, checks: [], output: "", failure: "docker" })
+        setBusy()
+        reveal()
+      },
+    )
+  }
+
+  const existing = () => {
+    const live = workers()
+
+    // The one being made right now is not a reason to refuse making it.
+    return live.status === "active" && !!live.value.state()?.docker && !docked() && busy() !== "docker"
+  }
+
+  const models = () => {
+    props.onClose()
+    ctx.layout.settings("providers")
+  }
+
   const edit = (set: (value: string) => void) => (value: string) => {
     set(value)
     // A changed address is another machine: what was found out about the old one no longer holds.
@@ -94,12 +121,6 @@ export default function AddWorker(props: { onClose: () => void }) {
     setInstalled()
     setConnected()
   }
-
-  const copy = (text: string) =>
-    void navigator.clipboard.writeText(text).then(
-      () => setCopied(text),
-      () => undefined,
-    )
 
   const report = (found: WorkerReport, passed: string, failed: string) => (
     <div class="flex flex-col gap-2">
@@ -226,7 +247,7 @@ export default function AddWorker(props: { onClose: () => void }) {
 
   // The one button that moves the SSH steps along: check, then install, then connect, then done.
   const next = () => {
-    if (connected()) return { label: ctx.t("wizard.done"), run: props.onClose }
+    if (connected()) return { label: ctx.t("models.run"), run: models }
 
     if (installed()?.passed) return { label: ctx.t("connect.run"), run: connect }
 
@@ -259,7 +280,20 @@ export default function AddWorker(props: { onClose: () => void }) {
                 {next().label}
               </ui.Button>
             </Match>
-            <Match when={where() === "docker" || where() === "link"}>
+            <Match when={where() === "docker" && docked()?.passed}>
+              <ui.Button variant="neutral" onClick={props.onClose}>
+                {ctx.t("wizard.done")}
+              </ui.Button>
+              <ui.Button variant="contrast" onClick={models}>
+                {ctx.t("models.run")}
+              </ui.Button>
+            </Match>
+            <Match when={where() === "docker"}>
+              <ui.Button variant="contrast" disabled={!!busy() || existing()} onClick={dock}>
+                {ctx.t("docker.run")}
+              </ui.Button>
+            </Match>
+            <Match when={where() === "link"}>
               <ui.Button variant="contrast" onClick={props.onClose}>
                 {ctx.t("wizard.done")}
               </ui.Button>
@@ -290,21 +324,37 @@ export default function AddWorker(props: { onClose: () => void }) {
           <Match when={where() === "server"}>{overSsh("server")}</Match>
           <Match when={where() === "vps"}>{overSsh("vps")}</Match>
           <Match when={where() === "docker"}>
-            <div class="flex flex-col gap-3 text-13-regular text-v2-text-text-muted">
-              <p>{ctx.t("docker.about")}</p>
-              <For each={DOCKER_COMMANDS}>
-                {(command) => (
-                  <div class="flex items-start gap-2">
-                    <pre class="min-w-0 flex-1 overflow-auto whitespace-pre-wrap rounded-[6px] bg-v2-background-bg-deep p-2 font-mono text-[11px] text-v2-text-text-base">
-                      {command}
-                    </pre>
-                    <ui.Button size="small" variant="ghost" onClick={() => copy(command)}>
-                      {ctx.t(copied() === command ? "copied" : "copy")}
-                    </ui.Button>
-                  </div>
-                )}
-              </For>
-              <p>{ctx.t("docker.then")}</p>
+            <div class="flex flex-col gap-4">
+              <div class="flex flex-col gap-1 text-12-regular text-v2-text-text-muted">
+                <p>{ctx.t("docker.about")}</p>
+                <p>{ctx.t("docker.need")}</p>
+              </div>
+              <Show
+                when={!existing()}
+                fallback={<p class="text-13-medium text-v2-state-fg-warning">{ctx.t("docker.exists")}</p>}
+              >
+                {field(ctx.t("name.label"), ctx.t("name.hint"), () => (
+                  <ui.TextInput
+                    label={ctx.t("name.label")}
+                    placeholder={ctx.t("name.placeholder")}
+                    size="large"
+                    class="w-full"
+                    value={name()}
+                    onInput={setName}
+                    onSubmit={dock}
+                  />
+                ))}
+              </Show>
+              <Show when={busy() === "docker"}>
+                <p class="text-13-regular text-v2-text-text-muted">{ctx.t("docker.running")}</p>
+              </Show>
+              <Show when={!busy() && docked()}>{(found) => report(found(), "docker.passed", "docker.failed")}</Show>
+              <Show when={docked()?.passed}>
+                <div class="rounded-[8px] border border-v2-border-border-muted p-2.5 text-12-regular text-v2-text-text-muted">
+                  <span class="text-12-medium text-v2-text-text-base">{ctx.t("model.title")}</span>
+                  <p>{ctx.t("model.about")}</p>
+                </div>
+              </Show>
             </div>
           </Match>
           <Match when={where() === "link"}>
