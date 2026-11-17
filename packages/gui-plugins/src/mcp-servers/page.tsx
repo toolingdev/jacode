@@ -3,7 +3,7 @@ import { createKeyed, createLatest, usePlugin } from "@opencode/plugin/gui"
 import { TextField } from "@opencode/ui/text-field"
 import { showToast } from "@opencode/ui/toast"
 import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
-import { emptyMcpForm, readMcpForm, type McpForm, type McpFormErrors } from "./form"
+import { emptyMcpForm, mcpFormOf, readMcpForm, type McpConfig, type McpForm, type McpFormErrors } from "./form"
 import type definition from "./index"
 
 export default function McpServersPage() {
@@ -111,10 +111,12 @@ export default function McpServersPage() {
   const showTools = (item: McpServer) =>
     ctx.dialogs.open(() => <ToolsDialog name={item.name} server={server} location={location} />)
 
-  const add = () =>
+  // Opens the form, empty to add a server or filled with a saved one to change it, and saves what it returns.
+  const openForm = (editing?: { name: string; config: McpConfig }) =>
     ctx.dialogs.open((dialog) => (
       <AddDialog
-        taken={servers().map((item) => item.name)}
+        editing={editing}
+        taken={servers().flatMap((item) => (item.name === editing?.name ? [] : [item.name]))}
         onCancel={dialog.close}
         onSubmit={(name, config) => {
           const client = server()?.client
@@ -130,6 +132,31 @@ export default function McpServersPage() {
       />
     ))
 
+  // Fork feature: change a saved server in place. Its settings come from the global config, the file the form writes.
+  const edit = (item: McpServer) => {
+    const client = server()?.client
+
+    if (!client) return
+    void client.config.get().then(
+      (entries) => {
+        const boundary = entries.findIndex((entry) => entry.type === "directory")
+
+        const config = (boundary === -1 ? entries : entries.slice(0, boundary))
+          .flatMap((entry) => (entry.type === "document" ? [entry.info.mcp?.servers?.[item.name]] : []))
+          .findLast((found) => found !== undefined)
+
+        if (!config) return showToast({ title: ctx.t("edit.elsewhere", { name: item.name }) })
+        void openForm({ name: item.name, config })
+      },
+      (cause) =>
+        showToast({
+          variant: "error",
+          title: ctx.t("failed"),
+          description: cause instanceof Error ? cause.message : String(cause),
+        }),
+    )
+  }
+
   const status = (item: McpServer) =>
     item.status.status === "failed"
       ? ctx.t("status.failed", { error: item.status.error })
@@ -140,7 +167,7 @@ export default function McpServersPage() {
       title={ctx.t("title")}
       description={ctx.t("description")}
       actions={
-        <ui.Button variant="neutral" size="small" icon="plus" disabled={!server()} onClick={add}>
+        <ui.Button variant="neutral" size="small" icon="plus" disabled={!server()} onClick={() => void openForm()}>
           {ctx.t("add")}
         </ui.Button>
       }
@@ -175,6 +202,7 @@ export default function McpServersPage() {
                       label={ctx.t("actions", { name: item.name })}
                       disabled={busy().includes(item.name)}
                       items={[
+                        { label: ctx.t("edit"), icon: "edit", onSelect: () => edit(item) },
                         { label: ctx.t("reconnect"), icon: "reset", onSelect: () => reconnect(item) },
                         { label: ctx.t("tools"), icon: "mcp", onSelect: () => void showTools(item) },
                         { type: "separator" },
@@ -253,15 +281,21 @@ function ToolsDialog(props: { name: string; server: () => PageServer; location: 
 
 type SubmitConfig = Extract<ReturnType<typeof readMcpForm>, { ok: true }>["config"]
 
-/** The Add server form. It stays open with the fields to fix marked, and while the save runs. */
+/** The server form, to add one or to change a saved one. It stays open with the fields to fix marked, and while the save runs. */
 function AddDialog(props: {
+  /** The saved server being changed. Its name is fixed, since the name is what the config stores it under. */
+  editing?: { name: string; config: McpConfig }
   taken: readonly string[]
   onCancel: () => void
   onSubmit: (name: string, config: SubmitConfig) => Promise<void>
 }) {
   const ctx = usePlugin<typeof definition>()
   const ui = ctx.ui
-  const [form, setForm] = createSignal<McpForm>(emptyMcpForm)
+
+  const [form, setForm] = createSignal<McpForm>(
+    props.editing ? mcpFormOf(props.editing.name, props.editing.config) : emptyMcpForm,
+  )
+
   const [errors, setErrors] = createSignal<McpFormErrors>({})
   const [saving, setSaving] = createSignal(false)
   const [failure, setFailure] = createSignal<string>()
@@ -269,7 +303,7 @@ function AddDialog(props: {
 
   const submit = () => {
     if (saving()) return
-    const result = readMcpForm(form(), props.taken)
+    const result = readMcpForm(form(), props.taken, props.editing?.config)
 
     if (!result.ok) return setErrors(result.errors)
     setErrors({})
@@ -290,7 +324,7 @@ function AddDialog(props: {
 
   return (
     <ui.Dialog
-      title={ctx.t("form.title")}
+      title={props.editing ? ctx.t("form.title.edit", { name: props.editing.name }) : ctx.t("form.title")}
       description={ctx.t("form.description")}
       footer={
         <>
@@ -298,7 +332,7 @@ function AddDialog(props: {
             {ctx.t("form.cancel")}
           </ui.Button>
           <ui.Button variant="contrast" busy={saving()} onClick={submit}>
-            {ctx.t("form.submit")}
+            {props.editing ? ctx.t("form.save") : ctx.t("form.submit")}
           </ui.Button>
         </>
       }
@@ -311,7 +345,8 @@ function AddDialog(props: {
             placeholder={ctx.t("form.name.placeholder")}
             size="large"
             class="w-full"
-            autofocus
+            autofocus={!props.editing}
+            disabled={!!props.editing}
             value={form().name}
             invalid={!!errors().name}
             onInput={(name) => set({ name })}

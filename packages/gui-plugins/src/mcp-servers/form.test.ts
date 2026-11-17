@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { emptyMcpForm, readMcpForm, splitCommand } from "./form"
+import { emptyMcpForm, mcpFormOf, readMcpForm, splitCommand } from "./form"
 
 describe("MCP server form", () => {
   test("reads a local command with quoted arguments and environment variables", () => {
@@ -79,5 +79,37 @@ describe("MCP server form", () => {
     expect(splitCommand(`a "" 'b c'd`)).toEqual(["a", "", "b cd"])
     expect(splitCommand("")).toEqual([])
     expect(splitCommand(`a 'b`)).toBeUndefined()
+  })
+})
+
+describe("editing a saved server", () => {
+  test("a local server reads back as typed, with spaced arguments quoted", () => {
+    const config = { type: "local" as const, command: ["node", "my server.js"], environment: { KEY: "{env:KEY}" } }
+    const form = mcpFormOf("files", config)
+
+    expect(form.command).toBe('node "my server.js"')
+    expect(form.environment).toBe("KEY={env:KEY}")
+    expect(readMcpForm(form, [], config)).toEqual({ ok: true, name: "files", config })
+  })
+
+  test("keeps settings the form has no field for and drops cleared variables", () => {
+    const original = {
+      type: "local" as const,
+      command: ["/old/run.sh"],
+      environment: { KEY: "value" },
+      timeout: { startup: 60000 },
+    }
+
+    expect(readMcpForm({ ...mcpFormOf("trade", original), command: "/new/run.sh", environment: "" }, [], original)).toEqual({
+      ok: true,
+      name: "trade",
+      config: { type: "local", command: ["/new/run.sh"], timeout: { startup: 60000 } },
+    })
+  })
+
+  test("a remote server reads back with its headers", () => {
+    const config = { type: "remote" as const, url: "https://example.com/mcp", headers: { Authorization: "Bearer x" } }
+
+    expect(readMcpForm(mcpFormOf("web", config), [], config)).toEqual({ ok: true, name: "web", config })
   })
 })

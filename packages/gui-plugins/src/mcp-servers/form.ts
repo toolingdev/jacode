@@ -19,8 +19,10 @@ export type McpFormErrors = {
   readonly headers?: "headers.invalid" | undefined
 }
 
+export type McpConfig = ExperimentalConfigMcpSetInput["config"]
+
 export type McpFormResult =
-  | { readonly ok: true; readonly name: string; readonly config: ExperimentalConfigMcpSetInput["config"] }
+  | { readonly ok: true; readonly name: string; readonly config: McpConfig }
   | { readonly ok: false; readonly errors: McpFormErrors }
 
 export const emptyMcpForm: McpForm = { name: "", type: "local", command: "", environment: "", url: "", headers: "" }
@@ -29,7 +31,7 @@ export const emptyMcpForm: McpForm = { name: "", type: "local", command: "", env
  * The server config a filled form describes, or what to fix. Only the fields of the chosen type are read. Values are
  * kept as typed, so `{env:NAME}` reaches the config file for the server to substitute.
  */
-export function readMcpForm(form: McpForm, taken: readonly string[]): McpFormResult {
+export function readMcpForm(form: McpForm, taken: readonly string[], original?: McpConfig): McpFormResult {
   const name = form.name.trim()
 
   const nameError = !name
@@ -55,10 +57,13 @@ export function readMcpForm(form: McpForm, taken: readonly string[]): McpFormRes
         },
       }
 
+    // An edit keeps what the form has no field for, such as timeouts; a cleared headers box removes the headers.
+    const { headers: _, ...kept } = original?.type === "remote" ? original : { type: "remote" as const, url }
+
     return {
       ok: true,
       name,
-      config: Object.keys(headers).length > 0 ? { type: "remote", url, headers } : { type: "remote", url },
+      config: Object.keys(headers).length > 0 ? { ...kept, url, headers } : { ...kept, url },
     }
   }
 
@@ -76,10 +81,37 @@ export function readMcpForm(form: McpForm, taken: readonly string[]): McpFormRes
       },
     }
 
+  const { environment: _, ...kept } = original?.type === "local" ? original : { type: "local" as const, command }
+
   return {
     ok: true,
     name,
-    config: Object.keys(environment).length > 0 ? { type: "local", command, environment } : { type: "local", command },
+    config: Object.keys(environment).length > 0 ? { ...kept, command, environment } : { ...kept, command },
+  }
+}
+
+/** A saved server as the form shows it for editing. An argument that holds spaces is quoted, so it reads back whole. */
+export function mcpFormOf(name: string, config: McpConfig): McpForm {
+  if (config.type === "remote")
+    return {
+      ...emptyMcpForm,
+      name,
+      type: "remote",
+      url: config.url,
+      headers: Object.entries(config.headers ?? {})
+        .map(([key, value]) => `${key}: ${value}`)
+        .join("\n"),
+    }
+
+  return {
+    ...emptyMcpForm,
+    name,
+    command: config.command
+      .map((part) => (/^[^\s"']+$/.test(part) ? part : part.includes('"') ? `'${part}'` : `"${part}"`))
+      .join(" "),
+    environment: Object.entries(config.environment ?? {})
+      .map(([key, value]) => `${key}=${value}`)
+      .join("\n"),
   }
 }
 
