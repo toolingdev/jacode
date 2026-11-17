@@ -2938,6 +2938,7 @@ export type ExperimentalConfigProviderRemoveOperation<E = never> = (
 ) => Effect.Effect<ExperimentalConfigProviderRemoveOutput, E>
 
 export type ExperimentalConfigDecisionsSetInput = {
+  readonly enabled?: boolean | undefined
   readonly model?: string | undefined
   readonly models?: { readonly [x: string]: string } | undefined
   readonly plan?: boolean | undefined

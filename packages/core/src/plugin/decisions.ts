@@ -71,7 +71,7 @@ export const Plugin = define({
         picks.delete(event.sessionID)
         const settings = decisions(yield* config.entries())
 
-        if (!settings) return
+        if (!settings || settings.enabled === false) return
         const routed = yield* candidates(settings)
         const pool = usable(routed, hasImage(event.prompt))
         // A scheduled prompt was approved when it was scheduled, so it is never held for a plan.

@@ -18234,6 +18234,9 @@
       "ConfigExperimental.Decisions": {
         "type": "object",
         "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
           "model": {
             "type": "string"
           },

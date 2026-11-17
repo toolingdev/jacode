@@ -2042,6 +2042,7 @@ const EndpointExperimentalConfigDecisionsSet =
     preserveEffect<ExperimentalConfigDecisionsSetOutput>()(
       raw["config.decisions.set"]({
         payload: {
+          enabled: input?.["enabled"],
           model: input?.["model"],
           models: input?.["models"],
           plan: input?.["plan"],

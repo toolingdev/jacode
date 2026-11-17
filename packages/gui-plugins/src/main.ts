@@ -17,6 +17,7 @@ import goal from "./goal"
 import customProviders from "./custom-providers"
 import imageGen from "./image-gen"
 import mcpServers from "./mcp-servers"
+import routing from "./routing"
 import subscriptionUsage from "./subscription-usage"
 
 /** Built-in plugins with their main entries, by id. Lists every built-in so their ids stay reserved. */
@@ -39,5 +40,6 @@ export const builtins = compose({
   "custom-providers": customProviders,
   "image-gen": imageGen,
   "mcp-servers": mcpServers,
+  routing,
   "subscription-usage": subscriptionUsage,
 })

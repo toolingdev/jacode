@@ -9,6 +9,9 @@ import { ConfigPolicy } from "./policy.js"
 // Fork feature: a decision model answers small questions about each prompt before the session model runs.
 export interface Decisions extends Schema.Schema.Type<typeof Decisions> {}
 export const Decisions = Schema.Struct({
+  enabled: Schema.Boolean.pipe(optional).annotate({
+    description: "Set to false to switch the decision layer off while keeping its settings. Defaults to true.",
+  }),
   // A plain string, not a model selection: the client codegen cannot carry a selection's branded IDs in a payload.
   model: Schema.String.pipe(optional).annotate({
     description:

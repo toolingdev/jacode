@@ -391,6 +391,7 @@ export type ConfigModelReasoning =
   | { supported: true; toggle?: boolean; effort?: Array<string>; budget?: { min?: number; max?: number } }
 
 export type ConfigExperimentalDecisions = {
+  enabled?: boolean
   model?: string
   models?: { [x: string]: string }
   plan?: boolean
@@ -5027,6 +5028,7 @@ export type ExperimentalConfigProviderRemoveInput = { readonly provider: string 
 export type ExperimentalConfigProviderRemoveOutput = void
 
 export type ExperimentalConfigDecisionsSetInput = {
+  readonly enabled?: boolean | undefined
   readonly model?: string | undefined
   readonly models?: { readonly [x: string]: string } | undefined
   readonly plan?: boolean | undefined

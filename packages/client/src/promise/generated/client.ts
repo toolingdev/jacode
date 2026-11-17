@@ -1868,6 +1868,7 @@ export function make(options: ClientOptions) {
                 method: "PUT",
                 path: `/api/experimental/config/decisions`,
                 body: {
+                  enabled: input?.["enabled"],
                   model: input?.["model"],
                   models: input?.["models"],
                   plan: input?.["plan"],

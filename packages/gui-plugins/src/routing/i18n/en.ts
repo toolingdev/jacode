@@ -1,0 +1,15 @@
+export default {
+  on: "Routing on",
+  off: "Routing off",
+  routed: "Routed to {{model}}",
+  title: "Smart routing",
+  "row.none": "No decision yet in this chat",
+  "row.model": "Model: {{model}}",
+  "row.size.small": "Size: small task, started right away",
+  "row.size.large": "Size: large task, plan first",
+  sure: "{{percent}}% sure",
+  "turn.off": "Turn routing off for every chat",
+  "turn.on": "Turn routing on for every chat",
+  settings: "Routing settings",
+  failed: "Could not change routing",
+}

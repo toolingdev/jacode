@@ -35,6 +35,8 @@ import imageGen from "./image-gen"
 import imageGenRenderer from "./image-gen/renderer"
 import mcpServers from "./mcp-servers"
 import mcpServersRenderer from "./mcp-servers/renderer"
+import routing from "./routing"
+import routingRenderer from "./routing/renderer"
 import subscriptionUsage from "./subscription-usage"
 import subscriptionUsageRenderer from "./subscription-usage/renderer"
 
@@ -63,5 +65,6 @@ export const builtins = compose({
   "custom-providers": { ...customProviders, windowEntry: eager(customProvidersRenderer) },
   "image-gen": { ...imageGen, windowEntry: eager(imageGenRenderer) },
   "mcp-servers": { ...mcpServers, windowEntry: eager(mcpServersRenderer) },
+  routing: { ...routing, windowEntry: eager(routingRenderer) },
   "subscription-usage": { ...subscriptionUsage, windowEntry: eager(subscriptionUsageRenderer) },
 })
