@@ -7,10 +7,13 @@ import { useMascot } from "./store"
 // durable instruction entry, so the server keeps it for work that runs with no app open, such as a scheduled wake.
 const KEY = "companion"
 
+/** What a session instruction entry may hold: any JSON value. The companion entry holds a string. */
+type EntryValue = string | number | boolean | null | object
+
 type Entries = {
-  list: (input: { sessionID: string }) => Promise<readonly { readonly key: string; readonly value: unknown }[]>
-  put: (input: { sessionID: string; key: string; value: string }) => Promise<unknown>
-  remove: (input: { sessionID: string; key: string }) => Promise<unknown>
+  list: (input: { sessionID: string }) => Promise<readonly { readonly key: string; readonly value: EntryValue }[]>
+  put: (input: { sessionID: string; key: string; value: string }) => Promise<object | void>
+  remove: (input: { sessionID: string; key: string }) => Promise<object | void>
 }
 
 /** What the model is told about the character. Model-facing, so it is not translated. */
@@ -27,6 +30,7 @@ export async function syncCompanion(entries: Entries, sessionID: string, sprite:
   const wanted = sprite && companionInstruction(sprite)
 
   if (current === wanted) return
+
   if (wanted === undefined) return void (await entries.remove({ sessionID, key: KEY }))
   await entries.put({ sessionID, key: KEY, value: wanted })
 }

@@ -10,8 +10,11 @@ const input = (fallback?: { providerID: string; modelID: string }) => ({
 })
 
 const everywhere = { providerID: AUTO, modelID: AUTO }
+
 const withinNano = { providerID: "nano", modelID: AUTO }
+
 const kimi = { providerID: "nano", modelID: "kimi" }
+
 const gpt = { providerID: "other", modelID: "gpt" }
 
 test("only an auto model ID is an Auto choice", () => {

@@ -90,7 +90,9 @@ export function createAutoSelection(input: {
           .map((model) => ({ providerID, modelID: model.id }))
           .find(input.valid),
     })
+
     const usual = target && models.find(target)
+
     const found =
       usual &&
       autoImageModel(

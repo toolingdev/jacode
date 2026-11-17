@@ -3,6 +3,7 @@ import { idle, nextAnimation, paint, STAGE, type Animation } from "./animations"
 import type { Sprite } from "./sprites"
 
 const FRAME_MS = 110
+
 /** An animation shorter than this many frames plays again before the next one starts. */
 const MIN_FRAMES = 60
 
@@ -43,6 +44,7 @@ export const Mascot: Component<{
     const play = { animation: thinking ? nextAnimation(sprite, undefined, Math.random) : idle, tick: 0 }
 
     draw(play.animation, 0)
+
     const timer = setInterval(() => {
       play.tick += 1
 

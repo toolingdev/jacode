@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { findSprite } from "./sprites"
 import { companionInstruction, syncCompanion } from "./sync"
 
-function fake(initial: { key: string; value: unknown }[]) {
+function fake(initial: { key: string; value: string }[]) {
   const calls: string[] = []
   const state = new Map(initial.map((entry) => [entry.key, entry.value]))
 
@@ -52,6 +52,7 @@ describe("companion sync", () => {
       { key: "companion", value: companionInstruction(findSprite("ribbit")) },
       { key: "other", value: "kept" },
     ])
+
     await syncCompanion(server.entries, "ses_1", undefined)
     await syncCompanion(server.entries, "ses_1", undefined)
 

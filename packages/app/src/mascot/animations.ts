@@ -5,6 +5,7 @@ import type { Sprite } from "./sprites"
 
 /** The stage is square; the sprite stands on its last row. */
 export const STAGE = 24
+
 /** Where the sprite's top-left corner rests. */
 export const REST = { x: 4, y: 8 }
 
@@ -40,16 +41,27 @@ export type Animation = {
 }
 
 const WHITE = "#f1f0ff"
+
 const GOLD = "#ffd84a"
+
 const ORANGE = "#ff8a3d"
+
 const BLUE = "#6cc8ff"
+
 const ICE = "#b9e6ff"
+
 const PINK = "#ff8fb0"
+
 const VIOLET = "#9aa4ff"
+
 const STEEL = "#b9c2d0"
+
 const GREY = "#8a8fa3"
+
 const RED = "#ff5a5a"
+
 const GREEN = "#4fd66b"
+
 const HUES = ["#ff5a5a", "#ff8a3d", "#ffd84a", "#4fd66b", "#6cc8ff", "#9aa4ff", "#ff8fb0"]
 
 const at = <T>(items: readonly T[], tick: number) => items[((tick % items.length) + items.length) % items.length]
@@ -66,9 +78,9 @@ const lean = (amount: number) => (row: number) => Math.round(((15 - row) / 15) *
 /** A repeatable stand-in for randomness, so a frame always draws the same way. */
 const hash = (a: number, b: number) => ((a * 73856093) ^ (b * 19349663)) >>> 0
 
-// A small shape placed by its top-left corner; `#` cells are drawn.
-const glyph = (shape: readonly string[], x: number, y: number, color: string): Pixel[] =>
-  shape.flatMap((line, row) =>
+// A small drawing placed by its top-left corner; `#` cells are drawn.
+const glyph = (lines: readonly string[], x: number, y: number, color: string): Pixel[] =>
+  lines.flatMap((line, row) =>
     line.split("").flatMap((cell, column): Pixel[] => (cell === "#" ? [px(x + column, y + row, color)] : [])),
   )
 
@@ -89,15 +101,25 @@ const falling = (tick: number, xs: readonly number[], span: number, colors: read
   xs.map((x, index) => px(x, (tick + index * 5) % span, at(colors, index)))
 
 const ZERO = ["###", "#.#", "###"]
+
 const ONE = [".#.", ".#.", ".#."]
+
 const BANG = ["#", "#", "#", ".", "#"]
+
 const HEART = ["#.#", "###", ".#."]
+
 const NOTE = [".##", ".#.", "##."]
+
 const PLUS = [".#.", "###", ".#."]
+
 const FISH = ["#.##", "####", "#.##"]
+
 const CROSS = ["..#..", "#####", "..#..", "..#.."]
+
 const MOON = [".##", "##.", "##.", ".##"]
+
 const UFO = [".###.", "#####"]
+
 const RUNES = [
   ["#.#", ".#.", "#.#"],
   [".#.", "###", ".#."],
@@ -105,8 +127,11 @@ const RUNES = [
   ["#.#", "###", "#.#"],
 ]
 
+/** The animations each character has of one kind, by character id. */
+type Repertoire = Readonly<Record<string, readonly Animation[]>>
+
 /** Ten thinking animations for each character, none shared with another. */
-export const own: Readonly<Record<string, readonly Animation[]>> = {
+export const own = {
   bolt: [
     {
       // Antenna throws sparks while the eyes cycle through colors.
@@ -819,6 +844,7 @@ export const own: Readonly<Record<string, readonly Animation[]>> = {
       length: 32,
       frame: (tick, sprite) => {
         const step = tick % 32
+
         const baby = (x: number) => [
           px(x, 22, "#e5484d"),
           px(x + 1, 22, "#e5484d"),
@@ -1408,12 +1434,16 @@ export const own: Readonly<Record<string, readonly Animation[]>> = {
       }),
     },
   ],
-}
+} satisfies Repertoire
 
 const PANEL = "#3a4a6b"
+
 const NAVY = "#22355e"
+
 const TERMINAL = "#3df2c8"
+
 const SMOKE = "#d9dbe6"
+
 const WOOD = "#8a5a3c"
 
 const fill = (x: number, y: number, width: number, height: number, color: string): Pixel[] =>
@@ -1447,15 +1477,21 @@ const wire = (from: readonly [number, number], to: readonly [number, number], co
 }
 
 const ARROW = ["#..", "##.", "###", ".#."]
+
 const ZED = ["###", ".#.", "###"]
+
 const BULB = [".##.", "####", "####", ".##."]
+
 const LENS = [".###.", "#...#", "#...#", "#...#", ".###."]
+
 const KEY = ["##....", "#.####", "##..#."]
+
 const DIGITS = [ZERO, ONE, ["###", ".##", "###"], ["#.#", "###", "..#"], ["###", "##.", "###"], ["##.", ".#.", ".##"]]
+
 const MORSE = "###.#.###.#...###.###.###...###.#.#...#......"
 
 /** Three animations of each character at work on something technical, none shared with another. */
-export const tech: Readonly<Record<string, readonly Animation[]>> = {
+export const tech = {
   bolt: [
     {
       // A cable drops in, plugs into its side, and charge runs down the line.
@@ -1920,6 +1956,7 @@ export const tech: Readonly<Record<string, readonly Animation[]>> = {
       frame: (tick) => {
         const step = tick % 20
         const round = Math.floor(tick / 20)
+
         const bug = [
           7 + ((Math.floor(Math.min(step, 12) / 2) + (hash(round, 1) % 5)) % 10),
           2 + (hash(round, 2) % 5),
@@ -2066,6 +2103,7 @@ export const tech: Readonly<Record<string, readonly Animation[]>> = {
       length: 44,
       frame: (tick, sprite) => {
         const step = tick % 44
+
         const trace = [
           ...wire([5, 2], [9, 2], WHITE),
           ...wire([9, 3], [9, 5], WHITE),
@@ -2135,7 +2173,7 @@ export const tech: Readonly<Record<string, readonly Animation[]>> = {
       },
     },
   ],
-}
+} satisfies Repertoire
 
 /** Resting between thoughts: a slow bob and the odd blink. */
 export const idle: Animation = {
@@ -2144,12 +2182,15 @@ export const idle: Animation = {
   frame: (tick) => ({ dy: at([0, 0, 1, 1], tick >> 1), closed: blink(tick, 26) }),
 }
 
+// A character with no animations of a kind simply has none to play.
+const repertoire = (all: Repertoire, sprite: Sprite) => all[sprite.id] ?? []
+
 export function thinking(sprite: Sprite): readonly Animation[] {
-  return own[sprite.id] ?? []
+  return repertoire(own, sprite)
 }
 
 export function tinkering(sprite: Sprite): readonly Animation[] {
-  return tech[sprite.id] ?? []
+  return repertoire(tech, sprite)
 }
 
 /**
@@ -2170,6 +2211,7 @@ export function paint(sprite: Sprite, frame: Frame): Pixel[] {
   const scaleX = frame.scaleX ?? 1
   const scaleY = frame.scaleY ?? 1
   const cells = sprite.rows.map((half) => `${half}${half.split("").reverse().join("")}`)
+
   const span = (scale: number) =>
     Array.from({ length: Math.ceil(16 * Math.max(1, scale)) + 2 }, (_, index) => index - 1)
 
