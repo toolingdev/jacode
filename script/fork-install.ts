@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { $ } from "bun"
-import { exists, readdir, rename } from "node:fs/promises"
-import { homedir } from "node:os"
+import { exists, mkdir, mkdtemp, readdir, rename, rm } from "node:fs/promises"
+import { homedir, tmpdir } from "node:os"
 import path from "node:path"
 
 // Fork feature: the fork's upgrade path. The packaged fork never self-updates, because the update feeds serve
@@ -10,6 +10,7 @@ import path from "node:path"
 //   bun script/fork-install.ts             build this checkout and install it
 //   bun script/fork-install.ts --upstream  merge upstream/dev first, then build and install
 //   bun script/fork-install.ts --open      open the app once it is installed
+//   bun script/fork-install.ts --no-worker skip building the Linux servers the Workers page installs elsewhere
 //
 // macOS only. The replaced app goes to the Trash, so putting it back is the way to roll back.
 if (process.platform !== "darwin") throw new Error("fork-install only installs the macOS app")
@@ -18,7 +19,11 @@ const root = path.resolve(import.meta.dir, "..")
 
 const target = process.arch === "arm64" ? "darwin-arm64" : "darwin-x64"
 
-const env = { ...process.env, OPENCODE_TARGET: target, OPENCODE_CHANNEL: "dev" }
+// One version for everything built here. The app only connects over SSH to a worker of its own version, so the
+// worker binaries below carry the same one as the app.
+const version = `0.0.0-dev-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}`
+
+const env = { ...process.env, OPENCODE_TARGET: target, OPENCODE_CHANNEL: "dev", OPENCODE_VERSION: version }
 
 process.chdir(root)
 
@@ -79,3 +84,24 @@ await $`ditto ${path.join(built, bundle)} ${installed}`
 console.log(`Installed ${installed} from ${(await $`git describe --always --dirty`.text()).trim()}`)
 
 if (process.argv.includes("--open")) await $`open ${installed}`
+
+// The Linux servers the Workers settings page installs on other machines, kept beside the app's own data: they are
+// too large to ride inside the app. Older versions' copies are of no use to this app and are removed.
+if (!process.argv.includes("--no-worker")) {
+  const workers = path.join(homedir(), "Library/Application Support/OpenCodeFork/desktop/worker")
+
+  await rm(workers, { recursive: true, force: true })
+  await mkdir(path.join(workers, version), { recursive: true })
+
+  for (const arch of ["x64", "arm64"]) {
+    const out = await mkdtemp(path.join(tmpdir(), "fork-worker-"))
+
+    await $`bun run build --outdir=${out}`
+      .cwd("packages/cli")
+      .env({ ...env, OPENCODE_TARGET: `linux-${arch}` })
+      .quiet()
+    // A copy, not a move: the two folders can be on different disks.
+    await $`cp ${path.join(out, `cli-linux-${arch}/bin/opencode`)} ${path.join(workers, version, `opencode-linux-${arch}`)}`
+    await rm(out, { recursive: true })
+  }
+}

@@ -41,6 +41,8 @@ import visual from "./visual"
 import visualRenderer from "./visual/renderer"
 import weather from "./weather"
 import weatherRenderer from "./weather/renderer"
+import workers from "./workers"
+import workersRenderer from "./workers/renderer"
 import subscriptionUsage from "./subscription-usage"
 import subscriptionUsageRenderer from "./subscription-usage/renderer"
 
@@ -72,5 +74,6 @@ export const builtins = compose({
   routing: { ...routing, windowEntry: eager(routingRenderer) },
   visual: { ...visual, windowEntry: eager(visualRenderer) },
   weather: { ...weather, windowEntry: eager(weatherRenderer) },
+  workers: { ...workers, windowEntry: eager(workersRenderer) },
   "subscription-usage": { ...subscriptionUsage, windowEntry: eager(subscriptionUsageRenderer) },
 })

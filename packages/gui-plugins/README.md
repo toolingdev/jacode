@@ -774,6 +774,7 @@ export const builtins = compose({
   routing,
   visual,
   weather,
+  workers: { ...workers, mainEntry: () => import("./workers/main") },
   "subscription-usage": subscriptionUsage,
 })
 ```
@@ -806,6 +807,7 @@ export const builtins = compose({
   routing: { ...routing, windowEntry: eager(routingRenderer) },
   visual: { ...visual, windowEntry: eager(visualRenderer) },
   weather: { ...weather, windowEntry: eager(weatherRenderer) },
+  workers: { ...workers, windowEntry: eager(workersRenderer) },
   "subscription-usage": { ...subscriptionUsage, windowEntry: eager(subscriptionUsageRenderer) },
 })
 ```

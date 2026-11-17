@@ -20,6 +20,7 @@ import mcpServers from "./mcp-servers"
 import routing from "./routing"
 import visual from "./visual"
 import weather from "./weather"
+import workers from "./workers"
 import subscriptionUsage from "./subscription-usage"
 
 /** Built-in plugins with their main entries, by id. Lists every built-in so their ids stay reserved. */
@@ -45,5 +46,6 @@ export const builtins = compose({
   routing,
   visual,
   weather,
+  workers: { ...workers, mainEntry: () => import("./workers/main") },
   "subscription-usage": subscriptionUsage,
 })

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Fork feature: turns a Linux machine into a worker, a server the desktop app connects to and hands work.
-# `script/fork-worker-setup.ts` copies this file and the server binary to the machine and runs it there; it also
+# The app's Workers settings page and `script/fork-worker-setup.ts` copy this file and the server binary to the
+# machine and run it there; it also
 # runs by hand on the machine itself. It checks the machine first and changes nothing unless every check passes.
 # Running it again is safe: it replaces the binary and the units and keeps the password, the config and the work.
 #

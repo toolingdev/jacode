@@ -5,7 +5,7 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 
 // Fork feature: sets a machine up as a worker, a server the desktop app connects to and hands work. It builds this
-// checkout's server for the machine, copies it over with `script/worker/setup.sh`, and runs that there. The script
+// checkout's server for the machine, copies it over with `packages/gui-plugins/src/workers/setup.sh`, and runs that there. The script
 // checks the machine first (Linux with systemd, 2 cores, 4 GB of memory, 10 GB of disk, sudo, internet, a free
 // port) and changes nothing unless every check passes. Running it again updates the worker and keeps its password,
 // config and work. `fork-worker.ts` is the quick way to update a worker that is already set up.
@@ -29,7 +29,7 @@ if ([host !== undefined, local, docker].filter(Boolean).length !== 1)
   throw new Error("Say where: an ssh address such as user@host, --local, or --docker")
 
 const root = path.resolve(import.meta.dir, "..")
-const setup = path.join(import.meta.dir, "worker/setup.sh")
+const setup = path.join(root, "packages/gui-plugins/src/workers/setup.sh")
 
 const settings = {
   WORKER_MODE: args.includes("--check") ? "check" : "install",
