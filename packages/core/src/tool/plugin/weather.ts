@@ -2,16 +2,20 @@ export * as WeatherTool from "./weather.js"
 
 import { ToolFailure } from "@opencode/ai/effect"
 import type { Context } from "@opencode/plugin/effect/plugin"
+import type { Document, Entry } from "@opencode/schema/config"
+import type { ConfigExperimental } from "@opencode/schema/config/experimental"
 import { Duration, Effect, Schema } from "effect"
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http"
+import { Config } from "../../config.js"
 
-// Fork feature: current weather and a daily forecast for a place. The place is looked up with Open-Meteo's geocoder
-// and the forecast comes from MET Norway; both are free and need no key. The place name and its coordinates are the
-// only things sent. The result names an icon for each condition, which the app's inline visuals can draw.
+// Fork feature: current weather and a daily forecast for a place. The place is looked up with Open-Meteo's geocoder;
+// the forecast comes from the sources listed in config (`experimental.weather.sources`), tried in order until one
+// answers. All of them are free and need no key. The place name and its coordinates are the only things sent. The
+// result names an icon for each condition, which the app's inline visuals can draw.
 
 export const name = "weather"
 
-export const description = `Get the current weather and a daily forecast for a place by name (a city, optionally with a state or country, such as "Denver, CA" or "Lyon, France"). Data comes from MET Norway. Use this instead of searching the web for weather.
+export const description = `Get the current weather and a daily forecast for a place by name (a city, optionally with a state or country, such as "Denver, CA" or "Lyon, France"). Data comes from a free forecast service chosen in Settings. Use this instead of searching the web for weather.
 
 Each condition comes with an \`icon\` name. When you show the result as a visual, draw it with <weather-icon name="..."></weather-icon>.`
 
@@ -48,6 +52,7 @@ const Day = Schema.Struct({
 })
 
 export const Output = Schema.Struct({
+  source: Schema.String,
   place: Schema.String,
   timezone: Schema.String,
   temperatureUnit: Schema.String,
@@ -130,6 +135,7 @@ const symbolOf = (hour: Hour) =>
  * wind in metres a second, and leave in the asked units.
  */
 export function summarize(input: {
+  source: string
   place: string
   timezone: string
   units: "fahrenheit" | "celsius"
@@ -146,6 +152,7 @@ export function summarize(input: {
   const fromMidday = (hour: Hour) => Math.abs(Number(hourOf.format(new Date(hour.time))) - 12)
 
   return {
+    source: input.source,
     place: input.place,
     timezone: input.timezone,
     temperatureUnit: metric ? "°C" : "°F",
@@ -211,12 +218,188 @@ export function pickPlace(places: readonly Place[], regions: readonly string[]) 
   )
 }
 
+// Open-Meteo reports WMO weather codes, each here with its wording and the icon that draws it by day.
+const CODES: ReadonlyArray<readonly [codes: readonly number[], condition: string, icon: Icon]> = [
+  [[0], "Clear", "sun"],
+  [[1], "Mostly clear", "sun"],
+  [[2], "Partly cloudy", "partly-cloudy-day"],
+  [[3], "Overcast", "cloud"],
+  [[45, 48], "Fog", "fog"],
+  [[51, 53, 55, 56, 57], "Drizzle", "drizzle"],
+  [[61, 63, 80, 81], "Rain", "rain"],
+  [[65, 82], "Heavy rain", "rain"],
+  [[66, 67], "Freezing rain", "rain"],
+  [[71, 73, 75, 77, 85, 86], "Snow", "snow"],
+  [[95, 96, 99], "Thunderstorm", "storm"],
+]
+
+// wttr.in reports World Weather Online codes.
+const WWO: ReadonlyArray<readonly [codes: readonly number[], condition: string, icon: Icon]> = [
+  [[113], "Clear", "sun"],
+  [[116], "Partly cloudy", "partly-cloudy-day"],
+  [[119, 122], "Overcast", "cloud"],
+  [[143, 248, 260], "Fog", "fog"],
+  [[200, 386, 389, 392, 395], "Thunderstorm", "storm"],
+  [[263, 266, 293, 296, 353], "Light rain", "drizzle"],
+  [[176, 299, 302, 305, 308, 356, 359], "Rain", "rain"],
+  [
+    [179, 182, 185, 227, 230, 281, 284, 311, 314, 317, 320, 323, 326, 329, 332, 335, 338, 350, 362, 365, 368, 371, 374, 377],
+    "Snow",
+    "snow",
+  ],
+]
+
+const worded = (table: typeof CODES, code: number, day: boolean): { condition: string; icon: Icon } => {
+  const found = table.find((entry) => entry[0].includes(code))
+  const icon = found?.[2] ?? "cloud"
+
+  return { condition: found?.[1] ?? "Unknown", icon: day ? icon : (NIGHT[icon] ?? icon) }
+}
+
+/** The wording and icon for one of Open-Meteo's weather codes. */
+export function describeCode(code: number, day = true) {
+  return worded(CODES, code, day)
+}
+
+/** The wording and icon for one of wttr.in's weather codes. */
+export function describeWwo(code: number, day = true) {
+  return worded(WWO, code, day)
+}
+
+const OpenMeteoForecast = Schema.Struct({
+  timezone: Schema.String,
+  current: Schema.Struct({
+    temperature_2m: Schema.Finite,
+    relative_humidity_2m: Schema.Finite,
+    weather_code: Schema.Finite,
+    wind_speed_10m: Schema.Finite,
+    is_day: Schema.Finite,
+  }),
+  daily: Schema.Struct({
+    time: Schema.Array(Schema.String),
+    weather_code: Schema.Array(Schema.Finite),
+    temperature_2m_max: Schema.Array(Schema.Finite),
+    temperature_2m_min: Schema.Array(Schema.Finite),
+  }),
+})
+
+/** Open-Meteo's answer, which already comes in the asked units, as what the tool returns. */
+export function fromOpenMeteo(input: {
+  source: string
+  place: string
+  units: "fahrenheit" | "celsius"
+  forecast: typeof OpenMeteoForecast.Type
+}): Output {
+  const metric = input.units === "celsius"
+
+  return {
+    source: input.source,
+    place: input.place,
+    timezone: input.forecast.timezone,
+    temperatureUnit: metric ? "°C" : "°F",
+    windUnit: metric ? "km/h" : "mph",
+    current: {
+      ...describeCode(input.forecast.current.weather_code, input.forecast.current.is_day === 1),
+      temperature: Math.round(input.forecast.current.temperature_2m),
+      humidity: Math.round(input.forecast.current.relative_humidity_2m),
+      wind: Math.round(input.forecast.current.wind_speed_10m),
+    },
+    days: input.forecast.daily.time.map((date, index) => ({
+      date,
+      ...describeCode(input.forecast.daily.weather_code[index] ?? -1),
+      high: Math.round(input.forecast.daily.temperature_2m_max[index] ?? 0),
+      low: Math.round(input.forecast.daily.temperature_2m_min[index] ?? 0),
+    })),
+  }
+}
+
+// wttr.in writes every number as text.
+const WttrForecast = Schema.Struct({
+  current_condition: Schema.Array(
+    Schema.Struct({
+      temp_C: Schema.String,
+      temp_F: Schema.String,
+      humidity: Schema.String,
+      windspeedKmph: Schema.String,
+      windspeedMiles: Schema.String,
+      weatherCode: Schema.String,
+    }),
+  ),
+  weather: Schema.Array(
+    Schema.Struct({
+      date: Schema.String,
+      maxtempC: Schema.String,
+      maxtempF: Schema.String,
+      mintempC: Schema.String,
+      mintempF: Schema.String,
+      hourly: Schema.Array(Schema.Struct({ time: Schema.String, weatherCode: Schema.String })),
+    }),
+  ),
+})
+
+/** wttr.in's answer as what the tool returns. It carries both units, and three days at most. */
+export function fromWttr(input: {
+  source: string
+  place: string
+  timezone: string
+  units: "fahrenheit" | "celsius"
+  days: number
+  forecast: typeof WttrForecast.Type
+}): Output | undefined {
+  const now = input.forecast.current_condition[0]
+
+  if (!now) return undefined
+  const metric = input.units === "celsius"
+
+  return {
+    source: input.source,
+    place: input.place,
+    timezone: input.timezone,
+    temperatureUnit: metric ? "°C" : "°F",
+    windUnit: metric ? "km/h" : "mph",
+    current: {
+      ...describeWwo(Number(now.weatherCode)),
+      temperature: Number(metric ? now.temp_C : now.temp_F),
+      humidity: Number(now.humidity),
+      wind: Number(metric ? now.windspeedKmph : now.windspeedMiles),
+    },
+    days: input.forecast.weather.slice(0, input.days).map((day) => ({
+      date: day.date,
+      // The midday hour stands for the day.
+      ...describeWwo(Number((day.hourly.find((hour) => hour.time === "1200") ?? day.hourly[0])?.weatherCode ?? -1)),
+      high: Number(metric ? day.maxtempC : day.maxtempF),
+      low: Number(metric ? day.mintempC : day.mintempF),
+    })),
+  }
+}
+
+type Source = ConfigExperimental.WeatherSource
+
+/** What each kind of source is called and where it lives unless the config gives another address. */
+export const SOURCE_TYPES = {
+  "met-norway": { label: "MET Norway", url: "https://api.met.no/weatherapi/locationforecast/2.0/compact" },
+  "open-meteo": { label: "Open-Meteo", url: "https://api.open-meteo.com/v1/forecast" },
+  wttr: { label: "wttr.in", url: "https://wttr.in" },
+} as const satisfies Record<Source["type"], { label: string; url: string }>
+
+/** The sources used while the config lists none. */
+export const DEFAULT_SOURCES: readonly Source[] = [{ type: "met-norway" }, { type: "open-meteo" }]
+
+/** The sources to try, in order: the config's own list without the ones switched off, else the defaults. */
+export function activeSources(entries: readonly Entry[]) {
+  return (
+    entries.findLast(
+      (entry): entry is Document => entry.type === "document" && entry.info.experimental?.weather !== undefined,
+    )?.info.experimental?.weather?.sources ?? DEFAULT_SOURCES
+  ).filter((source) => source.disabled !== true)
+}
+
 /** The result as the short text the model reads. */
 export function weatherText(weather: Output) {
   const degrees = weather.temperatureUnit
 
   return [
-    `${weather.place} (${weather.timezone})`,
+    `${weather.place} (${weather.timezone}), from ${weather.source}`,
     `Now: ${weather.current.condition}, ${weather.current.temperature}${degrees}, humidity ${weather.current.humidity}%, wind ${weather.current.wind} ${weather.windUnit}. Icon: ${weather.current.icon}`,
     ...weather.days.map(
       (day) => `${day.date}: ${day.condition}, high ${day.high}${degrees}, low ${day.low}${degrees}. Icon: ${day.icon}`,
@@ -224,12 +407,14 @@ export function weatherText(weather: Output) {
   ].join("\n")
 }
 
-const TIMEOUT = Duration.seconds(20)
+// Each source gets this long before the next one is tried.
+const TIMEOUT = Duration.seconds(12)
 
 export const Plugin = {
   id: "opencode.tool.weather",
   effect: Effect.fn("WeatherTool.Plugin")(function* (ctx: Context) {
     const http = yield* HttpClient.HttpClient
+    const config = yield* Config.Service
 
     // MET Norway asks every client to name itself.
     const get = <A>(url: string, params: Record<string, string>, schema: Schema.Codec<A, unknown>) =>
@@ -245,6 +430,66 @@ export const Plugin = {
           Effect.flatMap(HttpClientResponse.schemaBodyJson(schema)),
         )
 
+    const empty = Effect.fail(new Error("The forecast came back empty"))
+
+    // One source's forecast for a found place, in the asked units.
+    const ask = (source: Source, place: Place, input: typeof Input.Type): Effect.Effect<Output, unknown> => {
+      const kind = SOURCE_TYPES[source.type]
+      const label = source.name || kind.label
+      const url = source.url || kind.url
+      const named = [place.name, place.admin1, place.country].filter((part) => part !== undefined).join(", ")
+      // The services take at most four decimals.
+      const latitude = place.latitude.toFixed(4)
+      const longitude = place.longitude.toFixed(4)
+
+      if (source.type === "open-meteo")
+        return get(
+          url,
+          {
+            latitude,
+            longitude,
+            current: "temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,is_day",
+            daily: "weather_code,temperature_2m_max,temperature_2m_min",
+            temperature_unit: input.units,
+            wind_speed_unit: input.units === "celsius" ? "kmh" : "mph",
+            timezone: "auto",
+            forecast_days: String(input.days),
+          },
+          OpenMeteoForecast,
+        ).pipe(Effect.map((forecast) => fromOpenMeteo({ source: label, place: named, units: input.units, forecast })))
+
+      if (source.type === "wttr")
+        return get(`${url.replace(/\/$/, "")}/${latitude},${longitude}`, { format: "j1" }, WttrForecast).pipe(
+          Effect.flatMap((forecast) => {
+            const output = fromWttr({
+              source: label,
+              place: named,
+              timezone: place.timezone ?? "UTC",
+              units: input.units,
+              days: input.days,
+              forecast,
+            })
+
+            return output ? Effect.succeed(output) : empty
+          }),
+        )
+
+      return get(url, { lat: latitude, lon: longitude }, Forecast).pipe(
+        Effect.flatMap((forecast) => {
+          const output = summarize({
+            source: label,
+            place: named,
+            timezone: place.timezone ?? "UTC",
+            units: input.units,
+            days: input.days,
+            hours: forecast.properties.timeseries,
+          })
+
+          return output ? Effect.succeed(output) : empty
+        }),
+      )
+    }
+
     yield* ctx.tool
       .transform((editor) =>
         editor.add({
@@ -254,38 +499,46 @@ export const Plugin = {
           output: Output,
           execute: (input) =>
             Effect.gen(function* () {
+              const sources = activeSources(yield* config.entries())
+
+              if (sources.length === 0)
+                return yield* Effect.fail(new Error("No weather source is turned on. Add one in Settings, under Weather."))
               const written = splitLocation(input.location)
 
               const found = yield* get(
                 "https://geocoding-api.open-meteo.com/v1/search",
                 { name: written.city, count: "10", language: "en", format: "json" },
                 Places,
+              ).pipe(
+                Effect.timeoutOrElse({
+                  duration: TIMEOUT,
+                  orElse: () => Effect.fail(new Error("Looking up the place timed out")),
+                }),
               )
 
               const place = pickPlace(found.results ?? [], written.regions)
 
               if (!place) return yield* Effect.fail(new Error(`No place found for "${input.location}"`))
 
-              const forecast = yield* get(
-                "https://api.met.no/weatherapi/locationforecast/2.0/compact",
-                // The service takes at most four decimals.
-                { lat: place.latitude.toFixed(4), lon: place.longitude.toFixed(4) },
-                Forecast,
-              )
+              // Each source in turn; a failure moves on to the next, and all of them failing reports each reason.
+              const from = (index: number, failures: readonly string[]): Effect.Effect<Output, Error> => {
+                const source = sources[index]
 
-              const output = summarize({
-                place: [place.name, place.admin1, place.country].filter((part) => part !== undefined).join(", "),
-                timezone: place.timezone ?? "UTC",
-                units: input.units,
-                days: input.days,
-                hours: forecast.properties.timeseries,
-              })
+                if (!source) return Effect.fail(new Error(failures.join("; ")))
+                const label = source.name || SOURCE_TYPES[source.type].label
 
-              if (!output) return yield* Effect.fail(new Error("The forecast came back empty"))
+                return ask(source, place, input).pipe(
+                  Effect.timeoutOrElse({ duration: TIMEOUT, orElse: () => Effect.fail(new Error("timed out")) }),
+                  Effect.catch((error) =>
+                    from(index + 1, [...failures, `${label}: ${error instanceof Error ? error.message : String(error)}`]),
+                  ),
+                )
+              }
+
+              const output = yield* from(0, [])
 
               return { output, content: weatherText(output) }
             }).pipe(
-              Effect.timeoutOrElse({ duration: TIMEOUT, orElse: () => Effect.fail(new Error("Request timed out")) }),
               Effect.mapError(
                 (error) => new ToolFailure({ message: `Unable to get the weather for ${input.location}`, error }),
               ),

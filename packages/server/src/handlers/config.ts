@@ -111,6 +111,24 @@ export const ConfigHandler = HttpApiBuilder.group(Api, "server.config", (handler
       }),
     )
     .handle(
+      "config.weather.set",
+      Effect.fn(function* (ctx) {
+        const config = yield* Config.Service
+        if (!config.weather) return yield* Effect.die(new Error("Config updates are unavailable"))
+        yield* config.weather(ctx.payload).pipe(Effect.orDie)
+        return HttpApiSchema.NoContent.make()
+      }),
+    )
+    .handle(
+      "config.weather.remove",
+      Effect.fn(function* () {
+        const config = yield* Config.Service
+        if (!config.weather) return yield* Effect.die(new Error("Config updates are unavailable"))
+        yield* config.weather(undefined).pipe(Effect.orDie)
+        return HttpApiSchema.NoContent.make()
+      }),
+    )
+    .handle(
       "config.plugin.add",
       Effect.fn(function* (ctx) {
         const config = yield* Config.Service

@@ -390,6 +390,13 @@ export type ConfigModelReasoning =
   | { supported: false }
   | { supported: true; toggle?: boolean; effort?: Array<string>; budget?: { min?: number; max?: number } }
 
+export type ConfigExperimentalWeatherSource = {
+  type: "met-norway" | "open-meteo" | "wttr"
+  name?: string
+  url?: string
+  disabled?: boolean
+}
+
 export type ConfigExperimentalDecisions = {
   enabled?: boolean
   model?: string
@@ -1031,6 +1038,8 @@ export type ConfigModelCapabilities = {
   temperature?: boolean
   reasoning?: ConfigModelReasoning
 }
+
+export type ConfigExperimentalWeather = { sources: Array<ConfigExperimentalWeatherSource> }
 
 export type SessionMessageLocationSwitched = {
   id: SessionMessageID
@@ -2637,6 +2646,7 @@ export type ConfigEntry =
           mcp_events?: boolean
           part_rows?: boolean
           image_generate?: boolean | { model?: string | { providerID: string; model: string; variant?: string } }
+          weather?: ConfigExperimentalWeather
           decisions?: ConfigExperimentalDecisions
           subagent_depth?: number
           location_idle_timeout?: string | false
@@ -5039,6 +5049,19 @@ export type ExperimentalConfigDecisionsSetOutput = void
 
 export type ExperimentalConfigDecisionsRemoveOutput = void
 
+export type ExperimentalConfigWeatherSetInput = {
+  readonly sources: ReadonlyArray<{
+    readonly type: "met-norway" | "open-meteo" | "wttr"
+    readonly name?: string
+    readonly url?: string
+    readonly disabled?: boolean
+  }>
+}
+
+export type ExperimentalConfigWeatherSetOutput = void
+
+export type ExperimentalConfigWeatherRemoveOutput = void
+
 export type ExperimentalConfigPluginAddInput = { readonly package: string }
 
 export type ExperimentalConfigPluginAddOutput = void
@@ -5255,6 +5278,15 @@ export type ConfigDecisionsSetOutput = ExperimentalConfigDecisionsSetOutput
 
 /** @deprecated Use `ExperimentalConfigDecisionsRemoveOutput`. Removed in the next minor. */
 export type ConfigDecisionsRemoveOutput = ExperimentalConfigDecisionsRemoveOutput
+
+/** @deprecated Use `ExperimentalConfigWeatherSetInput`. Removed in the next minor. */
+export type ConfigWeatherSetInput = ExperimentalConfigWeatherSetInput
+
+/** @deprecated Use `ExperimentalConfigWeatherSetOutput`. Removed in the next minor. */
+export type ConfigWeatherSetOutput = ExperimentalConfigWeatherSetOutput
+
+/** @deprecated Use `ExperimentalConfigWeatherRemoveOutput`. Removed in the next minor. */
+export type ConfigWeatherRemoveOutput = ExperimentalConfigWeatherRemoveOutput
 
 /** @deprecated Use `ExperimentalConfigPluginAddInput`. Removed in the next minor. */
 export type ConfigPluginAddInput = ExperimentalConfigPluginAddInput

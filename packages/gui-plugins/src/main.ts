@@ -19,6 +19,7 @@ import imageGen from "./image-gen"
 import mcpServers from "./mcp-servers"
 import routing from "./routing"
 import visual from "./visual"
+import weather from "./weather"
 import subscriptionUsage from "./subscription-usage"
 
 /** Built-in plugins with their main entries, by id. Lists every built-in so their ids stay reserved. */
@@ -43,5 +44,6 @@ export const builtins = compose({
   "mcp-servers": mcpServers,
   routing,
   visual,
+  weather,
   "subscription-usage": subscriptionUsage,
 })

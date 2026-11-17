@@ -30,6 +30,26 @@ export const Decisions = Schema.Struct({
   }),
 }).annotate({ identifier: "ConfigExperimental.Decisions" })
 
+// Fork feature: where the weather tool gets its forecast.
+export const WeatherSource = Schema.Struct({
+  type: Schema.Literals(["met-norway", "open-meteo", "wttr"]).annotate({
+    description: "The service: MET Norway, Open-Meteo or wttr.in. All are free and need no key.",
+  }),
+  name: Schema.String.pipe(optional).annotate({ description: "A label for this source in Settings." }),
+  url: Schema.String.pipe(optional).annotate({
+    description: "The service's base URL, to use a mirror or a self-hosted copy instead of the public one.",
+  }),
+  disabled: Schema.Boolean.pipe(optional).annotate({ description: "Keep the source listed but do not use it." }),
+}).annotate({ identifier: "ConfigExperimental.WeatherSource" })
+export type WeatherSource = typeof WeatherSource.Type
+
+export const Weather = Schema.Struct({
+  sources: Schema.Array(WeatherSource).annotate({
+    description: "The sources the weather tool tries, in order; the first that answers is used.",
+  }),
+}).annotate({ identifier: "ConfigExperimental.Weather" })
+export type Weather = typeof Weather.Type
+
 export class Info extends Schema.Class<Info>("ConfigExperimental.Info")({
   portable_shell_scanner: Schema.Boolean.pipe(optional).annotate({
     description: "Deprecated: the built-in shell permission scanner is now always enabled.",
@@ -64,6 +84,10 @@ export class Info extends Schema.Class<Info>("ConfigExperimental.Info")({
       description:
         "Settings for the experimental_image_generate tool, which is offered while a connected provider has an image model.",
     }),
+  weather: Weather.pipe(optional).annotate({
+    description:
+      "Sources for the weather tool. Without this it uses MET Norway, then Open-Meteo. An empty list turns the tool's lookups off.",
+  }),
   decisions: Decisions.pipe(optional).annotate({
     description:
       "Experimental: route each prompt with a decision model. When the decision model cannot be reached or paid for, the prompt runs unrouted and the session says so.",

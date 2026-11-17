@@ -337,6 +337,9 @@ import type {
   ExperimentalConfigDecisionsSetInput,
   ExperimentalConfigDecisionsSetOutput,
   ExperimentalConfigDecisionsRemoveOutput,
+  ExperimentalConfigWeatherSetInput,
+  ExperimentalConfigWeatherSetOutput,
+  ExperimentalConfigWeatherRemoveOutput,
   ExperimentalConfigPluginAddInput,
   ExperimentalConfigPluginAddOutput,
   ExperimentalConfigPluginRemoveInput,
@@ -1892,6 +1895,31 @@ export function make(options: ClientOptions) {
               requestOptions,
             ),
         },
+        weather: {
+          set: (input: ExperimentalConfigWeatherSetInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigWeatherSetOutput>(
+              {
+                method: "PUT",
+                path: `/api/experimental/config/weather`,
+                body: { sources: input["sources"] },
+                successStatus: 204,
+                declaredStatuses: [400, 401, 404],
+                empty: true,
+              },
+              requestOptions,
+            ),
+          remove: (requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigWeatherRemoveOutput>(
+              {
+                method: "DELETE",
+                path: `/api/experimental/config/weather`,
+                successStatus: 204,
+                declaredStatuses: [400, 401, 404],
+                empty: true,
+              },
+              requestOptions,
+            ),
+        },
         plugin: {
           add: (input: ExperimentalConfigPluginAddInput, requestOptions?: RequestOptions) =>
             request<ExperimentalConfigPluginAddOutput>(
@@ -3010,6 +3038,13 @@ export function make(options: ClientOptions) {
         set: client.experimental.config.decisions.set,
         /** @deprecated Use `client.experimental.config.decisions.remove`. Removed in the next minor. */
         remove: client.experimental.config.decisions.remove,
+      },
+      /** @deprecated Use `client.experimental.config.weather`. Removed in the next minor. */
+      weather: {
+        /** @deprecated Use `client.experimental.config.weather.set`. Removed in the next minor. */
+        set: client.experimental.config.weather.set,
+        /** @deprecated Use `client.experimental.config.weather.remove`. Removed in the next minor. */
+        remove: client.experimental.config.weather.remove,
       },
       /** @deprecated Use `client.experimental.config.plugin`. Removed in the next minor. */
       plugin: {

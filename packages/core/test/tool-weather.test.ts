@@ -43,6 +43,7 @@ describe("weather tool", () => {
 
   test("sums hours up into the place's own days, in the asked units", () => {
     const weather = WeatherTool.summarize({
+      source: "MET Norway",
       place: "Denver, California, United States",
       timezone: "America/Los_Angeles",
       units: "fahrenheit",
@@ -64,12 +65,100 @@ describe("weather tool", () => {
       { date: "2026-11-17", condition: "Partly cloudy", icon: "partly-cloudy-day", high: 68, low: 50 },
       { date: "2026-11-18", condition: "Rain", icon: "rain", high: 59, low: 41 },
     ])
-    expect(WeatherTool.summarize({ place: "x", timezone: "UTC", units: "celsius", days: 1, hours: [] })).toBeUndefined()
+    expect(WeatherTool.summarize({ source: "s", place: "x", timezone: "UTC", units: "celsius", days: 1, hours: [] }),
+    ).toBeUndefined()
+  })
+
+  test("reads Open-Meteo's answer, which already has the asked units", () => {
+    expect(
+      WeatherTool.fromOpenMeteo({
+        source: "Open-Meteo",
+        place: "Paris, France",
+        units: "celsius",
+        forecast: {
+          timezone: "Europe/Paris",
+          current: { temperature_2m: 11.4, relative_humidity_2m: 80.2, weather_code: 0, wind_speed_10m: 9.6, is_day: 0 },
+          daily: {
+            time: ["2026-11-17"],
+            weather_code: [63],
+            temperature_2m_max: [13.2],
+            temperature_2m_min: [7.6],
+          },
+        },
+      }),
+    ).toEqual({
+      source: "Open-Meteo",
+      place: "Paris, France",
+      timezone: "Europe/Paris",
+      temperatureUnit: "°C",
+      windUnit: "km/h",
+      current: { condition: "Clear", icon: "moon", temperature: 11, humidity: 80, wind: 10 },
+      days: [{ date: "2026-11-17", condition: "Rain", icon: "rain", high: 13, low: 8 }],
+    })
+  })
+
+  test("reads wttr.in's answer, taking the asked unit and the midday sky", () => {
+    const forecast = {
+      current_condition: [
+        { temp_C: "6", temp_F: "43", humidity: "94", windspeedKmph: "7", windspeedMiles: "4", weatherCode: "143" },
+      ],
+      weather: [
+        {
+          date: "2026-11-17",
+          maxtempC: "12",
+          maxtempF: "54",
+          mintempC: "6",
+          mintempF: "43",
+          hourly: [
+            { time: "0", weatherCode: "113" },
+            { time: "1200", weatherCode: "302" },
+          ],
+        },
+        { date: "2026-11-18", maxtempC: "11", maxtempF: "52", mintempC: "9", mintempF: "48", hourly: [] },
+      ],
+    }
+
+    const weather = WeatherTool.fromWttr({
+      source: "wttr.in",
+      place: "Denver",
+      timezone: "America/Los_Angeles",
+      units: "fahrenheit",
+      days: 1,
+      forecast,
+    })
+
+    expect(weather?.current).toEqual({ condition: "Fog", icon: "fog", temperature: 43, humidity: 94, wind: 4 })
+    expect(weather?.days).toEqual([{ date: "2026-11-17", condition: "Rain", icon: "rain", high: 54, low: 43 }])
+    expect(
+      WeatherTool.fromWttr({
+        source: "w",
+        place: "p",
+        timezone: "UTC",
+        units: "celsius",
+        days: 1,
+        forecast: { current_condition: [], weather: [] },
+      }),
+    ).toBeUndefined()
+  })
+
+  test("uses the config's sources without the ones switched off, else the defaults", () => {
+    const document = (weather: object | undefined) =>
+      ({ type: "document", info: { experimental: weather ? { weather } : {} } }) as never
+
+    expect(WeatherTool.activeSources([]).map((source) => source.type)).toEqual(["met-norway", "open-meteo"])
+    expect(
+      WeatherTool.activeSources([
+        document({ sources: [{ type: "wttr", disabled: true }, { type: "open-meteo", name: "Mirror" }] }),
+        document(undefined),
+      ]),
+    ).toEqual([{ type: "open-meteo", name: "Mirror" }])
+    expect(WeatherTool.activeSources([document({ sources: [] })])).toEqual([])
   })
 
   test("writes the result as text with the icon names", () => {
     expect(
       WeatherTool.weatherText({
+        source: "MET Norway",
         place: "Denver, California, United States",
         timezone: "America/Los_Angeles",
         temperatureUnit: "°F",
@@ -79,7 +168,7 @@ describe("weather tool", () => {
       }),
     ).toBe(
       [
-        "Denver, California, United States (America/Los_Angeles)",
+        "Denver, California, United States (America/Los_Angeles), from MET Norway",
         "Now: Clear, 72°F, humidity 40%, wind 6 mph. Icon: sun",
         "2026-11-17: Rain, high 60°F, low 48°F. Icon: rain",
       ].join("\n"),

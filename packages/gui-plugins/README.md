@@ -773,6 +773,7 @@ export const builtins = compose({
   "mcp-servers": mcpServers,
   routing,
   visual,
+  weather,
   "subscription-usage": subscriptionUsage,
 })
 ```
@@ -804,6 +805,7 @@ export const builtins = compose({
   "mcp-servers": { ...mcpServers, windowEntry: eager(mcpServersRenderer) },
   routing: { ...routing, windowEntry: eager(routingRenderer) },
   visual: { ...visual, windowEntry: eager(visualRenderer) },
+  weather: { ...weather, windowEntry: eager(weatherRenderer) },
   "subscription-usage": { ...subscriptionUsage, windowEntry: eager(subscriptionUsageRenderer) },
 })
 ```

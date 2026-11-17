@@ -16460,6 +16460,104 @@
         "summary": "Turn the decision layer off"
       }
     },
+    "/api/experimental/config/weather": {
+      "put": {
+        "tags": ["config"],
+        "operationId": "experimental.config.weather.set",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "LocationNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationNotFoundErrorEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Experimental: may change without compatibility guarantees. Set the weather tool's sources in the highest-precedence global configuration file.",
+        "summary": "Save weather sources",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigExperimental.Weather"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "delete": {
+        "tags": ["config"],
+        "operationId": "experimental.config.weather.remove",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "LocationNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationNotFoundErrorEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Experimental: may change without compatibility guarantees. Remove the weather tool's sources from the highest-precedence global configuration file, which returns it to its default sources.",
+        "summary": "Reset weather sources"
+      }
+    },
     "/api/experimental/config/plugin/add": {
       "post": {
         "tags": ["config"],
@@ -17657,6 +17755,9 @@
                   }
                 ]
               },
+              "weather": {
+                "$ref": "#/components/schemas/ConfigExperimental.Weather"
+              },
               "decisions": {
                 "$ref": "#/components/schemas/ConfigExperimental.Decisions"
               },
@@ -18253,6 +18354,41 @@
             "type": "number"
           }
         },
+        "additionalProperties": false
+      },
+      "ConfigExperimental.Weather": {
+        "type": "object",
+        "properties": {
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConfigExperimental.WeatherSource"
+            },
+            "description": "The sources the weather tool tries, in order; the first that answers is used."
+          }
+        },
+        "required": ["sources"],
+        "additionalProperties": false
+      },
+      "ConfigExperimental.WeatherSource": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["met-norway", "open-meteo", "wttr"],
+            "description": "The service: MET Norway, Open-Meteo or wttr.in. All are free and need no key."
+          },
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "disabled": {
+            "type": "boolean"
+          }
+        },
+        "required": ["type"],
         "additionalProperties": false
       },
       "ConfigShell.Option": {

@@ -39,6 +39,8 @@ import routing from "./routing"
 import routingRenderer from "./routing/renderer"
 import visual from "./visual"
 import visualRenderer from "./visual/renderer"
+import weather from "./weather"
+import weatherRenderer from "./weather/renderer"
 import subscriptionUsage from "./subscription-usage"
 import subscriptionUsageRenderer from "./subscription-usage/renderer"
 
@@ -69,5 +71,6 @@ export const builtins = compose({
   "mcp-servers": { ...mcpServers, windowEntry: eager(mcpServersRenderer) },
   routing: { ...routing, windowEntry: eager(routingRenderer) },
   visual: { ...visual, windowEntry: eager(visualRenderer) },
+  weather: { ...weather, windowEntry: eager(weatherRenderer) },
   "subscription-usage": { ...subscriptionUsage, windowEntry: eager(subscriptionUsageRenderer) },
 })

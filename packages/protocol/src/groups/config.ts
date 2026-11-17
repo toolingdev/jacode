@@ -128,6 +128,31 @@ export const ConfigGroup = HttpApiGroup.make("server.config")
     ),
   )
   .add(
+    HttpApiEndpoint.put("config.weather.set", "/api/experimental/config/weather", {
+      payload: ConfigExperimental.Weather,
+      success: HttpApiSchema.NoContent,
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.weather.set",
+        summary: "Save weather sources",
+        description:
+          "Experimental: may change without compatibility guarantees. Set the weather tool's sources in the highest-precedence global configuration file.",
+      }),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.delete("config.weather.remove", "/api/experimental/config/weather", {
+      success: HttpApiSchema.NoContent,
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.weather.remove",
+        summary: "Reset weather sources",
+        description:
+          "Experimental: may change without compatibility guarantees. Remove the weather tool's sources from the highest-precedence global configuration file, which returns it to its default sources.",
+      }),
+    ),
+  )
+  .add(
     HttpApiEndpoint.post("config.plugin.add", "/api/experimental/config/plugin/add", {
       payload: Schema.Struct({ package: Schema.String.check(Schema.isMinLength(1)) }),
       success: HttpApiSchema.NoContent,

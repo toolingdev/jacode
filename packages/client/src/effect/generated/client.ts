@@ -335,6 +335,9 @@ import type {
   ExperimentalConfigDecisionsSetInput,
   ExperimentalConfigDecisionsSetOutput,
   ExperimentalConfigDecisionsRemoveOutput,
+  ExperimentalConfigWeatherSetInput,
+  ExperimentalConfigWeatherSetOutput,
+  ExperimentalConfigWeatherRemoveOutput,
   ExperimentalConfigPluginAddInput,
   ExperimentalConfigPluginAddOutput,
   ExperimentalConfigPluginRemoveInput,
@@ -2056,6 +2059,17 @@ const EndpointExperimentalConfigDecisionsRemove = (raw: RawClient["server.config
     raw["config.decisions.remove"]({}).pipe(Effect.mapError(mapClientError)),
   )
 
+const EndpointExperimentalConfigWeatherSet =
+  (raw: RawClient["server.config"]) => (input: ExperimentalConfigWeatherSetInput) =>
+    preserveEffect<ExperimentalConfigWeatherSetOutput>()(
+      raw["config.weather.set"]({ payload: { sources: input["sources"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointExperimentalConfigWeatherRemove = (raw: RawClient["server.config"]) => () =>
+  preserveEffect<ExperimentalConfigWeatherRemoveOutput>()(
+    raw["config.weather.remove"]({}).pipe(Effect.mapError(mapClientError)),
+  )
+
 const EndpointExperimentalConfigPluginAdd =
   (raw: RawClient["server.config"]) => (input: ExperimentalConfigPluginAddInput) =>
     preserveEffect<ExperimentalConfigPluginAddOutput>()(
@@ -2088,6 +2102,7 @@ const adaptGroupExperimentalConfig = (raw: RawClient["server.config"]) => ({
     set: EndpointExperimentalConfigDecisionsSet(raw),
     remove: EndpointExperimentalConfigDecisionsRemove(raw),
   },
+  weather: { set: EndpointExperimentalConfigWeatherSet(raw), remove: EndpointExperimentalConfigWeatherRemove(raw) },
   plugin: { add: EndpointExperimentalConfigPluginAdd(raw), remove: EndpointExperimentalConfigPluginRemove(raw) },
   skill: { add: EndpointExperimentalConfigSkillAdd(raw), remove: EndpointExperimentalConfigSkillRemove(raw) },
 })
@@ -2253,6 +2268,13 @@ const adaptClient = (raw: RawClient) => {
         set: client.experimental.config.decisions.set,
         /** @deprecated Use `client.experimental.config.decisions.remove`. Removed in the next minor. */
         remove: client.experimental.config.decisions.remove,
+      },
+      /** @deprecated Use `client.experimental.config.weather`. Removed in the next minor. */
+      weather: {
+        /** @deprecated Use `client.experimental.config.weather.set`. Removed in the next minor. */
+        set: client.experimental.config.weather.set,
+        /** @deprecated Use `client.experimental.config.weather.remove`. Removed in the next minor. */
+        remove: client.experimental.config.weather.remove,
       },
       /** @deprecated Use `client.experimental.config.plugin`. Removed in the next minor. */
       plugin: {

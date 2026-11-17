@@ -2874,6 +2874,15 @@ export interface ConfigApi<E = never> {
     readonly remove: ExperimentalConfigDecisionsRemoveOperation<E>
   }
 
+  /** @deprecated Use `client.experimental.config.weather`. Removed in the next minor. */
+  readonly weather: {
+    /** @deprecated Use `client.experimental.config.weather.set`. Removed in the next minor. */
+    readonly set: ExperimentalConfigWeatherSetOperation<E>
+
+    /** @deprecated Use `client.experimental.config.weather.remove`. Removed in the next minor. */
+    readonly remove: ExperimentalConfigWeatherRemoveOperation<E>
+  }
+
   /** @deprecated Use `client.experimental.config.plugin`. Removed in the next minor. */
   readonly plugin: {
     /** @deprecated Use `client.experimental.config.plugin.add`. Removed in the next minor. */
@@ -2955,6 +2964,25 @@ export type ExperimentalConfigDecisionsRemoveOperation<E = never> = () => Effect
   E
 >
 
+export type ExperimentalConfigWeatherSetInput = {
+  readonly sources: ReadonlyArray<{
+    readonly type: "met-norway" | "open-meteo" | "wttr"
+    readonly name?: string | undefined
+    readonly url?: string | undefined
+    readonly disabled?: boolean | undefined
+  }>
+}
+export type ExperimentalConfigWeatherSetOutput = void
+export type ExperimentalConfigWeatherSetOperation<E = never> = (
+  input: ExperimentalConfigWeatherSetInput,
+) => Effect.Effect<ExperimentalConfigWeatherSetOutput, E>
+
+export type ExperimentalConfigWeatherRemoveOutput = void
+export type ExperimentalConfigWeatherRemoveOperation<E = never> = () => Effect.Effect<
+  ExperimentalConfigWeatherRemoveOutput,
+  E
+>
+
 export type ExperimentalConfigPluginAddInput = { readonly package: string }
 export type ExperimentalConfigPluginAddOutput = void
 export type ExperimentalConfigPluginAddOperation<E = never> = (
@@ -2992,6 +3020,10 @@ export interface ExperimentalConfigApi<E = never> {
   readonly decisions: {
     readonly set: ExperimentalConfigDecisionsSetOperation<E>
     readonly remove: ExperimentalConfigDecisionsRemoveOperation<E>
+  }
+  readonly weather: {
+    readonly set: ExperimentalConfigWeatherSetOperation<E>
+    readonly remove: ExperimentalConfigWeatherRemoveOperation<E>
   }
   readonly plugin: {
     readonly add: ExperimentalConfigPluginAddOperation<E>
@@ -3299,6 +3331,21 @@ export type ConfigDecisionsRemoveOutput = ExperimentalConfigDecisionsRemoveOutpu
 
 /** @deprecated Use `ExperimentalConfigDecisionsRemoveOperation`. Removed in the next minor. */
 export type ConfigDecisionsRemoveOperation<E = never> = ExperimentalConfigDecisionsRemoveOperation<E>
+
+/** @deprecated Use `ExperimentalConfigWeatherSetInput`. Removed in the next minor. */
+export type ConfigWeatherSetInput = ExperimentalConfigWeatherSetInput
+
+/** @deprecated Use `ExperimentalConfigWeatherSetOutput`. Removed in the next minor. */
+export type ConfigWeatherSetOutput = ExperimentalConfigWeatherSetOutput
+
+/** @deprecated Use `ExperimentalConfigWeatherSetOperation`. Removed in the next minor. */
+export type ConfigWeatherSetOperation<E = never> = ExperimentalConfigWeatherSetOperation<E>
+
+/** @deprecated Use `ExperimentalConfigWeatherRemoveOutput`. Removed in the next minor. */
+export type ConfigWeatherRemoveOutput = ExperimentalConfigWeatherRemoveOutput
+
+/** @deprecated Use `ExperimentalConfigWeatherRemoveOperation`. Removed in the next minor. */
+export type ConfigWeatherRemoveOperation<E = never> = ExperimentalConfigWeatherRemoveOperation<E>
 
 /** @deprecated Use `ExperimentalConfigPluginAddInput`. Removed in the next minor. */
 export type ConfigPluginAddInput = ExperimentalConfigPluginAddInput
