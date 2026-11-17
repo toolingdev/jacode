@@ -8,7 +8,7 @@ import {
   displayName,
   getProjectAvatarGenerated,
   getProjectAvatarSource,
-  getProjectAvatarVariant,
+  getProjectAvatarColor,
   ProjectAvatar,
 } from "@opencode/ui/project-avatar"
 import { TextInput } from "@opencode/ui/text-input"
@@ -726,7 +726,7 @@ function ProjectRow(props: {
           class="shrink-0"
           fallback={displayName(props.project)}
           src={getProjectAvatarSource(props.project.id, props.project.icon)}
-          variant={getProjectAvatarVariant(props.project.icon?.color)}
+          variant={getProjectAvatarColor(props.project)}
           generated={getProjectAvatarGenerated(props.project)}
         />
         <div class="command-palette-row-text">

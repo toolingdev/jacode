@@ -89,6 +89,20 @@
   background: linear-gradient(var(--tab-overlay), var(--tab-overlay)), var(--tab-base);
 }
 
+/* Fork feature: a tab wears its project's color: a wash on every tab, stronger with a bright edge on the open one. */
+[data-titlebar-tab][data-tint] {
+  --tab-base: color-mix(in oklab, var(--tab-tint) 16%, var(--v2-background-bg-deep));
+}
+
+[data-titlebar-tab][data-tint][data-active="true"] {
+  --tab-base: color-mix(in oklab, var(--tab-tint) 46%, var(--v2-background-bg-deep));
+  box-shadow: inset 0 -2px 0 color-mix(in oklab, var(--tab-tint), white 35%);
+}
+
+[data-titlebar-tab][data-tint][data-orientation="vertical"][data-active="true"] {
+  box-shadow: inset 2px 0 0 color-mix(in oklab, var(--tab-tint), white 35%);
+}
+
 [data-titlebar-tab][data-orientation="vertical"]:has([data-slot="tab-project"]) {
   height: 45px;
 }

@@ -3,7 +3,7 @@ import {
   displayName,
   getProjectAvatarGenerated,
   getProjectAvatarSource,
-  getProjectAvatarVariant,
+  getProjectAvatarColor,
   ProjectAvatar,
 } from "@opencode/ui/project-avatar"
 
@@ -19,7 +19,7 @@ export function SessionTabAvatarView(props: {
     <ProjectAvatar
       fallback={displayName(props.project ?? { worktree: props.directory })}
       src={getProjectAvatarSource(props.project?.id, props.project?.icon)}
-      variant={getProjectAvatarVariant(props.project?.icon?.color)}
+      variant={getProjectAvatarColor(props.project ?? { worktree: props.directory })}
       generated={getProjectAvatarGenerated(props.project ?? { worktree: props.directory })}
       label={props.label}
       unread={props.unread}

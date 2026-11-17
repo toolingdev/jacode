@@ -1,0 +1,43 @@
+[data-component="server-badge"] {
+  /* The avatar colors are dark fills; lifted toward white they read as marks on the dark shell. */
+  --server-badge-fg: color-mix(in oklab, var(--server-badge-tint), white 45%);
+  display: inline-flex;
+  min-width: 0;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  color: var(--server-badge-fg);
+}
+
+[data-color-scheme="light"] [data-component="server-badge"] {
+  --server-badge-fg: var(--server-badge-tint);
+}
+
+[data-component="server-badge"]:not([data-named]) {
+  width: 16px;
+  height: 16px;
+  justify-content: center;
+  border-radius: 4px;
+  background: var(--server-badge-tint);
+  box-shadow: inset 0 0 0 0.5px color-mix(in oklab, var(--server-badge-tint), white 30%);
+  color: var(--v2-avatar-fg);
+}
+
+[data-component="server-badge"]:not([data-named]) [data-slot="icon-svg"] {
+  width: 12px;
+  height: 12px;
+}
+
+[data-component="server-badge"][data-named] {
+  height: 20px;
+  max-width: 140px;
+  margin-inline-end: 4px;
+  padding-inline: 6px;
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--server-badge-tint) 28%, transparent);
+  box-shadow: inset 0 0 0 0.5px color-mix(in oklab, var(--server-badge-fg) 45%, transparent);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}

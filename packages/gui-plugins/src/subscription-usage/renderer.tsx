@@ -84,7 +84,7 @@ function SubscriptionUsage(props: { session: MountedSession; active: boolean; co
               aria-label={ctx.t("view")}
             >
               <span class="flex items-center gap-2 whitespace-nowrap group-active:text-v2-text-text-muted">
-                <ProgressCircle appearance="compact" size={16} percentage={main().percent} />
+                <ProgressCircle appearance="compact" size={16} percentage={main().percent} leveled />
                 <Show when={!props.compact}>
                   <span class="tabular-nums">{ctx.t(`short.${main().window}`, { percent: main().percent })}</span>
                 </Show>

@@ -6,7 +6,7 @@ import { Divider } from "@opencode/ui/divider"
 import {
   displayName,
   getProjectAvatarSource,
-  getProjectAvatarVariant,
+  getProjectAvatarColor,
   ProjectAvatar,
 } from "@opencode/ui/project-avatar"
 import { TextInput } from "@opencode/ui/text-input"
@@ -687,7 +687,7 @@ export function DirectoryPickerDialog(props: DirectoryPickerDialogProps) {
                           aria-hidden="true"
                           fallback={name()}
                           src={getProjectAvatarSource(project.id, project.icon)}
-                          variant={getProjectAvatarVariant(project.icon?.color)}
+                          variant={getProjectAvatarColor(project)}
                         />
                         <span class="min-w-0 truncate">{name()}</span>
                       </Button>

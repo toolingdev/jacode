@@ -6,10 +6,12 @@ export interface ProgressCircleProps extends Pick<ComponentProps<"svg">, "class"
   appearance?: "compact" | "indicator"
   size?: number
   strokeWidth?: number
+  /** Fork feature: colors the ring by how full it is — calm, then a warning from 60%, then danger from 85%. */
+  leveled?: boolean
 }
 
 export function ProgressCircle(props: ProgressCircleProps) {
-  const [local, rest] = splitProps(props, ["percentage", "appearance", "size", "strokeWidth", "class", "classList"])
+  const [local, rest] = splitProps(props, ["percentage", "appearance", "size", "strokeWidth", "leveled", "class", "classList"])
 
   const appearance = () => local.appearance ?? "compact"
   const viewBoxSize = () => (appearance() === "indicator" ? 16 : 14)
@@ -18,6 +20,15 @@ export function ProgressCircle(props: ProgressCircleProps) {
   const center = () => viewBoxSize() / 2
   const radius = () => center() - strokeWidth() / 2
   const circumference = createMemo(() => 2 * Math.PI * radius())
+
+  const level = () => {
+    if (!local.leveled) return
+
+    if (local.percentage >= 85) return "danger"
+
+    return local.percentage >= 60 ? "warning" : "success"
+  }
+
   const offset = createMemo(() => circumference() * (1 - Math.max(0, Math.min(100, local.percentage || 0)) / 100))
 
   return (
@@ -29,6 +40,7 @@ export function ProgressCircle(props: ProgressCircleProps) {
       fill="none"
       data-component="progress-circle"
       data-appearance={appearance()}
+      data-level={level()}
       classList={{
         ...local.classList,
         [local.class ?? ""]: !!local.class,

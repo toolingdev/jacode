@@ -7,7 +7,7 @@ import {
   displayName,
   getProjectAvatarGenerated,
   getProjectAvatarSource,
-  getProjectAvatarVariant,
+  getProjectAvatarColor,
   ProjectAvatar,
 } from "@opencode/ui/project-avatar"
 import { useNavigate } from "@solidjs/router"
@@ -27,6 +27,7 @@ import { containsDirectory, getFilename } from "@opencode/util/path"
 import { useServer } from "@/runtime/server/current"
 import { ServerConnection, useServers } from "@/runtime/server/registry"
 import { ServerLabel } from "@/servers/registry/label"
+import { ServerBadge } from "@/servers/registry/badge"
 import { fileManagerApp } from "@/home/projects/file-manager"
 import { useLanguage } from "@/runtime/i18n/language"
 import { usePlatform } from "@/runtime/platform/platform"
@@ -205,6 +206,9 @@ export function SessionLocation(props: {
 
   return (
     <>
+      <Show when={!props.compact}>
+        <ServerBadge server={server.conn} named />
+      </Show>
       {/* The shift lines the card's icons and labels up with the trigger's: 2px card + 8px row padding vs the trigger's 6px. */}
       <Menu placement="bottom-start" gutter={4} shift={-4} modal={false} onOpenChange={onOpenChange}>
         <Tooltip
@@ -223,7 +227,7 @@ export function SessionLocation(props: {
               aria-hidden="true"
               fallback={projectName()}
               src={getProjectAvatarSource(props.project?.id, props.project?.icon)}
-              variant={getProjectAvatarVariant(props.project?.icon?.color)}
+              variant={getProjectAvatarColor(props.project ?? { worktree: props.directory })}
               generated={getProjectAvatarGenerated(props.project)}
             />
             <bdi dir="auto" data-slot="session-location-project" class="session-location-label min-w-0 truncate">
@@ -257,7 +261,7 @@ export function SessionLocation(props: {
                 aria-hidden="true"
                 fallback={projectName()}
                 src={getProjectAvatarSource(props.project?.id, props.project?.icon)}
-                variant={getProjectAvatarVariant(props.project?.icon?.color)}
+                variant={getProjectAvatarColor(props.project ?? { worktree: props.directory })}
                 generated={getProjectAvatarGenerated(props.project)}
               />
               <bdi dir="auto" class="min-w-0 truncate font-[530]">

@@ -10,7 +10,7 @@ import {
   displayName,
   getProjectAvatarGenerated,
   getProjectAvatarSource,
-  getProjectAvatarVariant,
+  getProjectAvatarColor,
   ProjectAvatar,
 } from "@opencode/ui/project-avatar"
 import { Schema } from "effect"
@@ -402,7 +402,7 @@ function NewSessionLocation(props: {
                 class="shrink-0"
                 fallback={displayName(props.project)}
                 src={getProjectAvatarSource(props.project.id, props.project.icon)}
-                variant={getProjectAvatarVariant(props.project.icon?.color)}
+                variant={getProjectAvatarColor(props.project)}
                 generated={getProjectAvatarGenerated(props.project)}
               />
               <span class="min-w-0 truncate">{displayName(props.project)}</span>

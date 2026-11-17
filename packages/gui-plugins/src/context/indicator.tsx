@@ -106,6 +106,7 @@ export function SessionContextUsage(props: {
         size={16}
         strokeWidth={2}
         percentage={context()?.usage ?? 0}
+        leveled
         style={{
           "--progress-circle-background": "var(--v2-background-bg-layer-04)",
           "--progress-circle-background-overlay": "var(--v2-overlay-simple-overlay-pressed, transparent)",
@@ -117,7 +118,7 @@ export function SessionContextUsage(props: {
 
   const compactCircle = () => (
     <div class="flex items-center justify-center">
-      <ProgressCircle appearance="compact" size={16} percentage={context()?.usage ?? 0} />
+      <ProgressCircle appearance="compact" size={16} percentage={context()?.usage ?? 0} leveled />
     </div>
   )
 

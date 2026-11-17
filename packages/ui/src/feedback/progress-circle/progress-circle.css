@@ -23,6 +23,18 @@
   stroke: var(--progress-circle-progress, var(--v2-icon-icon-base));
 }
 
+[data-component="progress-circle"][data-level="success"] [data-slot="progress-circle-progress"] {
+  stroke: var(--v2-state-fg-success);
+}
+
+[data-component="progress-circle"][data-level="warning"] [data-slot="progress-circle-progress"] {
+  stroke: var(--v2-state-fg-warning);
+}
+
+[data-component="progress-circle"][data-level="danger"] [data-slot="progress-circle-progress"] {
+  stroke: var(--v2-state-fg-danger);
+}
+
 [data-component="progress-circle"] [data-slot="progress-circle-progress"] {
   transition: stroke-dashoffset 0.35s cubic-bezier(0.65, 0, 0.35, 1);
 }

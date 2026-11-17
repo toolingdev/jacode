@@ -10,8 +10,9 @@ import { Menu } from "@opencode/ui/menu"
 import { useServerCtx } from "@/runtime/server/runtime"
 import { useLanguage } from "@/runtime/i18n/language"
 import { ServerConnection, useServers } from "@/runtime/server/registry"
-import { displayName, ProjectAvatar } from "@opencode/ui/project-avatar"
+import { displayName, getProjectAvatarColor, ProjectAvatar } from "@opencode/ui/project-avatar"
 import { SessionTabAvatarView } from "@/shell/layout/session-tab-avatar"
+import { ServerBadge } from "@/servers/registry/badge"
 import type { SessionInfo } from "@opencode/client/promise"
 import { showToast } from "@/shell/notifications/toast"
 import { createSessionExporter } from "@/session/commands/export-session"
@@ -188,6 +189,13 @@ export function TabNavItem(
     if (!home || !directory.startsWith(home) || !/^([/\\]|$)/.test(directory.slice(home.length))) return directory
 
     return "~" + directory.slice(home.length)
+  })
+
+  // Fork feature: a tab wears its project's color, so tabs of one project read as a group.
+  const tint = createMemo(() => {
+    const directory = props.session?.location.directory ?? props.fallbackDirectory
+
+    return directory ? getProjectAvatarColor(project() ?? { worktree: directory }) : undefined
   })
 
   // Only label the server when multiple servers are connected, and never the current one.
@@ -438,6 +446,8 @@ export function TabNavItem(
       data-title-overflow={titleOverflowing()}
       data-editing={editing()}
       data-avatar={props.hideAvatar ? "hidden" : undefined}
+      data-tint={tint()}
+      style={{ "--tab-tint": tint() ? `var(--v2-avatar-bg-${tint()})` : undefined }}
       class="group relative flex h-7 w-full min-w-0 select-none flex-row items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-[6px] px-1.5 [container-type:inline-size]"
       classList={{ invisible: props.hidden }}
       data-active={props.active}
@@ -515,6 +525,9 @@ export function TabNavItem(
             <span data-slot="tab-avatar-unread-dot" aria-hidden="true" />
           </Show>
         </span>
+        <Show when={props.orientation !== "vertical"}>
+          <ServerBadge server={servers.list.find((item) => ServerConnection.key(item) === props.server)} />
+        </Show>
         <span
           ref={(el) => {
             titleEl = el

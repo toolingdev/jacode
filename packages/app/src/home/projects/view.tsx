@@ -6,7 +6,7 @@ import {
   displayName,
   getProjectAvatarGenerated,
   getProjectAvatarSource,
-  getProjectAvatarVariant,
+  getProjectAvatarColor,
   ProjectAvatar,
 } from "@opencode/ui/project-avatar"
 import { Icon } from "@opencode/ui/icon"
@@ -708,7 +708,7 @@ function HomeProjectAvatar(props: { project: LocalProject; outline?: boolean }) 
     <ProjectAvatar
       fallback={name()}
       src={props.outline ? undefined : getProjectAvatarSource(props.project.id, props.project.icon)}
-      variant={props.outline ? "outline" : getProjectAvatarVariant(props.project.icon?.color)}
+      variant={props.outline ? "outline" : getProjectAvatarColor(props.project)}
       generated={props.outline ? undefined : getProjectAvatarGenerated(props.project)}
     />
   )

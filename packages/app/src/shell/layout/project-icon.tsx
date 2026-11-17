@@ -2,7 +2,7 @@ import {
   displayName,
   getProjectAvatarGenerated,
   getProjectAvatarSource,
-  getProjectAvatarVariant,
+  getProjectAvatarColor,
   ProjectAvatar,
   type ProjectAvatarProps,
 } from "@opencode/ui/project-avatar"
@@ -24,7 +24,7 @@ export function ProjectIcon(props: ProjectIconProps) {
       {...rest}
       fallback={local.fallback ?? displayName(local.project)}
       src={getProjectAvatarSource(local.project.id, icon())}
-      variant={getProjectAvatarVariant(icon()?.color)}
+      variant={getProjectAvatarColor({ ...local.project, icon: icon() })}
       generated={getProjectAvatarGenerated({ ...local.project, icon: icon() })}
     />
   )

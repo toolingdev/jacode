@@ -106,6 +106,28 @@ export function getProjectAvatarVariant(key?: string): ProjectAvatarVariant {
   return "gray"
 }
 
+/** The variants a color can be picked from when nobody chose one: every one but gray. */
+export const PROJECT_AVATAR_COLORS = PROJECT_AVATAR_VARIANTS.filter((variant) => variant !== "gray")
+
+/** Fork feature: a stable color for a name, so the same project or server always shows the same one. */
+export function pickProjectAvatarVariant(seed: string, palette: readonly ProjectAvatarVariant[] = PROJECT_AVATAR_COLORS) {
+  const hash = Array.from(seed).reduce((sum, char) => (Math.imul(sum, 31) + (char.codePointAt(0) ?? 0)) >>> 0, 7)
+
+  return palette[hash % palette.length] ?? "gray"
+}
+
+/** The color a project shows: the one chosen for it, or a stable one picked from its ID or directory. */
+export function getProjectAvatarColor(project?: {
+  id?: string
+  worktree?: string
+  icon?: { color?: string }
+}): ProjectAvatarVariant {
+  if (project?.icon?.color) return getProjectAvatarVariant(project.icon.color)
+  const seed = project?.id && project.id !== "global" ? project.id : project?.worktree
+
+  return seed ? pickProjectAvatarVariant(seed) : "gray"
+}
+
 /**
  * Keeps each project's generated avatar once it has been drawn, so it stays identical after restarts and after the
  * generator's defaults change. Without a store, avatars are derived from their key every time.
