@@ -30,3 +30,24 @@ export function createSessionContextFormatter(locale: string) {
     },
   }
 }
+
+// Fork feature: the context view colors its numbers and draws them as bars, so a session reads at a glance.
+export type StatTone = "success" | "warning" | "danger" | "info" | "accent"
+
+/** How full the context is: comfortable, filling up, or close to the limit. */
+export function usageTone(percent: number | null | undefined): StatTone | undefined {
+  if (percent === undefined || percent === null) return
+
+  if (percent >= 85) return "danger"
+
+  if (percent >= 60) return "warning"
+
+  return "success"
+}
+
+/** A part's share of a whole as a bar length, or nothing when there is no whole to measure against. */
+export function statShare(part: number | undefined, whole: number | null | undefined) {
+  if (part === undefined || !whole) return
+
+  return Math.min(Math.max(part / whole, 0), 1)
+}

@@ -16,7 +16,7 @@ import { lastAssistantWithUsage } from "@opencode/client/solid"
 import { createKeyed, usePlugin, type MountedSession } from "@opencode/plugin/gui"
 import { catalogModel, syncCatalog } from "./catalog"
 import { fetchSessionExport, sessionExportFilename } from "./export"
-import { createSessionContextFormatter } from "./format"
+import { createSessionContextFormatter, statShare, usageTone, type StatTone } from "./format"
 import {
   createContextScrollState,
   createSessionExportState,
@@ -29,11 +29,51 @@ import {
   type SessionExportEvent,
 } from "./machine"
 
-function Stat(props: { label: string; value: JSX.Element }) {
+const toneColor = {
+  success: "var(--v2-state-fg-success)",
+  warning: "var(--v2-state-fg-warning)",
+  danger: "var(--v2-state-fg-danger)",
+  info: "var(--v2-state-fg-info)",
+  accent: "var(--v2-text-text-accent)",
+} satisfies Record<StatTone, string>
+
+type StatPart = { tone: StatTone; share: number | undefined }
+
+function Stat(props: { label: string; value: JSX.Element; tone?: StatTone; parts?: StatPart[]; caption?: string }) {
   return (
     <div class="flex flex-col gap-1">
       <div class="text-12-regular text-text-weak">{props.label}</div>
-      <div class="text-12-medium text-text-strong">{props.value}</div>
+      <div class="flex items-baseline gap-2">
+        <div class="text-12-medium text-text-strong" style={{ color: props.tone && toneColor[props.tone] }}>
+          {props.value}
+        </div>
+        <Show when={props.caption}>
+          <div class="text-12-regular text-text-weak">{props.caption}</div>
+        </Show>
+      </div>
+      <Show when={props.parts}>
+        {(parts) => (
+          <div
+            aria-hidden="true"
+            class="flex h-1.5 w-full max-w-64 rounded-full overflow-hidden"
+            style={{ background: "var(--v2-border-border-muted)" }}
+          >
+            <For each={parts()}>
+              {(part) => (
+                <div
+                  class="h-full"
+                  style={{
+                    // A sliver stays visible so a small part still reads as present rather than missing.
+                    width: part.share ? `max(${part.share * 100}%, 2px)` : "0",
+                    background: toneColor[part.tone],
+                    transition: "width 300ms ease-out",
+                  }}
+                />
+              )}
+            </For>
+          </div>
+        )}
+      </Show>
     </div>
   )
 }
@@ -49,9 +89,7 @@ function RawMessageContent(props: { message: SessionMessageInfo; onRendered: () 
     }
   })
 
-  return (
-    <File mode="text" file={file()} overflow="wrap" class="select-text" onRendered={props.onRendered} />
-  )
+  return <File mode="text" file={file()} overflow="wrap" class="select-text" onRendered={props.onRendered} />
 }
 
 function RawMessage(props: {
@@ -195,28 +233,91 @@ export default function SessionContextTab(props: { session: MountedSession }) {
     return c.modelLabel
   })
 
+  // A bar always measures against something named beside it: the context against its limit, and a total against
+  // the colored numbers that add up to it. A number alone gets no bar, since nothing says what would fill it.
   const stats = [
     { label: "stats.session", value: () => info()?.title ?? (props.session.id || "—") },
-    { label: "stats.messages", value: () => counts().all.toLocaleString(i18n.locale()) },
+    {
+      label: "stats.messages",
+      value: () => counts().all.toLocaleString(i18n.locale()),
+      parts: () => [
+        { tone: "info" as const, share: statShare(counts().user, counts().all) },
+        { tone: "accent" as const, share: statShare(counts().assistant, counts().all) },
+      ],
+    },
     { label: "stats.provider", value: providerLabel },
     { label: "stats.model", value: modelLabel },
     { label: "stats.limit", value: () => formatter().number(context()?.limit) },
-    { label: "stats.totalTokens", value: () => formatter().number(context()?.total) },
-    { label: "stats.usage", value: () => formatter().percent(context()?.usage) },
-    { label: "stats.inputTokens", value: () => formatter().number(context()?.input) },
-    { label: "stats.outputTokens", value: () => formatter().number(context()?.tokens.output) },
-    { label: "stats.reasoningTokens", value: () => formatter().number(context()?.tokens.reasoning) },
+    {
+      label: "stats.totalTokens",
+      value: () => formatter().number(context()?.total),
+      parts: () => {
+        const c = context()
+
+        if (!c) return
+
+        return [
+          { tone: "info" as const, share: statShare(c.input, c.total) },
+          { tone: "success" as const, share: statShare(c.tokens.cache.read + c.tokens.cache.write, c.total) },
+          { tone: "accent" as const, share: statShare(c.tokens.output, c.total) },
+          { tone: "warning" as const, share: statShare(c.tokens.reasoning, c.total) },
+        ]
+      },
+    },
+    {
+      label: "stats.usage",
+      value: () => formatter().percent(context()?.usage),
+      tone: () => usageTone(context()?.usage),
+      caption: () => {
+        const c = context()
+
+        if (!c?.limit) return
+
+        return `${formatter().number(c.total)} / ${formatter().number(c.limit)}`
+      },
+      parts: () => {
+        const tone = usageTone(context()?.usage)
+
+        return tone && [{ tone, share: statShare(context()?.total, context()?.limit) }]
+      },
+    },
+    { label: "stats.inputTokens", value: () => formatter().number(context()?.input), tone: () => "info" as const },
+    {
+      label: "stats.outputTokens",
+      value: () => formatter().number(context()?.tokens.output),
+      tone: () => "accent" as const,
+    },
+    {
+      label: "stats.reasoningTokens",
+      value: () => formatter().number(context()?.tokens.reasoning),
+      tone: () => "warning" as const,
+    },
     {
       label: "stats.cacheTokens",
       value: () =>
         `${formatter().number(context()?.tokens.cache.read)} / ${formatter().number(context()?.tokens.cache.write)}`,
+      tone: () => "success" as const,
     },
-    { label: "stats.userMessages", value: () => counts().user.toLocaleString(i18n.locale()) },
-    { label: "stats.assistantMessages", value: () => counts().assistant.toLocaleString(i18n.locale()) },
+    {
+      label: "stats.userMessages",
+      value: () => counts().user.toLocaleString(i18n.locale()),
+      tone: () => "info" as const,
+    },
+    {
+      label: "stats.assistantMessages",
+      value: () => counts().assistant.toLocaleString(i18n.locale()),
+      tone: () => "accent" as const,
+    },
     { label: "stats.totalCost", value: cost },
     { label: "stats.sessionCreated", value: () => formatter().time(info()?.time.created) },
     { label: "stats.lastActivity", value: () => formatter().time(context()?.message.time.created) },
-  ] satisfies { label: string; value: () => JSX.Element }[]
+  ] satisfies {
+    label: string
+    value: () => JSX.Element
+    tone?: () => StatTone | undefined
+    parts?: () => StatPart[] | undefined
+    caption?: () => string | undefined
+  }[]
 
   const [exportState, setExportState] = createSignal(createSessionExportState())
   const exportControllers = new Map<number, AbortController>()
@@ -377,10 +478,7 @@ export default function SessionContextTab(props: { session: MountedSession }) {
   )
 
   // New messages grow the content, so a restore clamped by shorter content can now reach its offset.
-  createKeyed(
-    createMemo(on(messages, (list) => list, { defer: true })),
-    () => dispatchScroll(contentChanged),
-  )
+  createKeyed(createMemo(on(messages, (list) => list, { defer: true })), () => dispatchScroll(contentChanged))
 
   // Writes the offset the save frame has not stored yet.
   onCleanup(() => dispatchScroll({ type: "disposed" }))
@@ -407,7 +505,19 @@ export default function SessionContextTab(props: { session: MountedSession }) {
       <div data-slot="session-usage-content" class="px-4 pt-4 pb-6 flex flex-col gap-6 md:px-6 md:pb-10 md:gap-10">
         <div class="grid grid-cols-1 @[32rem]:grid-cols-2 gap-4">
           <For each={stats}>
-            {(stat) => <Show when={stat.value()}>{(value) => <Stat label={ctx.t(stat.label)} value={value()} />}</Show>}
+            {(stat) => (
+              <Show when={stat.value()}>
+                {(value) => (
+                  <Stat
+                    label={ctx.t(stat.label)}
+                    value={value()}
+                    tone={stat.tone?.()}
+                    parts={stat.parts?.()}
+                    caption={stat.caption?.()}
+                  />
+                )}
+              </Show>
+            )}
           </For>
         </div>
 
@@ -441,7 +551,11 @@ export default function SessionContextTab(props: { session: MountedSession }) {
           <Accordion multiple>
             <For each={messages()}>
               {(message) => (
-                <RawMessage message={message} onRendered={() => dispatchScroll(contentChanged)} time={formatter().time} />
+                <RawMessage
+                  message={message}
+                  onRendered={() => dispatchScroll(contentChanged)}
+                  time={formatter().time}
+                />
               )}
             </For>
           </Accordion>
