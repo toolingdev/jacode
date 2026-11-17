@@ -10,7 +10,7 @@ const REMOTE_COLORS: readonly ProjectAvatarVariant[] = ["orange", "pink", "purpl
 
 /**
  * Fork feature: tells this computer's sessions from another server's at a glance. This computer is a green monitor;
- * every other server is a server mark in a color of its own. Alone it is a small filled square, so it reads on a tab
+ * every other server is a worker mark in a color of its own. Alone it is a small filled square, so it reads on a tab
  * of any color; `named` makes it a pill with the server's name. Shows nothing while there is only one server.
  */
 export function ServerBadge(props: { server?: ServerConnection.Any; named?: boolean }) {
@@ -30,7 +30,7 @@ export function ServerBadge(props: { server?: ServerConnection.Any; named?: bool
             "--server-badge-tint": `var(--v2-avatar-bg-${servers.local(conn()) ? "green" : pickProjectAvatarVariant(ServerConnection.key(conn()), REMOTE_COLORS)})`,
           }}
         >
-          <Icon name={servers.local(conn()) ? "monitor" : "server"} size="small" aria-hidden="true" />
+          <Icon name={servers.local(conn()) ? "monitor" : "worker"} size="small" aria-hidden="true" />
           <Show when={props.named}>
             <bdi dir="auto" class="min-w-0 truncate">
               {servers.local(conn()) ? language.t("server.thisComputer") : servers.label(conn())}

@@ -1,18 +1,7 @@
 export default {
-  title: "Workers",
-  description:
-    "A worker is another computer that runs chats and tasks for you, so work keeps going there while this one sleeps or is busy. This computer always runs its own; workers are extra.",
   "command.title": "Set up a worker",
   "command.group": "Settings",
-  add: "Add a worker",
-  "local.title": "This computer",
-  "local.about": "JaCode's own engine, running on this computer. Your local chats and projects use it. It is not a worker.",
-  "remote.title": "Workers",
-  "remote.empty": "No workers yet",
-  "remote.empty.description": "Add one to run work on another computer. You are guided through it.",
-  "state.connected": "Connected",
-  "state.disconnected": "Not connected",
-  "manage": "Manage connections",
+  add: "Set up a new worker…",
   "wizard.title": "Add a worker",
   "wizard.back": "Back",
   "wizard.close": "Close",
@@ -54,8 +43,8 @@ export default {
   "install.failed": "The install did not finish. The details below say where it stopped.",
   "connect.run": "Connect to it",
   "connect.running": "Connecting…",
-  "connect.passed": "Connected. The worker is in your list; start a session on it from Home.",
-  "connect.failed": "Installed, but the app could not connect yet. Open Manage connections and choose Connect on it.",
+  "connect.passed": "Connected. The worker is in the list on this page; start a session on it from Home.",
+  "connect.failed": "Installed, but the app could not connect yet. Close this, then choose Connect on its row.",
   "model.title": "One thing is left",
   "model.about":
     "A new worker has no AI model yet. Open Settings, choose the worker at the top, and add a provider under Providers, the same way you did on this computer.",
@@ -68,8 +57,8 @@ export default {
     "This copy of JaCode does not carry the worker software for that computer's processor. Reinstall JaCode from source with the worker build.",
   "docker.about":
     "A Docker worker is built from JaCode's source code, in Terminal. Run these three lines, one at a time, from the source folder:",
-  "docker.then": "The last one prints a pairing link. Then open Manage connections, choose Add server, and paste it.",
-  "link.about": "Open Manage connections, choose Add server, and paste the pairing link, or type the address and password.",
+  "docker.then": "The last one prints a pairing link. Close this, choose Add worker, then Connect one already set up, and paste it.",
+  "link.about": "Close this, choose Add worker, then Connect one already set up, and paste the pairing link, or type the address and password.",
   copy: "Copy",
   copied: "Copied",
 }

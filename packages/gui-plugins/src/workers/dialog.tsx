@@ -1,5 +1,5 @@
 import { usePlugin } from "@opencode/plugin/gui"
-import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
+import { createSignal, For, Match, Show, Switch } from "solid-js"
 import { Ssh } from "../ssh/contract"
 import { Workers, type WorkerReport, type WorkerRequest } from "./contract"
 import type definition from "./index"
@@ -16,68 +16,8 @@ const DOCKER_COMMANDS = [
   "docker logs jacode-worker",
 ]
 
-export default function WorkersPage() {
-  const ctx = usePlugin<typeof definition>()
-  const ui = ctx.ui
-
-  const servers = createMemo(() => ctx.servers.list().flatMap((id) => ctx.servers.get(id) ?? []))
-  const own = () => servers().find((server) => server.builtin)
-  const workers = () => servers().filter((server) => !server.builtin)
-
-  const state = (connected: boolean) => (
-    <span
-      class="text-12-medium"
-      classList={{ "text-v2-state-fg-success": connected, "text-v2-text-text-muted": !connected }}
-    >
-      {ctx.t(connected ? "state.connected" : "state.disconnected")}
-    </span>
-  )
-
-  return (
-    <ui.SettingsLayout
-      title={ctx.t("title")}
-      description={ctx.t("description")}
-      actions={
-        <div class="flex items-center gap-2">
-          <ui.Button variant="ghost" size="small" onClick={() => ctx.layout.settings("servers")}>
-            {ctx.t("manage")}
-          </ui.Button>
-          <ui.Button
-            variant="neutral"
-            size="small"
-            icon="plus"
-            onClick={() => void ctx.dialogs.open((dialog) => <AddWorker onClose={dialog.close} />)}
-          >
-            {ctx.t("add")}
-          </ui.Button>
-        </div>
-      }
-    >
-      <ui.SettingsSection title={ctx.t("local.title")}>
-        <ui.SettingsRow title={own()?.name ?? ctx.t("local.title")} description={ctx.t("local.about")}>
-          {state(own()?.connected ?? false)}
-        </ui.SettingsRow>
-      </ui.SettingsSection>
-      <ui.SettingsSection title={ctx.t("remote.title")}>
-        <Show
-          when={workers().length > 0}
-          fallback={<ui.SettingsRow title={ctx.t("remote.empty")} description={ctx.t("remote.empty.description")} />}
-        >
-          <For each={workers()}>
-            {(worker) => (
-              <ui.SettingsRow title={worker.name} description={worker.url}>
-                {state(worker.connected)}
-              </ui.SettingsRow>
-            )}
-          </For>
-        </Show>
-      </ui.SettingsSection>
-    </ui.SettingsLayout>
-  )
-}
-
 /** The guided way to add a worker: where it runs, then that place's own steps. */
-function AddWorker(props: { onClose: () => void }) {
+export default function AddWorker(props: { onClose: () => void }) {
   const ctx = usePlugin<typeof definition>()
   const ui = ctx.ui
   const workers = ctx.use(Workers)
@@ -320,14 +260,8 @@ function AddWorker(props: { onClose: () => void }) {
               </ui.Button>
             </Match>
             <Match when={where() === "docker" || where() === "link"}>
-              <ui.Button
-                variant="contrast"
-                onClick={() => {
-                  props.onClose()
-                  ctx.layout.settings("servers")
-                }}
-              >
-                {ctx.t("manage")}
+              <ui.Button variant="contrast" onClick={props.onClose}>
+                {ctx.t("wizard.done")}
               </ui.Button>
             </Match>
           </Switch>

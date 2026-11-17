@@ -12,7 +12,7 @@ export const pageIcons = {
   providers: "providers",
   models: "models",
   extensions: "extensions",
-  servers: "server",
+  servers: "worker",
   experimental: "flask",
   about: "info",
 } as const satisfies Record<SettingsRootTab, IconProps["name"]>

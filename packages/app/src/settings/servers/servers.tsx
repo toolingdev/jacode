@@ -132,9 +132,17 @@ function ServerConnectionRow(props: {
                   <bdi class="settings-servers-name" dir="auto">
                     {props.entry.name}
                   </bdi>
-                  <bdi class="settings-servers-meta" dir="ltr">
-                    {ServerConnection.http(server())?.url}
-                  </bdi>
+                  {/* Fork feature: the app's own server sits in the list of workers, so it says what it is. */}
+                  <Show
+                    when={ServerConnection.builtin(server())}
+                    fallback={
+                      <bdi class="settings-servers-meta" dir="ltr">
+                        {ServerConnection.http(server())?.url}
+                      </bdi>
+                    }
+                  >
+                    <span class="settings-servers-meta">{language.t("settings.servers.thisComputer")}</span>
+                  </Show>
                 </div>
               </div>
               <div class="settings-servers-actions">

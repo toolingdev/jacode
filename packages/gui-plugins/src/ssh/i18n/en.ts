@@ -1,8 +1,8 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Add SSH server",
-  "server.menu.label": "SSH server",
+  add: "Add a worker over SSH…",
+  "server.menu.label": "SSH worker",
   target: "Host or SSH command",
   connect: "Connect",
   connectTo: "Connect to {{host}}",
@@ -33,8 +33,8 @@ export default {
   "action.authenticate": "Authenticate",
   "stage.connecting": "Connecting over SSH…",
   "stage.authentication": "Authentication required",
-  "form.name": "Server name (optional)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Add server",
+  "form.name": "Worker name (optional)",
+  "form.namePlaceholder": "worker",
+  "form.add": "Add worker",
   "menu.delete": "Delete",
 }
