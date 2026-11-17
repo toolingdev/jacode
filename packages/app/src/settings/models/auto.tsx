@@ -11,6 +11,10 @@ type Option = { value: string; label: string }
 
 const UNSET = "default"
 
+// The select looks its options up with a `[data-key="..."]` selector, so a value must hold no quote or backslash.
+const optionValue = (providerID: string, modelID: string) =>
+  `${encodeURIComponent(providerID)}/${encodeURIComponent(modelID)}`
+
 // Fork feature: choose what the "Auto" model choice uses, for every provider and within each one.
 export const SettingsAutoModels: Component = () => {
   const language = useLanguage()
@@ -33,7 +37,7 @@ export const SettingsAutoModels: Component = () => {
     unset(),
     ...providers().flatMap((provider) =>
       provider.items.map((item) => ({
-        value: JSON.stringify([provider.id, item.id]),
+        value: optionValue(provider.id, item.id),
         label: `${provider.name} · ${item.name}`,
       })),
     ),
@@ -45,7 +49,7 @@ export const SettingsAutoModels: Component = () => {
       provider.items
         .filter((item) => item.capabilities.input.image)
         .map((item) => ({
-          value: JSON.stringify([provider.id, item.id]),
+          value: optionValue(provider.id, item.id),
           label: `${provider.name} · ${item.name}`,
         })),
     ),
@@ -54,12 +58,12 @@ export const SettingsAutoModels: Component = () => {
   const picked = (value: string) =>
     providers()
       .flatMap((provider) => provider.items)
-      .find((item) => JSON.stringify([item.provider.id, item.id]) === value)
+      .find((item) => optionValue(item.provider.id, item.id) === value)
 
   const imageValue = () =>
-    auto.chosen.image ? JSON.stringify([auto.chosen.image.providerID, auto.chosen.image.modelID]) : UNSET
+    auto.chosen.image ? optionValue(auto.chosen.image.providerID, auto.chosen.image.modelID) : UNSET
 
-  const allValue = () => (auto.chosen.all ? JSON.stringify([auto.chosen.all.providerID, auto.chosen.all.modelID]) : UNSET)
+  const allValue = () => (auto.chosen.all ? optionValue(auto.chosen.all.providerID, auto.chosen.all.modelID) : UNSET)
 
   return (
     <div class="flex flex-col gap-2 pb-6">
