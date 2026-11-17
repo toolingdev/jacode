@@ -16,6 +16,8 @@ type ModelRef = { providerID: string; modelID: string }
 export const AutoModelsSchema = Schema.Struct({
   /** What Auto across every provider uses. */
   all: Persistence.optional(Schema.Struct({ providerID: Schema.String, modelID: Schema.String })),
+  /** What Auto uses for a prompt with images, when the model it would use cannot read them. */
+  image: Persistence.optional(Schema.Struct({ providerID: Schema.String, modelID: Schema.String })),
   /** What Auto within a provider uses, as that provider's model ID. */
   providers: Persistence.record(Persistence.fallback(Schema.String, () => "")),
 })
@@ -49,6 +51,21 @@ export function resolveAutoModel(
   return fallback?.providerID === model.providerID ? fallback : input.first(model.providerID)
 }
 
+type ImageReader = { capabilities: { input: { image: boolean } } }
+
+/**
+ * The model Auto sends a prompt with: the image model when the prompt has images its usual model cannot read.
+ * Before any image is attached, the usual model is reported as reading images, so an image attaches as one instead
+ * of as a file path and the prompt can then move to the image model.
+ */
+export function autoImageModel<Model extends ImageReader>(usual: Model, image: Model | undefined, attached: boolean) {
+  if (!image?.capabilities.input.image || usual.capabilities.input.image) return usual
+
+  if (attached) return image
+
+  return { ...usual, capabilities: { ...usual.capabilities, input: { ...usual.capabilities.input, image: true } } }
+}
+
 /**
  * Auto for one model selection: which Auto choices it accepts, and the catalog model each one uses now, named so
  * every surface shows that Auto chose it.
@@ -62,7 +79,7 @@ export function createAutoSelection(input: {
   const auto = useAutoModels()
   const language = useLanguage()
 
-  const resolve = (item: ModelRef) => {
+  const resolve = (item: ModelRef, prompt?: { image: boolean }) => {
     const target = resolveAutoModel(item, auto.chosen, {
       valid: input.valid,
       fallback: input.fallback,
@@ -73,7 +90,14 @@ export function createAutoSelection(input: {
           .map((model) => ({ providerID, modelID: model.id }))
           .find(input.valid),
     })
-    const found = target && models.find(target)
+    const usual = target && models.find(target)
+    const found =
+      usual &&
+      autoImageModel(
+        usual,
+        auto.chosen.image && input.valid(auto.chosen.image) ? models.find(auto.chosen.image) : undefined,
+        !!prompt?.image,
+      )
 
     return found && { ...found, name: language.t("dialog.model.auto.named", { name: found.name }) }
   }
@@ -82,7 +106,8 @@ export function createAutoSelection(input: {
     resolve,
     valid: (model: ModelRef) =>
       isAutoModel(model) ? model.providerID === AUTO || input.connected(model.providerID) : input.valid(model),
-    find: (item: ModelRef) => (isAutoModel(item) ? resolve(item) : models.find(item)),
+    find: (item: ModelRef, prompt?: { image: boolean }) =>
+      isAutoModel(item) ? resolve(item, prompt) : models.find(item),
   }
 }
 
@@ -102,6 +127,7 @@ export function useAutoModels() {
   return {
     chosen,
     setAll: (model: ModelRef | undefined) => setChosen({ all: model }),
+    setImage: (model: ModelRef | undefined) => setChosen({ image: model }),
     setProvider: (providerID: string, modelID: string | undefined) => setChosen("providers", providerID, modelID ?? ""),
   }
 }

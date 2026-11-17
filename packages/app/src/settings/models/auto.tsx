@@ -39,6 +39,26 @@ export const SettingsAutoModels: Component = () => {
     ),
   ])
 
+  const image = createMemo(() => [
+    { value: UNSET, label: language.t("settings.models.auto.image.none") },
+    ...providers().flatMap((provider) =>
+      provider.items
+        .filter((item) => item.capabilities.input.image)
+        .map((item) => ({
+          value: JSON.stringify([provider.id, item.id]),
+          label: `${provider.name} · ${item.name}`,
+        })),
+    ),
+  ])
+
+  const picked = (value: string) =>
+    providers()
+      .flatMap((provider) => provider.items)
+      .find((item) => JSON.stringify([item.provider.id, item.id]) === value)
+
+  const imageValue = () =>
+    auto.chosen.image ? JSON.stringify([auto.chosen.image.providerID, auto.chosen.image.modelID]) : UNSET
+
   const allValue = () => (auto.chosen.all ? JSON.stringify([auto.chosen.all.providerID, auto.chosen.all.modelID]) : UNSET)
 
   return (
@@ -60,11 +80,30 @@ export const SettingsAutoModels: Component = () => {
             onSelect={(option) => {
               if (!option) return
 
-              const picked = providers()
-                .flatMap((provider) => provider.items)
-                .find((item) => JSON.stringify([item.provider.id, item.id]) === option.value)
+              const model = picked(option.value)
 
-              auto.setAll(picked && { providerID: picked.provider.id, modelID: picked.id })
+              auto.setAll(model && { providerID: model.provider.id, modelID: model.id })
+            }}
+          />
+        </SettingsRow>
+        <SettingsRow
+          title={language.t("settings.models.auto.image.title")}
+          description={language.t("settings.models.auto.image.description")}
+        >
+          <Select
+            data-action="settings-auto-model-image"
+            options={image()}
+            current={image().find((option) => option.value === imageValue()) ?? image()[0]}
+            value={(option) => option.value}
+            label={(option) => option.label}
+            placement="bottom-end"
+            gutter={6}
+            onSelect={(option) => {
+              if (!option) return
+
+              const model = picked(option.value)
+
+              auto.setImage(model && { providerID: model.provider.id, modelID: model.id })
             }}
           />
         </SettingsRow>

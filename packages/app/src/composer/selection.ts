@@ -191,10 +191,17 @@ export function createComposerModelSelection(input: {
     )
   }
 
+  // Fork feature: Auto moves a prompt with images to the model chosen for images.
+  const image = createMemo(() =>
+    prompt
+      .current()
+      .some((part) => part.type === "image" || (part.type === "path" && part.mime.startsWith("image/"))),
+  )
+
   const current = () => {
     const item = key()
 
-    return item ? auto.find(item) : undefined
+    return item ? auto.find(item, { image: image() }) : undefined
   }
 
   const recentModels = createMemo(() =>

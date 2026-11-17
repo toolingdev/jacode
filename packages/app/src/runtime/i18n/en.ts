@@ -177,6 +177,10 @@ export const dict = {
   "settings.models.auto.all.title": "Auto, every provider",
   "settings.models.auto.all.description": "The model Auto uses when it may choose from every provider.",
   "settings.models.auto.provider.description": "The model Auto uses within this provider.",
+  "settings.models.auto.image.title": "Auto, prompts with images",
+  "settings.models.auto.image.description":
+    "The model Auto sends a prompt with images to when its usual model cannot read them.",
+  "settings.models.auto.image.none": "Keep the usual model",
   "settings.models.auto.default": "Default model",
   "dialog.model.hint.navigate": "Navigate",
   "dialog.model.hint.select": "Select",
