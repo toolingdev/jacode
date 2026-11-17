@@ -84,6 +84,10 @@ export class Info extends Schema.Class<Info>("ConfigExperimental.Info")({
       description:
         "Settings for the experimental_image_generate tool, which is offered while a connected provider has an image model.",
     }),
+  visuals: Schema.Boolean.pipe(optional).annotate({
+    description:
+      "Tell models they may answer with inline visuals (charts, weather cards), which the desktop app draws. Set to false for clients that show text only. Defaults to true.",
+  }),
   weather: Weather.pipe(optional).annotate({
     description:
       "Sources for the weather tool. Without this it uses MET Norway, then Open-Meteo. An empty list turns the tool's lookups off.",

@@ -407,6 +407,19 @@ export function weatherText(weather: Output) {
   ].join("\n")
 }
 
+/**
+ * The ready-made block that shows the result as a card in the desktop app. Models copy what they are handed far more
+ * reliably than they assemble it, and without the fence the card would arrive as plain text.
+ */
+export function cardHint(weather: Output) {
+  return [
+    "To show this as a weather card, put this block in your reply exactly as it is, fence included:",
+    "```visual",
+    `<weather-card><script type="application/json">${JSON.stringify(weather)}</script></weather-card>`,
+    "```",
+  ].join("\n")
+}
+
 // Each source gets this long before the next one is tried.
 const TIMEOUT = Duration.seconds(12)
 
@@ -494,6 +507,9 @@ export const Plugin = {
       .transform((editor) =>
         editor.add({
           name,
+          // Called directly rather than from Code Mode, where a script gets only the data back: the model must read
+          // the text result, which ends with the card to show.
+          options: { codemode: false },
           description,
           input: Input,
           output: Output,
@@ -537,7 +553,7 @@ export const Plugin = {
 
               const output = yield* from(0, [])
 
-              return { output, content: weatherText(output) }
+              return { output, content: `${weatherText(output)}\n\n${cardHint(output)}` }
             }).pipe(
               Effect.mapError(
                 (error) => new ToolFailure({ message: `Unable to get the weather for ${input.location}`, error }),

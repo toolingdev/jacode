@@ -2646,6 +2646,7 @@ export type ConfigEntry =
           mcp_events?: boolean
           part_rows?: boolean
           image_generate?: boolean | { model?: string | { providerID: string; model: string; variant?: string } }
+          visuals?: boolean
           weather?: ConfigExperimentalWeather
           decisions?: ConfigExperimentalDecisions
           subagent_depth?: number

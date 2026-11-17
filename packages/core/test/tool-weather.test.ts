@@ -155,6 +155,26 @@ describe("weather tool", () => {
     expect(WeatherTool.activeSources([document({ sources: [] })])).toEqual([])
   })
 
+  test("hands over the card as a fenced block to copy", () => {
+    const weather = {
+      source: "MET Norway",
+      place: "Denver",
+      timezone: "America/Los_Angeles",
+      temperatureUnit: "°F",
+      windUnit: "mph",
+      current: { condition: "Clear", icon: "sun" as const, temperature: 72, humidity: 40, wind: 6 },
+      days: [],
+    }
+
+    const lines = WeatherTool.cardHint(weather).split("\n")
+
+    expect(lines[1]).toBe("```visual")
+    expect(lines[2]).toBe(
+      `<weather-card><script type="application/json">${JSON.stringify(weather)}</script></weather-card>`,
+    )
+    expect(lines[3]).toBe("```")
+  })
+
   test("writes the result as text with the icon names", () => {
     expect(
       WeatherTool.weatherText({
