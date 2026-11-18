@@ -64,31 +64,6 @@ export const SettingsModels: Component<{
 
   const sections = new Map<string, HTMLElement>()
 
-  const list = useFilteredList<ModelItem>({
-    items: (_filter) => models.list(),
-    key: (x) => `${x.provider.id}:${x.id}`,
-    filterKeys: ["provider.name", "name", "id"],
-    sortBy: (a, b) => a.name.localeCompare(b.name),
-    groupBy: (x) => x.provider.id,
-    sortGroupsBy: (a, b) => {
-      const aIndex = popularProviders.indexOf(a.category)
-      const bIndex = popularProviders.indexOf(b.category)
-      const aPopular = aIndex >= 0
-      const bPopular = bIndex >= 0
-
-      if (aPopular && !bPopular) return -1
-
-      if (!aPopular && bPopular) return 1
-
-      if (aPopular && bPopular) return aIndex - bIndex
-
-      const aName = a.items[0].provider.name
-      const bName = b.items[0].provider.name
-
-      return aName.localeCompare(bName)
-    },
-  })
-
   // Fork feature: which models each subscription covers, so a row can say whether it is in the plan or paid per use.
   const data = useData()
 
@@ -113,6 +88,40 @@ export const SettingsModels: Component<{
 
     return models.has(item.id) ? "included" : "paid"
   }
+
+  // Fork feature: show only the models a subscription covers. Offered only once a provider reports one.
+  const [planOnly, setPlanOnly] = createSignal(false)
+
+  const hasPlan = () => {
+    const view = included.view()
+
+    return view.status === "ready" && view.value.size > 0
+  }
+
+  const list = useFilteredList<ModelItem>({
+    items: (_filter) => models.list().filter((item) => !planOnly() || plan(item) === "included"),
+    key: (x) => `${x.provider.id}:${x.id}`,
+    filterKeys: ["provider.name", "name", "id"],
+    sortBy: (a, b) => a.name.localeCompare(b.name),
+    groupBy: (x) => x.provider.id,
+    sortGroupsBy: (a, b) => {
+      const aIndex = popularProviders.indexOf(a.category)
+      const bIndex = popularProviders.indexOf(b.category)
+      const aPopular = aIndex >= 0
+      const bPopular = bIndex >= 0
+
+      if (aPopular && !bPopular) return -1
+
+      if (!aPopular && bPopular) return 1
+
+      if (aPopular && bPopular) return aIndex - bIndex
+
+      const aName = a.items[0].provider.name
+      const bName = b.items[0].provider.name
+
+      return aName.localeCompare(bName)
+    },
+  })
 
   const money = new Intl.NumberFormat(language.locale(), {
     style: "currency",
@@ -289,6 +298,14 @@ export const SettingsModels: Component<{
           }}
           placeholder={language.t("dialog.model.search.placeholder")}
         />
+        <Show when={hasPlan()}>
+          <div class="flex items-center gap-2 pt-1">
+            <Switch checked={planOnly()} onChange={setPlanOnly} hideLabel>
+              {language.t("settings.models.planOnly")}
+            </Switch>
+            <span class="text-12-regular text-v2-text-text-base">{language.t("settings.models.planOnly")}</span>
+          </div>
+        </Show>
       </div>
 
       <div class="settings-tab-body settings-models">
