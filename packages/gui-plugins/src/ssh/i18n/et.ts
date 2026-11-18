@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh kasutaja@example.com",
-  add: "Lisa SSH server",
-  "server.menu.label": "SSH server",
   target: "Host või SSH käsk",
   connect: "Ühendage",
   connectTo: "Ühendage seadmega {{host}}",
@@ -33,8 +31,5 @@ export default {
   "action.authenticate": "Autentida",
   "stage.connecting": "Ühendamine üle SSH…",
   "stage.authentication": "Nõutav autentimine",
-  "form.name": "Serveri nimi (valikuline)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Lisa server",
   "menu.delete": "Kustuta",
 }

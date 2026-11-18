@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Илова кардани сервери SSH",
-  "server.menu.label": "Сервери SSH",
   target: "Фармони хост ё SSH",
   connect: "Пайваст кунед",
   connectTo: "Ба {{host}} пайваст шавед",
@@ -35,8 +33,5 @@ export default {
   "action.authenticate": "Тасдиқ кардан",
   "stage.connecting": "Пайвастшавӣ тавассути SSH…",
   "stage.authentication": "Аутентификатсия талаб карда мешавад",
-  "form.name": "Номи сервер (ихтиёрӣ)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Илова кардани сервер",
   "menu.delete": "Нобуд кунед",
 }

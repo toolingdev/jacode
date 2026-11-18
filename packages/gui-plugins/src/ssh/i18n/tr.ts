@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "SSH sunucusu ekle",
-  "server.menu.label": "SSH sunucusu",
   target: "Ana Bilgisayar veya SSH komutu",
   connect: "Bağlan",
   connectTo: "{{host}}'ye bağlanın",
@@ -34,8 +32,5 @@ export default {
   "action.authenticate": "Kimlik Doğrula",
   "stage.connecting": "SSH üzerinden bağlanılıyor…",
   "stage.authentication": "Kimlik doğrulama gerekli",
-  "form.name": "Sunucu adı (isteğe bağlı)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Sunucu ekle",
   "menu.delete": "Sil",
 }

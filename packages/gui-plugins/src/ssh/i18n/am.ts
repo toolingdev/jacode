@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "የSSH አገልጋይ ያክሉ",
-  "server.menu.label": "SSH አገልጋይ",
   target: "አስተናጋጅ ወይም የSSH ትዕዛዝ",
   connect: "መገናኘት",
   connectTo: "ከ{{host}} ጋር ይገናኙ",
@@ -29,8 +27,5 @@ export default {
   "action.authenticate": "ያረጋግጡ",
   "stage.connecting": "በSSH በመገናኘት ላይ...",
   "stage.authentication": "ማረጋገጫ ያስፈልጋል",
-  "form.name": "የአገልጋይ ስም (አማራጭ)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "አገልጋይ አክል",
   "menu.delete": "ሰርዝ",
 }

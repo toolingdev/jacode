@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "ເພີ່ມເຊີບເວີ SSH",
-  "server.menu.label": "ເຊີບເວີ SSH",
   target: "ຄໍາສັ່ງ Host ຫຼື SSH",
   connect: "ເຊື່ອມຕໍ່",
   connectTo: "ເຊື່ອມຕໍ່ກັບ {{host}}",
@@ -31,8 +29,5 @@ export default {
   "action.authenticate": "ຢືນຢັນຕົວຕົນ",
   "stage.connecting": "ກໍາລັງເຊື່ອມຕໍ່ຜ່ານ SSH...",
   "stage.authentication": "ຕ້ອງການການຢືນຢັນຕົວຕົນ",
-  "form.name": "ຊື່ເຊີບເວີ (ທາງເລືອກ)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "ເພີ່ມເຊີບເວີ",
   "menu.delete": "ລຶບ",
 }

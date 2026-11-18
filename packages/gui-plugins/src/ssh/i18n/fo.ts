@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh brúkari@dømi.com",
-  add: "Legg SSH ambætara til",
-  "server.menu.label": "SSH ambætari",
   target: "Vertur ella SSH skipan",
   connect: "Samband",
   connectTo: "Seta teg í samband við {{host}}",
@@ -33,8 +31,5 @@ export default {
   "action.authenticate": "Staðfesta",
   "stage.connecting": "Samband yvir SSH...",
   "stage.authentication": "Staðfesting krevst",
-  "form.name": "Ambætaranavn (valfrítt)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Legg ambætara til",
   "menu.delete": "Strika",
 }

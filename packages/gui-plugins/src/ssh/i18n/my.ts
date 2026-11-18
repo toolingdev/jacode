@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "SSH ဆာဗာ ထည့်ရန်",
-  "server.menu.label": "SSH ဆာဗာ",
   target: "ဟိုစ် သို့မဟုတ် SSH လမ်းညွှန်",
   connect: "ချိတ်ဆက်ရန်",
   connectTo: "{{host}} သို့ ချိတ်ဆက်ပါ",
@@ -33,8 +31,5 @@ export default {
   "action.authenticate": "အတည်ပြုရန်",
   "stage.connecting": "SSH ဖြင့် ချိတ်ဆက်နေသည်…",
   "stage.authentication": "အမှုအရာအတည်ပြုခြင်း လိုအပ်ပါသည်",
-  "form.name": "ဆာဗာအမည် (ချန်လှပ်ထားနိုင်သည်)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "ဆာဗာထည့်ပါ။",
   "menu.delete": "ဖျက်ပါ",
 }

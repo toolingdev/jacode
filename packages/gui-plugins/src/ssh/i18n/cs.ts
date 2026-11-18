@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh uzivatel@example.com",
-  add: "Přidat server SSH",
-  "server.menu.label": "Server SSH",
   target: "Hostitel nebo příkaz SSH",
   connect: "Připojit",
   connectTo: "Připojit k hostiteli {{host}}",
@@ -35,8 +33,5 @@ export default {
   "action.authenticate": "Ověřit",
   "stage.connecting": "Připojování přes SSH…",
   "stage.authentication": "Je vyžadováno ověření",
-  "form.name": "Název serveru (volitelné)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Přidat server",
   "menu.delete": "Odstranit",
 }

@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Dodaj SSH strežnik",
-  "server.menu.label": "SSH strežnik",
   target: "Gostitelj ali SSH ukaz",
   connect: "Poveži",
   connectTo: "Poveži z {{host}}",
@@ -33,8 +31,5 @@ export default {
   "action.authenticate": "Overi",
   "stage.connecting": "Povezovanje preko SSH…",
   "stage.authentication": "Zahtevano overjanje",
-  "form.name": "Ime strežnika (neobvezno)",
-  "form.namePlaceholder": "Lokalni gostitelj",
-  "form.add": "Dodaj strežnik",
   "menu.delete": "Izbriši",
 }

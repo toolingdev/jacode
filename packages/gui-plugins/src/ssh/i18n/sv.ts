@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Lägg till SSH-server",
-  "server.menu.label": "SSH server",
   target: "Värd- eller SSH-kommando",
   connect: "Anslut",
   connectTo: "Anslut till {{host}}",
@@ -35,8 +33,5 @@ export default {
   "action.authenticate": "Autentisera",
   "stage.connecting": "Ansluter över SSH...",
   "stage.authentication": "Autentisering krävs",
-  "form.name": "Servernamn (valfritt)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Lägg till server",
   "menu.delete": "Radera",
 }

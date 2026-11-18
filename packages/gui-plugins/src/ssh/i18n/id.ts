@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Tambah server SSH",
-  "server.menu.label": "Server SSH",
   target: "Host atau perintah SSH",
   connect: "Hubungkan",
   connectTo: "Hubungkan ke {{host}}",
@@ -34,8 +32,5 @@ export default {
   "action.authenticate": "Autentikasikan",
   "stage.connecting": "Menghubungkan melalui SSH…",
   "stage.authentication": "Diperlukan autentikasi",
-  "form.name": "Nama server (opsional)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Tambah server",
   "menu.delete": "Hapus",
 }

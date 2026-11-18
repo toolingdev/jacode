@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "افزودن سرور SSH",
-  "server.menu.label": "سرور SSH",
   target: "میزبان یا فرمان SSH",
   connect: "اتصال",
   connectTo: "اتصال به ⁨{{host}}⁩",
@@ -31,8 +29,5 @@ export default {
   "action.authenticate": "احراز هویت",
   "stage.connecting": "در حال اتصال از طریق SSH…",
   "stage.authentication": "احراز هویت الزامی است",
-  "form.name": "نام سرور (اختیاری)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "سرور اضافه کنید",
   "menu.delete": "حذف",
 }

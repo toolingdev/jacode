@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "SSH server əlavə et",
-  "server.menu.label": "SSH server",
   target: "Host və ya SSH komandası",
   connect: "Qoşul",
   connectTo: "{{host}} ilə qoşul",
@@ -35,8 +33,5 @@ export default {
   "action.authenticate": "Autentifikasiya et",
   "stage.connecting": "SSH üzərindən qoşulur…",
   "stage.authentication": "Doğrulama tələb olunur",
-  "form.name": "Server adı (istəyə bağlı)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Server əlavə et",
   "menu.delete": "Sil",
 }

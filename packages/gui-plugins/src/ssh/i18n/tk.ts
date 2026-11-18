@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "SSH serwerini goşuň",
-  "server.menu.label": "SSH serweri",
   target: "Host ýa-da SSH buýrugy",
   connect: "Birikdiriň",
   connectTo: "{{host}} bilen birikdiriň",
@@ -33,8 +31,5 @@ export default {
   "action.authenticate": "Hakyky tassyklamak",
   "stage.connecting": "SSH-e birikmek…",
   "stage.authentication": "Hakyky tassyklamak zerur",
-  "form.name": "Serweriň ady (islege görä)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Serwer goşuň",
   "menu.delete": "Poz",
 }

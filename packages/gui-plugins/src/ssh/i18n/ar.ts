@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "إضافة خادم SSH",
-  "server.menu.label": "خادم SSH",
   target: "المضيف أو أمر SSH",
   connect: "اتصال",
   connectTo: "الاتصال بـ ⁨{{host}}⁩",
@@ -30,8 +28,5 @@ export default {
   "action.authenticate": "مصادقة",
   "stage.connecting": "جارٍ الاتصال عبر SSH…",
   "stage.authentication": "المصادقة مطلوبة",
-  "form.name": "اسم الخادم (اختياري)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "إضافة خادم",
   "menu.delete": "حذف",
 }

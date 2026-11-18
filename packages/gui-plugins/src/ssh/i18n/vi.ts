@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Thêm máy chủ SSH",
-  "server.menu.label": "Máy chủ SSH",
   target: "Host hoặc lệnh SSH",
   connect: "Kết nối",
   connectTo: "Kết nối với {{host}}",
@@ -34,8 +32,5 @@ export default {
   "action.authenticate": "Xác thực",
   "stage.connecting": "Đang kết nối qua SSH…",
   "stage.authentication": "Cần xác thực",
-  "form.name": "Tên máy chủ (tùy chọn)",
-  "form.namePlaceholder": "Máy chủ cục bộ",
-  "form.add": "Thêm máy chủ",
   "menu.delete": "Xóa",
 }

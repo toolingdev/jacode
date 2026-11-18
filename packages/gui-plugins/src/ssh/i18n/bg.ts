@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Добавяне на SSH сървър",
-  "server.menu.label": "SSH сървър",
   target: "Хост или SSH команда",
   connect: "Свързване",
   connectTo: "Свързване с {{host}}",
@@ -34,8 +32,5 @@ export default {
   "action.authenticate": "Удостоверяване",
   "stage.connecting": "Свързване чрез SSH…",
   "stage.authentication": "Изисква се удостоверяване",
-  "form.name": "Име на сървъра (по избор)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Добавете сървър",
   "menu.delete": "Изтриване",
 }

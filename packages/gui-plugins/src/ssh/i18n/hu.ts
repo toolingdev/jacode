@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "SSH szerver hozzáadása",
-  "server.menu.label": "SSH szerver",
   target: "Host vagy SSH parancs",
   connect: "Csatlakozás",
   connectTo: "Csatlakozás a {{host}}",
@@ -35,8 +33,5 @@ export default {
   "action.authenticate": "Hitelesítés",
   "stage.connecting": "Csatlakozás SSH-n keresztül…",
   "stage.authentication": "Hitelesítés szükséges",
-  "form.name": "Szerver neve (nem kötelező)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Szerver hozzáadása",
   "menu.delete": "Törlés",
 }

@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Shto serverin SSH",
-  "server.menu.label": "Serveri SSH",
   target: "Host ose komanda SSH",
   connect: "Lidhu",
   connectTo: "Lidhu me {{host}}",
@@ -35,8 +33,5 @@ export default {
   "action.authenticate": "Autentifiko",
   "stage.connecting": "Po lidhet me SSH…",
   "stage.authentication": "Kërkohet vërtetimi",
-  "form.name": "Emri i serverit (opsionale)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Shto server",
   "menu.delete": "Fshi",
 }

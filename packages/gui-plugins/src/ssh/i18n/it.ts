@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Aggiungi il server SSH",
-  "server.menu.label": "Server SSH",
   target: "Comando host o SSH",
   connect: "Connettiti",
   connectTo: "Connettiti a {{host}}",
@@ -35,8 +33,5 @@ export default {
   "action.authenticate": "Autenticarsi",
   "stage.connecting": "Collegamento tramite SSH…",
   "stage.authentication": "Autenticazione richiesta",
-  "form.name": "Nome del server (facoltativo)",
-  "form.namePlaceholder": "Host locale",
-  "form.add": "Aggiungi server",
   "menu.delete": "Elimina",
 }

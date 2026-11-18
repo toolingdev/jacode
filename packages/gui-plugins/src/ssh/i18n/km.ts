@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "បន្ថែមម៉ាស៊ីនបម្រើ SSH",
-  "server.menu.label": "ម៉ាស៊ីនបម្រើ SSH",
   target: "ម៉ាស៊ីនបម្រើ ឬពាក្យបញ្ជា SSH",
   connect: "ភ្ជាប់",
   connectTo: "ភ្ជាប់ទៅ {{host}}",
@@ -33,8 +31,5 @@ export default {
   "action.authenticate": "ផ្ទៀងផ្ទាត់",
   "stage.connecting": "កំពុងតភ្ជាប់តាម SSH…",
   "stage.authentication": "ត្រូវការការផ្ទៀងផ្ទាត់",
-  "form.name": "ឈ្មោះម៉ាស៊ីនមេ (ជាជម្រើស)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "បន្ថែមម៉ាស៊ីនមេ",
   "menu.delete": "លុប",
 }

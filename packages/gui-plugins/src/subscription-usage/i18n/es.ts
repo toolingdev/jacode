@@ -1,0 +1,16 @@
+export default {
+  view: "Uso de la suscripción",
+  "short.weekly": "{{percent}}% de la semana",
+  "short.daily": "{{percent}}% del día",
+  "meter.input_tokens.weekly": "Tokens de entrada semanales",
+  "meter.input_tokens.daily": "Tokens de entrada diarios",
+  "meter.images.weekly": "Imágenes semanales",
+  "meter.images.daily": "Imágenes diarias",
+  resets: "Se restablece {{time}}",
+  "history.title": "Últimos 30 días · esta clave de API",
+  "history.tokens": "{{input}} de entrada · {{output}} de salida",
+  "history.requests": "{{count}} solic.",
+  "history.empty": "No hay solicitudes de esta clave de API",
+  "history.failed": "El historial de uso no está disponible",
+  inactive: "La suscripción de {{name}} no está activa",
+}

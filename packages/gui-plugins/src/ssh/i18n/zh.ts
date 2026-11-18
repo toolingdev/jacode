@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "添加 SSH 服务器",
-  "server.menu.label": "SSH 服务器",
   target: "主机或 SSH 命令",
   connect: "连接",
   connectTo: "连接到 {{host}}",
@@ -28,8 +26,5 @@ export default {
   "action.authenticate": "验证",
   "stage.connecting": "正在通过 SSH 连接…",
   "stage.authentication": "需要身份验证",
-  "form.name": "服务器名称（可选）",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "添加服务器",
   "menu.delete": "删除",
 }

@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ایس ایس ایچ صارف@مثال.کام",
-  add: "SSH سرور شامل کرو",
-  "server.menu.label": "SSH سرور",
   target: "ہوسٹ یا SSH کمانڈ",
   connect: "منسلک کرو",
   connectTo: "⁨{{host}}⁩ نال جڑو",
@@ -32,8 +30,5 @@ export default {
   "action.authenticate": "تصدیق کرو",
   "stage.connecting": "SSH تے جڑنا...",
   "stage.authentication": "توثیق درکار اے۔",
-  "form.name": "سرور دا ناں (اختیاری)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "سرور شامل کرو",
   "menu.delete": "مکاؤ",
 }

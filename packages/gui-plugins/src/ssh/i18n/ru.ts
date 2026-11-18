@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Добавить SSH-сервер",
-  "server.menu.label": "SSH-сервер",
   target: "Хост или SSH-команда",
   connect: "Подключиться",
   connectTo: "Подключиться к {{host}}",
@@ -34,8 +32,5 @@ export default {
   "action.authenticate": "Аутентифицироваться",
   "stage.connecting": "Подключение по SSH…",
   "stage.authentication": "Требуется аутентификация",
-  "form.name": "Имя сервера (необязательно)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Добавить сервер",
   "menu.delete": "Удалить",
 }

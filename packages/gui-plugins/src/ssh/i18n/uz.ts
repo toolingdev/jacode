@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "SSH serverini qo'shing",
-  "server.menu.label": "SSH server",
   target: "Xost yoki SSH buyrug'i",
   connect: "Ulanish",
   connectTo: "{{host}} ga ulanish",
@@ -35,8 +33,5 @@ export default {
   "action.authenticate": "Autentifikatsiya qilish",
   "stage.connecting": "SSH orqali ulanmoqda…",
   "stage.authentication": "Autentifikatsiya talab qilinadi",
-  "form.name": "Server nomi (ixtiyoriy)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Server qo'shish",
   "menu.delete": "Oʻchirish",
 }

@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Tambah pelayan SSH",
-  "server.menu.label": "Pelayan SSH",
   target: "Hos atau arahan SSH",
   connect: "Sambung",
   connectTo: "Sambung ke {{host}}",
@@ -32,8 +30,5 @@ export default {
   "action.authenticate": "Pengesahan",
   "stage.connecting": "Menyambung melalui SSH…",
   "stage.authentication": "Pengesahan diperlukan",
-  "form.name": "Nama pelayan (pilihan)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Tambah pelayan",
   "menu.delete": "Padam",
 }

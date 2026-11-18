@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Adăugați serverul SSH",
-  "server.menu.label": "Server SSH",
   target: "Gazdă sau comanda SSH",
   connect: "Conectați",
   connectTo: "Conectați-vă la {{host}}",
@@ -36,8 +34,5 @@ export default {
   "action.authenticate": "Autentificare",
   "stage.connecting": "Se conectează prin SSH…",
   "stage.authentication": "Este necesară autentificare",
-  "form.name": "Nume server (opțional)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Adaugă server",
   "menu.delete": "Șterge",
 }

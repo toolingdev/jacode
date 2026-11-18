@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "SSH सर्वर जोड़ें",
-  "server.menu.label": "SSH सर्वर",
   target: "होस्ट या SSH कमांड",
   connect: "जोड़ना",
   connectTo: "{{host}} से कनेक्ट करें",
@@ -32,8 +30,5 @@ export default {
   "action.authenticate": "प्रमाणित",
   "stage.connecting": "SSH से कनेक्ट हो रहा है…",
   "stage.authentication": "प्रमाणित करना",
-  "form.name": "सर्वर नाम (वैकल्पिक)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "सर्वर जोड़ें",
   "menu.delete": "हटाएँ",
 }

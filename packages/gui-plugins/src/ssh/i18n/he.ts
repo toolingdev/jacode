@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "הוספת שרת SSH",
-  "server.menu.label": "שרת SSH",
   target: "מארח או פקודת SSH",
   connect: "התחברות",
   connectTo: "התחברות אל ⁨{{host}}⁩",
@@ -29,8 +27,5 @@ export default {
   "action.authenticate": "אימות",
   "stage.connecting": "מתחבר באמצעות SSH…",
   "stage.authentication": "נדרש אימות",
-  "form.name": "שם שרת (אופציונלי)",
-  "form.namePlaceholder": "מארח מקומי",
-  "form.add": "הוסף שרת",
   "menu.delete": "מחק",
 }

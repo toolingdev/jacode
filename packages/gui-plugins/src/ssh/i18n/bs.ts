@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh korisnik@primjer.com",
-  add: "Dodaj SSH server",
-  "server.menu.label": "SSH server",
   target: "Host ili SSH naredba",
   connect: "Poveži se",
   connectTo: "Poveži se s hostom {{host}}",
@@ -35,8 +33,5 @@ export default {
   "action.authenticate": "Autentificiraj",
   "stage.connecting": "Povezivanje putem SSH-a…",
   "stage.authentication": "Potrebna je autentifikacija",
-  "form.name": "Ime servera (opcionalno)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Dodaj server",
   "menu.delete": "Izbriši",
 }

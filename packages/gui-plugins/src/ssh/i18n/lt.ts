@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Pridėti SSH serverį",
-  "server.menu.label": "SSH serveris",
   target: "Pagrindinis arba SSH komanda",
   connect: "Prisijunkite",
   connectTo: "Prisijunkite prie {{host}}",
@@ -33,8 +31,5 @@ export default {
   "action.authenticate": "Autentifikuoti",
   "stage.connecting": "Jungiamasi per SSH…",
   "stage.authentication": "Reikalingas autentifikavimas",
-  "form.name": "Serverio pavadinimas (neprivaloma)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Pridėti serverį",
   "menu.delete": "Ištrinti",
 }

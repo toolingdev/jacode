@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "SSH სერვერის დამატება",
-  "server.menu.label": "SSH სერვერი",
   target: "ჰოსტი ან SSH ბრძანება",
   connect: "გადაერთვა",
   connectTo: "გადაერთვა {{host}}",
@@ -35,8 +33,5 @@ export default {
   "action.authenticate": "აუთენტიფიკაცია",
   "stage.connecting": "კავშირის დამყარება SSH-ის საშუალებით…",
   "stage.authentication": "ავთენტიფიკაცია საჭირო არის",
-  "form.name": "სერვერის სახელი (არასავალდებულო)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "სერვერის დამატება",
   "menu.delete": "წაშლა",
 }

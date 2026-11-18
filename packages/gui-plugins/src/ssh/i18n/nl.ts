@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "SSH-server toevoegen",
-  "server.menu.label": "SSH-server",
   target: "Host- of SSH-opdracht",
   connect: "Verbinden",
   connectTo: "Maak verbinding met {{host}}",
@@ -35,8 +33,5 @@ export default {
   "action.authenticate": "Authenticeren",
   "stage.connecting": "Verbinding maken via SSH…",
   "stage.authentication": "Authenticatie vereist",
-  "form.name": "Servernaam (optioneel)",
-  "form.namePlaceholder": "Lokale host",
-  "form.add": "Server toevoegen",
   "menu.delete": "Verwijderen",
 }

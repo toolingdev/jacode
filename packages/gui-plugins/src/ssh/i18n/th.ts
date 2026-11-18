@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "เพิ่มเซิร์ฟเวอร์ SSH",
-  "server.menu.label": "เซิร์ฟเวอร์ SSH",
   target: "โฮสต์หรือคำสั่ง SSH",
   connect: "เชื่อมต่อ",
   connectTo: "เชื่อมต่อกับ {{host}}",
@@ -30,8 +28,5 @@ export default {
   "action.authenticate": "ตรวจสอบสิทธิ์",
   "stage.connecting": "กำลังเชื่อมต่อผ่าน SSH…",
   "stage.authentication": "ต้องมีการตรวจสอบสิทธิ์",
-  "form.name": "ชื่อเซิร์ฟเวอร์ (ไม่บังคับ)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "เพิ่มเซิร์ฟเวอร์",
   "menu.delete": "ลบ",
 }

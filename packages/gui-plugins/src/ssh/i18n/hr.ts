@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh korisnik@primjer.com",
-  add: "Dodaj SSH poslužitelj",
-  "server.menu.label": "SSH poslužitelj",
   target: "Host ili SSH naredba",
   connect: "Poveži se",
   connectTo: "Poveži se s računalom domaćinom {{host}}",
@@ -35,8 +33,5 @@ export default {
   "action.authenticate": "Autenticiraj",
   "stage.connecting": "Povezivanje putem SSH-a…",
   "stage.authentication": "Potrebna je autentikacija",
-  "form.name": "Naziv poslužitelja (neobavezno)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Dodaj poslužitelj",
   "menu.delete": "Izbriši",
 }

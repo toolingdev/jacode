@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh lietotājs@example.com",
-  add: "Pievienot serveri SSH",
-  "server.menu.label": "SSH serveris",
   target: "Host vai SSH komanda",
   connect: "Savienot",
   connectTo: "Savienojiet ar {{host}}",
@@ -34,8 +32,5 @@ export default {
   "action.authenticate": "Autentificēt",
   "stage.connecting": "Savienojuma izveide, izmantojot SSH…",
   "stage.authentication": "Nepieciešama autentifikācija",
-  "form.name": "Servera nosaukums (nav obligāti)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Pievienot serveri",
   "menu.delete": "Dzēst",
 }

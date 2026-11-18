@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Legg til SSH-server",
-  "server.menu.label": "SSH server",
   target: "Vert eller SSH kommando",
   connect: "Koble til",
   connectTo: "Koble til {{host}}",
@@ -34,8 +32,5 @@ export default {
   "action.authenticate": "Autentiser",
   "stage.connecting": "Kobler over SSH...",
   "stage.authentication": "Autentisering kreves",
-  "form.name": "Servernavn (valgfritt)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Legg til server",
   "menu.delete": "Slett",
 }

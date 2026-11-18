@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Lisää SSH-palvelin",
-  "server.menu.label": "SSH palvelin",
   target: "Isäntä tai SSH-komento",
   connect: "Yhdistä",
   connectTo: "Yhdistä {{host}}:ään",
@@ -32,8 +30,5 @@ export default {
   "action.authenticate": "Todentaa",
   "stage.connecting": "Yhdistetään SSH:n kautta…",
   "stage.authentication": "Todennus vaaditaan",
-  "form.name": "Palvelimen nimi (valinnainen)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Lisää palvelin",
   "menu.delete": "Poista",
 }

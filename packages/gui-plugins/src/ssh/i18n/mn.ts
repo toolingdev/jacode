@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "SSH сервер нэмэх",
-  "server.menu.label": "SSH сервер",
   target: "Хост эсвэл SSH команд",
   connect: "Холбох",
   connectTo: "«{{host}}»-д холбогдох",
@@ -33,8 +31,5 @@ export default {
   "action.authenticate": "Баталгаажуулах",
   "stage.connecting": "SSH-р холбож байна…",
   "stage.authentication": "Нэвтрэх хэрэгтэй",
-  "form.name": "Серверийн нэр (заавал биш)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Сервер нэмэх",
   "menu.delete": "Устгах",
 }

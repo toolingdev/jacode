@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh notandi@example.com",
-  add: "Bæta við SSH miðlara",
-  "server.menu.label": "SSH þjónn",
   target: "Host eða SSH skipun",
   connect: "Tengdu",
   connectTo: "Tengstu {{host}}",
@@ -32,8 +30,5 @@ export default {
   "action.authenticate": "Staðfesta",
   "stage.connecting": "Tengist yfir SSH…",
   "stage.authentication": "Auðkenning krafist",
-  "form.name": "Nafn netþjóns (valfrjálst)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Bæta við netþjóni",
   "menu.delete": "Eyða",
 }

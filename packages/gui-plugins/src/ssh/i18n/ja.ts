@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "SSHサーバーを追加",
-  "server.menu.label": "SSHサーバー",
   target: "ホストまたはSSHコマンド",
   connect: "接続",
   connectTo: "{{host}} に接続",
@@ -35,8 +33,5 @@ export default {
   "action.authenticate": "認証",
   "stage.connecting": "SSHで接続中…",
   "stage.authentication": "認証が必要です",
-  "form.name": "サーバー名 (オプション)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "サーバーを追加",
   "menu.delete": "削除",
 }

@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "SSH सर्भर थप्नुहोस्",
-  "server.menu.label": "SSH सर्भर",
   target: "होस्ट वा SSH आदेश",
   connect: "जडान गर्नुहोस्",
   connectTo: "{{host}} मा जडान गर्नुहोस्",
@@ -31,8 +29,5 @@ export default {
   "action.authenticate": "प्रमाणीकरण गर्नुहोस्",
   "stage.connecting": "SSH मा जडान गर्दै…",
   "stage.authentication": "प्रमाणीकरण आवश्यक छ",
-  "form.name": "सर्भर नाम (वैकल्पिक)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "सर्भर थप्नुहोस्",
   "menu.delete": "मेट्नुहोस्",
 }

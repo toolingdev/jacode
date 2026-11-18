@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "SSH سرور شامل کریں۔",
-  "server.menu.label": "SSH سرور",
   target: "میزبان یا SSH کمانڈ",
   connect: "جڑیں۔",
   connectTo: "⁨{{host}}⁩ سے جڑیں",
@@ -32,8 +30,5 @@ export default {
   "action.authenticate": "تصدیق کریں۔",
   "stage.connecting": "SSH پر منسلک ہو رہا ہے…",
   "stage.authentication": "توثیق درکار ہے۔",
-  "form.name": "سرور کا نام (اختیاری)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "سرور شامل کریں۔",
   "menu.delete": "حذف کریں۔",
 }

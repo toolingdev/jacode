@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Προσθήκη διακομιστή SSH",
-  "server.menu.label": "Διακομιστής SSH",
   target: "Εντολή Host ή SSH",
   connect: "Σύνδεση",
   connectTo: "Σύνδεση στο {{host}}",
@@ -37,8 +35,5 @@ export default {
   "action.authenticate": "Έλεγχος ταυτότητας",
   "stage.connecting": "Σύνδεση μέσω SSH…",
   "stage.authentication": "Απαιτείται έλεγχος ταυτότητας",
-  "form.name": "Όνομα διακομιστή (προαιρετικό)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Προσθήκη διακομιστή",
   "menu.delete": "Διαγραφή",
 }

@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com އަށް ފޮނުއްވާށެވެ",
-  add: "SSH ސަރވަރ އިތުރުކުރުން",
-  "server.menu.label": "SSH ސަރވަރ އެވެ",
   target: "ހޯސްޓް ނުވަތަ SSH ކޮމާންޑެވެ",
   connect: "ގުޅުވުން",
   connectTo: "⁨{{host}}⁩ އާއި ގުޅާށެވެ.",
@@ -35,8 +33,5 @@ export default {
   "action.authenticate": "ސައްހަކުރުން",
   "stage.connecting": "SSH މެދުވެރިކޮށް ގުޅެމުން...",
   "stage.authentication": "އޮތެންޓިކޭޝަން ބޭނުންވެއެވެ",
-  "form.name": "ސަރވަރ ނަން (އިޚްތިޔާރީ)",
-  "form.namePlaceholder": "Localhost އެވެ",
-  "form.add": "ސަރވަރ އިތުރުކުރުން",
   "menu.delete": "ފުހެލުން",
 }

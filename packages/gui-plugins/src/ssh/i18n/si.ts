@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "SSH සේවාදායකය එක් කරන්න",
-  "server.menu.label": "SSH සේවාදායකය",
   target: "සත්කාරක හෝ SSH විධානය",
   connect: "සම්බන්ධ කරන්න",
   connectTo: "{{host}} වෙත සම්බන්ධ වන්න",
@@ -33,8 +31,5 @@ export default {
   "action.authenticate": "සත්‍යාපනය කරන්න",
   "stage.connecting": "SSH හරහා සම්බන්ධ වෙමින්…",
   "stage.authentication": "සත්‍යාපනය අවශ්‍යයි",
-  "form.name": "සේවාදායකයේ නම (විකල්ප)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "සේවාදායකය එක් කරන්න",
   "menu.delete": "මකන්න",
 }

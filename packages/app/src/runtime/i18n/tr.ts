@@ -3,7 +3,6 @@ import en from "./en"
 type Keys = keyof typeof en
 
 export const dict = {
-  "desktop.menu.app": "OpenCode",
   "desktop.menu.file": "Dosya",
   "desktop.menu.edit": "Düzen",
   "desktop.menu.view": "Görünüm",
@@ -47,7 +46,6 @@ export const dict = {
   "desktop.menu.supportForum": "Destek forumu",
   "desktop.menu.shareFeedback": "Geri bildirim paylaş",
   "desktop.menu.reportBug": "Hata bildir",
-  "desktop.menu.ariaLabel": "OpenCode menüsü",
 
   "desktop.cli.installed.title": "CLI yüklendi",
   "desktop.cli.installed.message":
@@ -59,9 +57,6 @@ export const dict = {
   "desktop.recovery.action.exportLogs": "Günlükleri dışa aktar",
   "desktop.recovery.action.keepWaiting": "Beklemeye devam et",
   "desktop.recovery.action.quit": "Çık",
-  "desktop.recovery.loadFailed": "OpenCode yüklenemedi",
-  "desktop.recovery.terminated": "OpenCode penceresi beklenmedik şekilde sonlandırıldı",
-  "desktop.recovery.unresponsive": "OpenCode yanıt vermiyor",
   "desktop.recovery.unresponsive.detail":
     "Uygulamayı yeniden başlatabilir, günlükleri açabilir veya beklemeye devam edebilirsiniz.",
   "desktop.recovery.loadFailed.detail": "Pencere: {{window}}\nURL: {{url}}\nHata: {{code}} {{description}}",
@@ -80,7 +75,6 @@ export const dict = {
   "command.category.view": "Görünüm",
   "command.category.project": "Proje",
   "command.category.provider": "Sağlayıcı",
-  "command.category.server": "Sunucu",
   "command.category.session": "Oturum",
   "command.category.file": "Dosya",
   "command.category.context": "Bağlam",
@@ -177,8 +171,6 @@ export const dict = {
   "provider.connect.status.inProgress": "Yetkilendirme devam ediyor…",
   "provider.connect.status.waiting": "Yetkilendirme bekleniyor",
   "provider.connect.status.failed": "Yetkilendirme başarısız: {{error}}",
-  "provider.connect.apiKey.description":
-    "{{provider}} hesabınızı bağlamak ve OpenCode'da {{provider}} modellerini kullanmak için API anahtarınızı girin.",
   "provider.connect.apiKey.label": "{{provider}} API anahtarı",
   "provider.connect.apiKey.placeholder": "API anahtarı",
   "provider.connect.apiKey.required": "API anahtarı gerekli",
@@ -261,16 +253,9 @@ export const dict = {
   "dialog.directory.parent": "Üst klasör",
   "dialog.directory.readError": "Bu klasör okunamıyor",
 
-  "dialog.server.add.title": "Sunucu ekle",
-  "dialog.server.add.url": "Sunucu URL'si",
   "dialog.server.add.placeholder": "http://localhost:4096",
-  "dialog.server.add.error": "Sunucuya bağlanılamadı",
   "dialog.server.add.checking": "Kontrol ediliyor…",
-  "dialog.server.add.button": "Sunucu ekle",
-  "dialog.server.add.name": "Sunucu adı (isteğe bağlı)",
-  "dialog.server.add.namePlaceholder": "Localhost",
   "dialog.server.add.password": "Parola (isteğe bağlı)",
-  "dialog.server.edit.title": "Sunucuyu düzenle",
 
   "dialog.server.menu.edit": "Düzenle",
 
@@ -329,8 +314,6 @@ export const dict = {
   "error.chain.didYouMean": "Bunu mu demek istediniz: {{suggestions}}",
   "error.chain.modelNotFound": "Model bulunamadı: {{provider}}/{{model}}",
   "error.chain.checkConfig": "Yapılandırma dosyanızdaki (opencode.json) sağlayıcı/model adlarını kontrol edin",
-  "error.chain.mcpFailed":
-    'MCP sunucusu "{{name}}" çalıştırılamadı. Not: OpenCode henüz MCP kimlik doğrulamasını desteklemiyor.',
   "error.chain.providerAuthFailed": "Sağlayıcı kimlik doğrulaması başarısız ({{provider}}): {{message}}",
   "error.chain.providerInitFailed":
     '"{{provider}}" sağlayıcısı başlatılamadı. Kimlik bilgilerini ve yapılandırmayı kontrol edin.',
@@ -353,7 +336,6 @@ export const dict = {
   "home.projects": "Projeler",
   "home.project.add": "Proje ekle",
   "home.recentlyClosed": "Yakın zamanda kapatılanlar",
-  "home.server.collapse": "Sunucu projelerini daralt",
   "home.server.expand": "Sunucu projelerini genişlet",
   "home.sessions.search.placeholder": "Oturum ara",
   "home.sessions.search.placeholder.scoped": "{{scope}} kapsamında oturum ara",
@@ -392,7 +374,6 @@ export const dict = {
   "session.header.reveal.fileExplorer": "Dosya Gezgini'nde göster",
   "session.header.reveal.containingFolder": "İçeren klasörü aç",
 
-  "settings.tab.servers": "Sunucular",
   "settings.extensions.tab.plugins": "Eklentiler",
 
   "common.copied": "Kopyalandı",
@@ -425,17 +406,13 @@ export const dict = {
   "settings.general.section.sounds": "Ses efektleri",
 
   "settings.general.row.language.title": "Dil",
-  "settings.general.row.language.description": "OpenCode'un görünüm dilini değiştirin",
   "settings.general.row.shell.title": "Terminal Kabuğu",
   "settings.general.row.shell.description":
     "Terminalinizde kullanılacak kabuğu seçin. Uyumlu kabuklar, ajan araç çağrılarında da kullanılır.",
   "settings.general.row.shell.autoDefault": "Otomatik (Varsayılan)",
   "settings.general.row.shell.terminalOnly": "yalnızca terminal",
   "settings.general.row.colorScheme.title": "Renk şeması",
-  "settings.general.row.colorScheme.description":
-    "OpenCode'un sistem, açık veya koyu temayı takip etip etmeyeceğini seçin",
   "settings.general.row.theme.title": "Tema",
-  "settings.general.row.theme.description": "OpenCode'un temasını özelleştirin.",
   "settings.general.row.font.title": "Kod yazı tipi",
   "settings.general.row.font.description": "Kod bloklarında kullanılan yazı tipini özelleştirin",
   "settings.general.row.terminalFont.title": "Terminal yazı tipi",
@@ -627,8 +604,6 @@ export const dict = {
 
   "command.project.copyID": "Proje kimliğini kopyala",
   "command.session.copyID": "Oturum kimliğini kopyala",
-  "server.row.incompatible":
-    "Bu sunucu, bu uygulamayla uyumlu olmayan OpenCode {{version}} sürümünü çalıştırıyor. Devam etmek için OpenCode V2'ye yükseltin.",
   "toast.session.copyID.failed.title": "Oturum kimliği kopyalanamadı",
   "toast.session.copyID.failed.description": "Oturum kimliği kopyalanırken bir hata oluştu",
   "toast.project.copyID.failed.title": "Proje kimliği kopyalanamadı",
@@ -637,8 +612,6 @@ export const dict = {
   "error.page.description.status": "Sunucu bir HTTP {{status}} yanıtı döndürdü.",
   "error.page.action.reload": "Yeniden yükle",
   "session.error.incompatible": "Bu sunucu sürümü desteklenmiyor",
-  "session.error.incompatible.description":
-    "{{server}}, bu uygulamayla uyumlu olmayan OpenCode {{version}} sürümünü çalıştırıyor. Devam etmek için sunucuyu OpenCode V2'ye yükseltin.",
   "session.background.moveInline": "Çalışan işi arka plana taşımak için {{keybind}} tuşuna basın",
 
   "command.session.background": "Arka plana taşı",
@@ -646,16 +619,13 @@ export const dict = {
   "settings.tab.preferences": "Tercihler",
   "settings.tab.notifications": "Bildirimler",
   "settings.tab.projects": "Projeler",
-  "settings.tab.extensions": "Uzantılar",
   "settings.preferences.description": "Tercihleri, temayı ve varsayılan davranışı özelleştirin",
   "settings.appearance.description": "Temayı ve yazı tiplerini özelleştirin",
   "settings.notifications.description": "Ne zaman bildirim ve sesli uyarı alacağınızı seçin",
   "settings.shortcuts.description": "Yaygın eylemlerin kısayollarını özelleştirin",
-  "settings.servers.description": "Sunucu bağlantılarını yönetin",
   "settings.projects.title": "Projeler",
   "settings.projects.description": "Bu sunucudaki proje ayarlarını yönetin",
   "settings.projects.empty": "Proje bulunamadı",
-  "settings.extensions.description": "Bu sunucuda kullanılabilen uzantıları yönetin",
   "settings.extensions.tab.mcps": "MCP'ler",
   "settings.extensions.tab.skills": "Beceriler",
   "settings.extensions.availableAll": "Tüm projelerde kullanılabilir",
@@ -740,7 +710,6 @@ export const dict = {
   "session.search.noResults": "Eşleşme yok",
   "titlebar.tabs": "Sekmeler",
   "settings.tab.experimental": "Deneysel",
-  "settings.experimental.description": "Deneysel özellikleri deneyin",
   "settings.tab.about": "Hakkında",
   "settings.about.version": "Sürüm {{version}}",
   "settings.about.devVersion": "geliştirme sürümü",
@@ -750,7 +719,6 @@ export const dict = {
   "settings.about.firstPublished": "İlk olarak Missouri, ABD'de yayınlandı",
   "settings.about.firstIllustrated": "İlk kez Londra, İngiltere'de resmedildi",
   "settings.about.website": "www.opencode.ai",
-  "settings.about.description": "OpenCode, açık kaynak kodlama aracısı",
   "settings.about.trademark": "OpenCode, Anomaly Innovations, Inc.'in tescilli ticari markasıdır.",
   "settings.about.typeset": "Inter ve IBM Plex Mono'da dizgi",
   "settings.about.tagline": "Yapay zeka siz olmadan mükemmel yazılım geliştiremez",
@@ -785,19 +753,10 @@ export const dict = {
   "server.status.connecting": "SSH üzerinden bağlanılıyor…",
   "server.status.authentication": "Kimlik doğrulama gerekli",
   "mcp.auth.interactiveForm": "MCP sunucusu {{name}} etkileşimli bir kimlik doğrulama formu gerektirir",
-  "server.connect.title": "Bir sunucuya bağlanın",
-  "server.connect.description": "Başlamak için sunucu adresinizi ve şifrenizi girin.",
   "server.connect.button": "Bağlan",
-  "server.connect.address.invalid": "Geçerli bir HTTP veya HTTPS sunucu adresi girin.",
-  "server.connect.failed": "Bağlantı kurulamadı. Sunucu adresini ve şifreyi kontrol edip tekrar deneyin.",
   "server.connect.scan": "QR kodunu tarayın",
-  "server.connect.scan.description": "Kameranızı opencode pair tarafından gösterilen QR koduna doğrultun.",
-  "server.connect.scan.invalid":
-    "Bu bir OpenCode eşleştirme kodu değildir. opencode pair tarafından gösterilen kodu tarayın.",
   "server.connect.camera": "Kamera eşleniyor",
   "server.connect.camera.starting": "Kamera açılıyor…",
-  "server.connect.mixedContent":
-    "Bu HTTP sunucusuna bir HTTPS sayfasından bağlanılamadı. Bunun yerine HTTPS sunucu adresini kullanın.",
   "server.connect.camera.unavailable":
     "Bu tarayıcıda kamera mevcut değil. Bağlantı ayrıntılarınızı manuel olarak girin.",
   "server.connect.camera.error":
@@ -829,18 +788,14 @@ export const dict = {
     "Temsilcilerin web'de arama yapmak için kullanacağı arama sağlayıcısını seçin",
   "settings.projects.search.placeholder": "Proje ara",
   "project.settings.name.title": "Proje adı",
-  "project.settings.name.description": "OpenCode genelinde bu proje için gösterilen ad",
   "project.settings.icon.description": "Önerilen: 128×128 piksel. Bir görseli yüklemek için tıklayın veya sürükleyin.",
   "project.settings.color.description": "Özel bir görüntü ayarlanmadığında proje simgesi için kullanılır",
   "project.settings.worktree.startup.description": "Yeni bir çalışma ağacı oluşturulduktan sonra bir kez çalıştırılır",
   "project.settings.worktree.startup.hint.base": "Temel çalışma ağacı için $OPENCODE_WORKTREE_BASE kullanın.",
   "project.settings.worktree.startup.hint.new": "Yeni çalışma ağacı için $OPENCODE_WORKTREE_PATH'yi kullanın.",
   "project.settings.extensions.empty.mcps.title": "Henüz MCPs yok",
-  "project.settings.extensions.empty.mcps.description": "OpenCode tarafından kullanılabilen MCPs burada görünecek",
   "project.settings.extensions.empty.plugins.title": "Henüz eklenti yok",
-  "project.settings.extensions.empty.plugins.description": "OpenCode'de kullanılabilen eklentiler burada görünecek",
   "project.settings.extensions.empty.skills.title": "Henüz beceri yok",
-  "project.settings.extensions.empty.skills.description": "OpenCode'nin kullanabileceği beceriler burada görünecek",
   "project.settings.extensions.lsp.configured": "Yapılandırılmış dil sunucuları",
   "project.settings.extensions.lsp.status.enabled": "Yapılandırmada etkinleştirildi",
   "project.settings.extensions.lsp.status.disabled": "Yapılandırmada devre dışı bırakıldı",
@@ -859,8 +814,6 @@ export const dict = {
   "settings.timeline.grouped.label": "{{activity}} gruplandırılmış",
   "settings.timeline.collapsed.label": "{{activity}} çöktü",
   "session.new.workspace.search.empty": "Eşleşen çalışma ağacı yok",
-  "settings.workspaces.description": "Çalışma ağaçlarını inceleyin ve disk kullanımını yönetin",
-  "settings.workspaces.empty.description": "OpenCode'de oluşturulan çalışma ağaçları burada görünecek",
   "settings.workspaces.sessions.filtered.one": "{{count}} oturumu",
   "settings.workspaces.sessions.filtered.other": "{{count}} oturumları",
   "settings.workspaces.deleteAll.confirm.one": "Bu, {{count}} seçili çalışma ağacını kalıcı olarak silecektir.",

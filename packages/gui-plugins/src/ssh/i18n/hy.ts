@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Ավելացնել SSH սերվերը",
-  "server.menu.label": "SSH սերվեր",
   target: "Հոստ կամ SSH հրամանը",
   connect: "Միանալ",
   connectTo: "Միանալ {{host}}-ին",
@@ -33,8 +31,5 @@ export default {
   "action.authenticate": "Հաստատել",
   "stage.connecting": "Կապ հաստատում SSH-ի միջոցով…",
   "stage.authentication": "Պայմանավորվածություն պահանջվում է",
-  "form.name": "Սերվերի անունը (ըստ ցանկության)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Ավելացնել սերվեր",
   "menu.delete": "Ջնջել",
 }

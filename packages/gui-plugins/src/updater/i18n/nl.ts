@@ -6,7 +6,7 @@ export default {
   "action.installRestart": "Installeren en opnieuw opstarten",
   "action.download": "OpenCode downloaden",
   "action.installing": "Installeren…",
-  "toast.latest.title": "OpenCode is bijgewerkt",
+  "toast.latest.title": "JaCode is bijgewerkt",
   "toast.latest.description": "Je gebruikt de nieuwste versie van OpenCode.",
   "migration.title": "Van Beta naar Stabiel overstappen",
   "migration.description":

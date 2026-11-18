@@ -1,0 +1,18 @@
+export default {
+  on: "Enrutamiento activado",
+  off: "Enrutamiento desactivado",
+  "off.chat": "Enrutamiento desactivado en este chat",
+  "chat.off": "Desactivar el enrutamiento en este chat",
+  "chat.on": "Volver a activar el enrutamiento en este chat",
+  routed: "Enrutado a {{model}}",
+  title: "Enrutamiento inteligente",
+  "row.none": "Aún no hay ninguna decisión en este chat",
+  "row.model": "Modelo: {{model}}",
+  "row.size.small": "Tamaño: tarea pequeña, iniciada de inmediato",
+  "row.size.large": "Tamaño: tarea grande, primero se planifica",
+  sure: "{{percent}}% de certeza",
+  "turn.off": "Desactivar el enrutamiento en todos los chats",
+  "turn.on": "Activar el enrutamiento en todos los chats",
+  settings: "Ajustes de enrutamiento",
+  failed: "No se pudo cambiar el enrutamiento",
+}

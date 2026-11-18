@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Agregar servidor SSH",
-  "server.menu.label": "Servidor SSH",
   target: "Comando host o SSH",
   connect: "Conectar",
   connectTo: "Conéctese a {{host}}",
@@ -35,8 +33,11 @@ export default {
   "action.authenticate": "autenticar",
   "stage.connecting": "Conectando a través de SSH…",
   "stage.authentication": "Se requiere autenticación",
-  "form.name": "Nombre del servidor (opcional)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Añadir servidor",
   "menu.delete": "Eliminar",
+  add: "Agregar un worker por SSH…",
+  "server.menu.label": "Worker SSH",
+  "error.unavailable": "SSH no está disponible",
+  "form.name": "Nombre del worker (opcional)",
+  "form.namePlaceholder": "worker",
+  "form.add": "Agregar worker",
 }

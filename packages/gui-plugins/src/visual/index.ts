@@ -1,3 +1,4 @@
+import { builtinCatalog } from "@opencode/plugin/gui/builtin"
 import { Plugin, Store } from "@opencode/plugin/gui"
 import { Schema } from "effect"
 import en from "./i18n/en"
@@ -14,5 +15,5 @@ export default Plugin.define({
     // Weather cards start on a different look each time; charts start plain, where the numbers read easiest.
     looks: Store.global(VisualLooks, { weather: RANDOM, chart: "clean" }),
   },
-  i18n: { en },
+  i18n: builtinCatalog({ en, es: () => import("./i18n/es") }),
 })

@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "SSH 서버 추가",
-  "server.menu.label": "SSH 서버",
   target: "호스트 또는 SSH 명령",
   connect: "연결",
   connectTo: "{{host}}에 연결",
@@ -32,8 +30,5 @@ export default {
   "action.authenticate": "인증",
   "stage.connecting": "SSH로 연결 중…",
   "stage.authentication": "인증 필요",
-  "form.name": "서버 이름 (선택 사항)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "서버 추가",
   "menu.delete": "삭제",
 }

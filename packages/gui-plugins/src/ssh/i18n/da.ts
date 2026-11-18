@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Tilføj SSH-server",
-  "server.menu.label": "SSH server",
   target: "Host eller SSH kommando",
   connect: "Forbind",
   connectTo: "Tilslut til {{host}}",
@@ -35,8 +33,5 @@ export default {
   "action.authenticate": "Godkend",
   "stage.connecting": "Opretter forbindelse via SSH...",
   "stage.authentication": "Godkendelse påkrævet",
-  "form.name": "Servernavn (valgfrit)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Tilføj server",
   "menu.delete": "Slet",
 }

@@ -1,8 +1,6 @@
 export default {
   label: "SSH",
   placeholder: "ssh user@example.com",
-  add: "Pridať SSH server",
-  "server.menu.label": "Server SSH",
   target: "Host alebo SSH príkaz",
   connect: "Pripojiť",
   connectTo: "Pripojiť sa k {{host}}",
@@ -34,8 +32,5 @@ export default {
   "action.authenticate": "Overiť",
   "stage.connecting": "Pripájanie cez SSH…",
   "stage.authentication": "Vyžaduje sa autentifikácia",
-  "form.name": "Názov servera (voliteľné)",
-  "form.namePlaceholder": "Localhost",
-  "form.add": "Pridať server",
   "menu.delete": "Odstrániť",
 }
