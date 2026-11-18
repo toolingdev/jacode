@@ -24,6 +24,23 @@ export const CARD_LABEL_KEYS = [
   "closing",
 ] as const
 
+// The looks a card can take, after each card's own styles so they win over its colours and decorations.
+const LOOKS = [
+  ".card.s-minimal{background:none;border:none;border-radius:0;padding:4px 0;box-shadow:none}",
+  ".card.s-minimal::before,.card.s-minimal::after{display:none}",
+  ".card.s-paper{font-family:Georgia,'Times New Roman',serif;background:#f4efe4;border:1px solid #1a1a1a;border-radius:2px;--text:#1a1a1a;--muted:#555;--surface:#f4efe4;--bg:#f4efe4;--purple:#6b4f2a;--orange:#8a5a1f;--pink:#7a3b3b;--blue:#2f4a6b;--green:#3d5a2f;--yellow:#7a6420;--red:#8b2a2a}",
+  ".card.s-paper::before{background:#1a1a1a;height:3px}",
+  ".card.s-neon{background:#0b0b16;border:1.5px solid #ff2bd6;box-shadow:0 0 12px #ff2bd6,inset 0 0 18px rgba(0,255,255,.15);--text:#e8faff;--muted:#8be9fd;--surface:#0b0b16;--bg:#0b0b16;--blue:#00f0ff;--purple:#ff2bd6;--pink:#ff2bd6;--yellow:#fff200;--green:#39ff14;--orange:#ff9f1c}",
+  ".card.s-neon .name,.card.s-neon .title{color:#00f0ff;text-shadow:0 0 10px #00f0ff}",
+  ".card.s-terminal{font-family:ui-monospace,Menlo,Consolas,monospace;background:#03130a;border:1px solid #1f8f4a;border-radius:4px;--text:#3dff7a;--muted:#1fae56;--surface:#03130a;--bg:#03130a;--blue:#3dff7a;--purple:#3dff7a;--pink:#3dff7a;--orange:#3dff7a;--yellow:#3dff7a;--green:#3dff7a;--red:#ff5f56}",
+  ".card.s-terminal .title,.card.s-terminal .text,.card.s-terminal .summary{font-family:inherit}",
+  ".card.s-terminal::before{background:#1f8f4a}",
+  ".card.s-terminal::after{display:none}",
+  ".card.s-pixel{font-family:ui-monospace,Menlo,Consolas,monospace;border-radius:0;background:#1b1f3b;border:4px solid #f8f8f2;box-shadow:4px 4px 0 #ff5fa2,8px 8px 0 #5fd7ff;margin:0 8px 8px 0;--text:#f8f8f2;--muted:#a9b1d6;--surface:#1b1f3b;--bg:#1b1f3b;--yellow:#ffd866;--blue:#5fd7ff;--pink:#ff5fa2;--purple:#b48ead;--green:#a6e22e;--orange:#fd971f}",
+  ".card.s-pixel .title,.card.s-pixel .text,.card.s-pixel .summary{font-family:inherit}",
+  ".card.s-pixel .track,.card.s-pixel .fill,.card.s-pixel .bar,.card.s-pixel .n,.card.s-pixel .chip{border-radius:0}",
+].join("")
+
 // What every card shares: reading its JSON, redrawing while the data is still arriving, and escaping text.
 const CARD_BASE = String.raw`
   const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -40,7 +57,10 @@ const CARD_BASE = String.raw`
       try { data = JSON.parse(text); } catch { return; }
       if (!data || typeof data !== "object") return;
       const root = this.shadowRoot ?? this.attachShadow({ mode: "open" });
-      root.innerHTML = "<style>:host{display:block;padding:6px 2px 10px}*{box-sizing:border-box}.card{font:14px/1.45 system-ui,-apple-system,sans-serif;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;max-width:640px;display:grid;gap:14px;position:relative;overflow:hidden}.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}" + css + "</style>" + render(data);
+      root.innerHTML = "<style>:host{display:block;padding:6px 2px 10px}*{box-sizing:border-box}.card{font:14px/1.45 system-ui,-apple-system,sans-serif;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;max-width:640px;display:grid;gap:14px;position:relative;overflow:hidden}.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}" + css + ${JSON.stringify(LOOKS)} + "</style>" + render(data);
+      // The look the user picked, read from the page's root element like the weather card's.
+      const look = document.documentElement.dataset.cardStyle || "clean";
+      root.querySelectorAll(".card").forEach((card) => card.classList.add("s-" + look));
     }
   });
 `

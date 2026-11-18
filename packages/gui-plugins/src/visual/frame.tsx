@@ -1,6 +1,6 @@
 import { createMemo, createResource, createSignal, onCleanup, Show } from "solid-js"
 import { VISUAL_COLORS, visualDocument, visualHeight, wantsChart, withChart, type VisualColors } from "./document"
-import type { ChartStyle, WeatherCardStyle } from "./styles"
+import type { CardStyle, ChartStyle, WeatherCardStyle } from "./styles"
 
 /**
  * A theme colour as plain `rgba()`. The theme writes colours in forms such as `color-mix()`, which CSS understands
@@ -35,6 +35,7 @@ export function VisualFrame(props: {
   fragment: string
   weather: WeatherCardStyle
   chart: ChartStyle
+  card?: CardStyle
   /** The words the cards show; the settings samples, which show none of those cards, leave it out. */
   labels?: Record<string, string>
   fixed?: number
@@ -73,6 +74,7 @@ export function VisualFrame(props: {
       dark,
       weather: props.weather,
       chart: props.chart,
+      card: props.card,
       labels: props.labels,
     })
   })

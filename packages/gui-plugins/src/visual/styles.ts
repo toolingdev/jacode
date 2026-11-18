@@ -40,6 +40,17 @@ export const CHART_STYLES = [
 
 export type ChartStyle = (typeof CHART_STYLES)[number]
 
+/** The looks shared by the usage, quote and outline cards. */
+export const CARD_STYLES = ["clean", "minimal", "paper", "neon", "terminal", "pixel"] as const
+
+export type CardStyle = (typeof CARD_STYLES)[number]
+
+/** A quote card with sample words, for the previews in Settings. */
+export const SAMPLE_CARD_FRAGMENT = `<quote-card><script type="application/json">${JSON.stringify({
+  title: "Sample quote",
+  quotes: [{ text: "Simplicity is the ultimate sophistication.", author: "Sample author", source: "Sample source" }],
+})}</script></quote-card>`
+
 /** A weather card with made-up numbers, for the previews in Settings. */
 export const SAMPLE_WEATHER = {
   source: "Sample",

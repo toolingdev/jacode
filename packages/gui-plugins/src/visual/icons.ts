@@ -44,7 +44,8 @@ function defineWeatherIcons() {
 
   const flakes = [0, 1, 2]
     .map(
-      (index) => `<circle class="flake" style="animation-delay:${index * -0.6}s" cx="${25 + index * 8}" cy="51" r="1.8"/>`,
+      (index) =>
+        `<circle class="flake" style="animation-delay:${index * -0.6}s" cx="${25 + index * 8}" cy="51" r="1.8"/>`,
     )
     .join("")
 

@@ -4,7 +4,7 @@ import { lazy, onCleanup, Suspense } from "solid-js"
 import { CARD_LABEL_KEYS } from "./cards"
 import { VisualFrame } from "./frame"
 import type definition from "./index"
-import { CHART_STYLES, resolveLook, WEATHER_CARD_STYLES } from "./styles"
+import { CARD_STYLES, CHART_STYLES, resolveLook, WEATHER_CARD_STYLES } from "./styles"
 
 /**
  * Fork feature: a reply can carry a live visual. A fenced code block with the language `visual` holds an HTML
@@ -28,6 +28,7 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
           fragment={props.code}
           weather={resolveLook(ctx.stores.looks.value.weather, WEATHER_CARD_STYLES, roll)}
           chart={resolveLook(ctx.stores.looks.value.chart, CHART_STYLES, roll)}
+          card={resolveLook(ctx.stores.looks.value.card ?? "clean", CARD_STYLES, roll)}
           labels={Object.fromEntries(CARD_LABEL_KEYS.map((key) => [key, ctx.t(`card.${key}`)]))}
         />
       )

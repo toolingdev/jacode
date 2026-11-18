@@ -3,16 +3,19 @@ import { createSignal, For, onCleanup, type JSX } from "solid-js"
 import { VisualFrame } from "./frame"
 import type definition from "./index"
 import {
+  CARD_STYLES,
   CHART_STYLES,
   RANDOM,
+  SAMPLE_CARD_FRAGMENT,
   SAMPLE_CHART_FRAGMENT,
   SAMPLE_WEATHER_FRAGMENT,
   WEATHER_CARD_STYLES,
+  type CardStyle,
   type ChartStyle,
   type WeatherCardStyle,
 } from "./styles"
 
-/** The Visuals settings page: one live sample per look, for weather cards and for charts; a click picks it. */
+/** The Cards settings page: one live sample per look, for weather cards, charts and the other cards; a click picks it. */
 export default function VisualsPage() {
   const ctx = usePlugin<typeof definition>()
   const ui = ctx.ui
@@ -58,6 +61,18 @@ export default function VisualsPage() {
       weather="clean"
       chart={style()}
       fixed={160}
+    />
+  )
+
+  const cardSample = (id: string, style: () => CardStyle) => (
+    <VisualFrame
+      id={`sample-card-${id}`}
+      title={ctx.t(`card.${id === RANDOM ? RANDOM : style()}`)}
+      fragment={SAMPLE_CARD_FRAGMENT}
+      weather="clean"
+      chart="clean"
+      card={style()}
+      fixed={190}
     />
   )
 
@@ -120,6 +135,37 @@ export default function VisualsPage() {
                     draft.chart = style
                   }),
                 sample: chartSample(style, () => style),
+              })
+            }
+          </For>
+        </div>
+      </div>
+      <div class="flex flex-col gap-2 pt-4">
+        <h3 class="text-13-medium text-v2-text-text-base">{ctx.t("card.title")}</h3>
+        <div
+          role="radiogroup"
+          aria-label={ctx.t("card.title")}
+          class="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-2"
+        >
+          {tile({
+            label: ctx.t("card.random"),
+            picked: () => looks.value.card === RANDOM,
+            pick: () =>
+              looks.update((draft) => {
+                draft.card = RANDOM
+              }),
+            sample: cardSample(RANDOM, () => CARD_STYLES[step() % CARD_STYLES.length] ?? "clean"),
+          })}
+          <For each={CARD_STYLES}>
+            {(style) =>
+              tile({
+                label: ctx.t(`card.${style}`),
+                picked: () => (looks.value.card ?? "clean") === style,
+                pick: () =>
+                  looks.update((draft) => {
+                    draft.card = style
+                  }),
+                sample: cardSample(style, () => style),
               })
             }
           </For>

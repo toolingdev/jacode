@@ -8,7 +8,12 @@ import { WEATHER_ICON_NAMES, WEATHER_ICONS_SCRIPT } from "./icons"
 import { CHART_STYLES, RANDOM, resolveLook, WEATHER_CARD_STYLES } from "./styles"
 
 describe("visual document", () => {
-  const page = visualDocument({ fragment: "<p>hi</p>", id: "v1", colors: { text: "#fff", blue: undefined }, dark: true })
+  const page = visualDocument({
+    fragment: "<p>hi</p>",
+    id: "v1",
+    colors: { text: "#fff", blue: undefined },
+    dark: true,
+  })
 
   test("carries the fragment, the theme colours it was given, and its id", () => {
     expect(page).toContain('<div id="visual-root"><p>hi</p></div>')
@@ -47,6 +52,10 @@ describe("visual document", () => {
 
     expect(styled).toContain('data-weather-style="pixel" data-chart-style="neon"')
     expect(page).toContain('data-weather-style="clean" data-chart-style="clean"')
+    expect(page).toContain('data-card-style="clean"')
+    expect(visualDocument({ fragment: "", id: "v", colors: {}, dark: true, card: "paper" })).toContain(
+      'data-card-style="paper"',
+    )
     expect(page).toContain('customElements.define("weather-card"')
     expect(() => new Function(WEATHER_CARD_SCRIPT)).not.toThrow()
     expect(() => new Function(CHART_STYLE_SCRIPT)).not.toThrow()
@@ -86,7 +95,13 @@ describe("visual cards", () => {
   })
 
   test("hands the cards their words, and has every word they ask for", () => {
-    const labelled = visualDocument({ fragment: "", id: "v2", colors: {}, dark: true, labels: { usage: "Uso </script>" } })
+    const labelled = visualDocument({
+      fragment: "",
+      id: "v2",
+      colors: {},
+      dark: true,
+      labels: { usage: "Uso </script>" },
+    })
 
     expect(labelled).toContain('window.visualLabels={"usage":"Uso \\u003c/script>"}')
     expect(CARD_LABEL_KEYS.filter((key) => !(`card.${key}` in en))).toEqual([])

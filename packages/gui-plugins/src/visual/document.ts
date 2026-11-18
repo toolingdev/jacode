@@ -2,7 +2,7 @@ import { WEATHER_CARD_SCRIPT } from "./card"
 import { OUTLINE_CARD_SCRIPT, QUOTE_CARD_SCRIPT, USAGE_CARD_SCRIPT } from "./cards"
 import { CHART_STYLE_SCRIPT } from "./charts"
 import { WEATHER_ICONS_SCRIPT } from "./icons"
-import type { ChartStyle, WeatherCardStyle } from "./styles"
+import type { CardStyle, ChartStyle, WeatherCardStyle } from "./styles"
 
 // Fork feature: the page a `visual` code block runs as.
 
@@ -59,6 +59,8 @@ export function visualDocument(input: {
   /** The looks the user picked; the page's weather card and charts read them from its root element. */
   weather?: WeatherCardStyle
   chart?: ChartStyle
+  /** The look of the usage, quote and outline cards. */
+  card?: CardStyle
   /** The words the usage and outline cards show, in the user's language; see CARD_LABEL_KEYS. */
   labels?: Record<string, string>
 }) {
@@ -75,7 +77,7 @@ export function visualDocument(input: {
   ].join("; ")
 
   return `<!doctype html>
-<html data-weather-style="${input.weather ?? "clean"}" data-chart-style="${input.chart ?? "clean"}">
+<html data-weather-style="${input.weather ?? "clean"}" data-chart-style="${input.chart ?? "clean"}" data-card-style="${input.card ?? "clean"}">
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="${policy}">
