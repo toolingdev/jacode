@@ -5,11 +5,12 @@ import { define } from "@opencode/plugin/effect/plugin"
 import type { Document, Entry, Info } from "@opencode/schema/config"
 import type { ChoiceAnswer, DecisionQuestion } from "@opencode/schema/generate"
 import type { PromptInput } from "@opencode/schema/prompt-input"
-import { Duration, Effect, Option } from "effect"
+import { Duration, Effect, Option, Schema } from "effect"
 import { Config } from "../config.js"
 import { Generate } from "../generate.js"
 import { Model } from "../model.js"
 import { Provider } from "../provider.js"
+import { UsageSubscription } from "../usage-subscription.js"
 import type { PluginInternal } from "./internal.js"
 
 // Fork feature: a decision model answers small questions about each prompt before the session model runs: which of
@@ -38,9 +39,33 @@ The user's request below was judged to be a large task. Do NOT start it and make
 
 type Settings = NonNullable<NonNullable<Info["experimental"]>["decisions"]>
 
-type Candidate = { readonly ref: Model.Ref; readonly key: string; readonly use: string; readonly images: boolean }
+type Candidate = {
+  readonly ref: Model.Ref
+  readonly key: string
+  readonly use: string
+  readonly images: boolean
+  /** Price per million input plus output tokens; 0 when unknown or free. */
+  readonly price: number
+}
 
-type Pick = { readonly model?: Model.Ref; readonly pool: ReadonlySet<string>; readonly plan: boolean }
+// `smart`: picked for a smart Auto chat, which may move to any model of its scope, across providers too.
+type Pick = {
+  readonly model?: Model.Ref
+  readonly pool: ReadonlySet<string>
+  readonly plan: boolean
+  readonly smart?: boolean
+}
+
+// Fork feature: a subscription allowance at or past this share counts as nearly used, so smart Auto saves it.
+const QUOTA_TIGHT = 0.85
+
+// How long the plan and quota a smart Auto choice reads are trusted before they are asked for again.
+const PLAN_TTL = 10 * 60_000
+const QUOTA_TTL = 2 * 60_000
+
+// What the app sends with a prompt of an Auto chat: the scope, and the models switched on in it.
+const SmartAuto = Schema.Struct({ scope: Schema.String, models: Schema.Array(Schema.String) })
+const decodeSmartAuto = Schema.decodeUnknownOption(SmartAuto)
 
 export const Plugin = define({
   id: "opencode.decisions",
@@ -48,6 +73,12 @@ export const Plugin = define({
     const config = yield* Config.Service
     const generate = yield* Generate.Service
     const models = yield* Model.Service
+    const usage = yield* UsageSubscription.Service
+    // The models each subscription covers, and how much of each allowance is used, read at most once per TTL.
+    const cache: {
+      plan?: { at: number; value: ReadonlyMap<string, ReadonlySet<string>> }
+      quota?: { at: number; value: ReadonlyMap<string, number> }
+    } = {}
     // What the latest prompt of each session was routed to; a new prompt replaces it.
     const picks = new Map<string, Pick>()
     // The last skip reason each session was told, so a lasting outage is mentioned once, not on every prompt.
@@ -59,11 +90,88 @@ export const Plugin = define({
           const ref = Model.Ref.parse(key)
           const info = yield* models.get(ref.providerID, ref.id)
 
-          return info ? [{ ref, key, use, images: readsImages(info) } satisfies Candidate] : []
+          return info ? [{ ref, key, use, images: readsImages(info), price: price(info) } satisfies Candidate] : []
         }),
       )
 
       return found.flat()
+    })
+
+    // Fork feature: smart Auto. The models a subscription covers, by provider; empty when none reports a plan.
+    const plans = Effect.fn("DecisionsPlugin.plans")(function* () {
+      const now = Date.now()
+
+      if (cache.plan && now - cache.plan.at < PLAN_TTL) return cache.plan.value
+      const included = yield* usage.included().pipe(Effect.orElseSucceed(() => []))
+      const value = new Map(included.map((entry) => [entry.providerID as string, new Set(entry.models)]))
+      cache.plan = { at: now, value }
+
+      return value
+    })
+
+    // The most used share of any allowance, by provider.
+    const quotas = Effect.fn("DecisionsPlugin.quotas")(function* () {
+      const now = Date.now()
+
+      if (cache.quota && now - cache.quota.at < QUOTA_TTL) return cache.quota.value
+      const list = yield* usage.list().pipe(Effect.orElseSucceed(() => []))
+      const value = new Map(
+        list.map((info) => [
+          info.providerID as string,
+          Math.max(0, ...info.meters.map((meter) => (meter.limit > 0 ? meter.used / meter.limit : 0))),
+        ]),
+      )
+      cache.quota = { at: now, value }
+
+      return value
+    })
+
+    // The models smart Auto picks from: the routed models of its scope, else three tiers of the scope's own
+    // catalog, the strongest, a balanced one and the cheapest, plus the strongest that reads images. Either way a
+    // provider with a plan keeps only the models the plan covers, unless paid ones are allowed.
+    const smartPool = Effect.fn("DecisionsPlugin.smartPool")(function* (
+      settings: Settings,
+      smart: typeof SmartAuto.Type,
+    ) {
+      const plan = yield* plans()
+      // Auto across every provider may use any switched-on model; Auto for one provider only that provider's.
+      const enabled = new Set(smart.models)
+      const allowed = (ref: Model.Ref) =>
+        enabled.has(`${ref.providerID}/${ref.id}`) && (smart.scope === "all" || ref.providerID === smart.scope)
+      const covered = (ref: Model.Ref) =>
+        settings.allowPaid === true || !plan.has(ref.providerID) || plan.get(ref.providerID)?.has(ref.id) === true
+      const configured = (yield* candidates(settings)).filter(
+        (candidate) => allowed(candidate.ref) && covered(candidate.ref),
+      )
+
+      if (configured.length > 0) return configured
+      const catalog = (yield* models.available())
+        .filter((info) => info.status !== "deprecated" && info.capabilities.tools)
+        .map((info) => ({ info, ref: Model.Ref.make({ providerID: info.providerID, id: info.id }) }))
+        .filter((entry) => allowed(entry.ref) && covered(entry.ref))
+        .toSorted((a, b) => price(a.info) - price(b.info))
+
+      return tiers(catalog)
+    })
+
+    // Smart Auto's last word: when the decision model was not sure, or the plan's allowance is nearly used and the
+    // task is not large, the cheapest model that fits wins, so cost and quota are spent where they matter.
+    const smartChoice = Effect.fn("DecisionsPlugin.smartChoice")(function* (
+      pool: readonly Candidate[],
+      chosen: Model.Ref | undefined,
+      large: boolean,
+      kept: boolean,
+    ) {
+      if (kept || pool.length === 0) return chosen
+      const quota = yield* quotas()
+      const cheapest = pool.toSorted((a, b) => a.price - b.price)[0]?.ref
+      const tight = (ref: Model.Ref) => (quota.get(ref.providerID) ?? 0) >= QUOTA_TIGHT
+
+      if (!chosen) return large ? pool.toSorted((a, b) => b.price - a.price)[0]?.ref : cheapest
+
+      if (!large && tight(chosen)) return cheapest
+
+      return chosen
     })
 
     yield* ctx.session.hook("prompt", (event) =>
@@ -71,24 +179,31 @@ export const Plugin = define({
         picks.delete(event.sessionID)
         const settings = decisions(yield* config.entries())
 
-        if (!settings || settings.enabled === false) return
+        // Fork feature: a smart Auto chat is routed even when routing is off, because the user chose it for this chat.
+        const smart = Option.getOrUndefined(decodeSmartAuto(event.metadata?.smartAuto))
+
+        // Only the scope is kept on the message; the list of switched-on models served this prompt alone.
+        if (smart) event.metadata = { ...event.metadata, smartAuto: { scope: smart.scope } }
+
+        if (!smart && (!settings || settings.enabled === false)) return
         const session = yield* ctx.session.get({ sessionID: event.sessionID }).pipe(Effect.option)
 
         // Fork feature: a chat can turn routing off for itself; its own model then answers every prompt.
         if (Option.isSome(session) && session.value.metadata?.routing === false) return
-        const routed = yield* candidates(settings)
+        const options = settings ?? {}
+        const routed = smart ? yield* smartPool(options, smart) : yield* candidates(options)
         const pool = usable(routed, hasImage(event.prompt))
         // A scheduled prompt was approved when it was scheduled, so it is never held for a plan.
-        const plan = settings.plan !== false && event.metadata?.schedule === undefined
-        const kept = keeping(settings, pool)
+        const plan = options.plan !== false && event.metadata?.schedule === undefined
+        const kept = keeping(options, pool)
         const questions = [...ask(pool, plan), ...kept.map((rule) => rule.question)]
         // One model left to use is no question: an image prompt goes to the only routed model that reads images.
         // It is set before asking anything, so it holds even when the decision model is skipped.
         const only = pool.length === 1 ? pool[0].ref : undefined
-        picks.set(event.sessionID, { model: only, pool: keys(routed), plan: false })
+        picks.set(event.sessionID, { model: only, pool: keys(routed), plan: false, smart: smart !== undefined })
 
         if (questions.length === 0) return
-        const decider = settings.model ? Model.Ref.parse(settings.model) : defaultDecider
+        const decider = options.model ? Model.Ref.parse(options.model) : defaultDecider
 
         const outcome = yield* generate
           .decisions({ model: decider, input: [{ type: "text", text: describe(event.prompt) }], questions })
@@ -123,7 +238,7 @@ export const Plugin = define({
             )
         }
         told.delete(event.sessionID)
-        const threshold = settings.confidence ?? DEFAULT_CONFIDENCE
+        const threshold = options.confidence ?? DEFAULT_CONFIDENCE
         const answers = outcome.answers.filter((answer): answer is ChoiceAnswer => answer.type === "choice")
         const model = sure(answers, "model", threshold)
         const size = sure(answers, "size", threshold)
@@ -131,10 +246,13 @@ export const Plugin = define({
         // A topic kept on one model wins over the model question.
         const keep = kept.find((rule) => sure(answers, rule.question.name, threshold)?.choice === "yes")
 
+        const chosen = only ?? keep?.candidate.ref ?? pool.find((candidate) => candidate.key === model?.choice)?.ref
+
         const pick = {
-          model: only ?? keep?.candidate.ref ?? pool.find((candidate) => candidate.key === model?.choice)?.ref,
+          model: smart ? yield* smartChoice(pool, chosen, size?.choice === "large", keep !== undefined) : chosen,
           pool: keys(routed),
           plan: size?.choice === "large",
+          smart: smart !== undefined,
         } satisfies Pick
 
         picks.set(event.sessionID, pick)
@@ -159,7 +277,15 @@ export const Plugin = define({
 
         // Only a session already on one of the routed models is rerouted, so a model picked by hand outside them is
         // left alone, and only within its provider, which is all the resolver serves.
-        if (!pick?.model || pick.model.providerID !== event.model.providerID) return
+        if (!pick?.model) return
+
+        // A smart Auto chat asked for a pick, so it moves to it whatever model it is on, across providers too.
+        if (pick.smart) {
+          event.model = pick.model
+          return
+        }
+
+        if (pick.model.providerID !== event.model.providerID) return
 
         if (!pick.pool.has(`${event.model.providerID}/${event.model.id}`)) return
         event.model = pick.model
@@ -296,3 +422,43 @@ function describe(prompt: PromptInput.Prompt) {
 }
 
 type Pick_<Type, Key extends keyof Type> = { readonly [Property in Key]: Type[Property] }
+
+/** Price per million input plus output tokens of a model, 0 when its catalog gives none. */
+function price(info: Model.Info) {
+  const cost = info.cost[0]
+
+  return cost ? cost.input + cost.output : 0
+}
+
+/**
+ * Smart Auto's pool from a catalog sorted cheapest first: a fast, a balanced and a strong model at the 20th, 50th
+ * and 80th price percentiles, so neither the oddest cheap model nor the most expensive one is picked, plus the
+ * image reader nearest the strong one. Each is described so the decision model can tell them apart.
+ */
+export function tiers(sorted: readonly { readonly info: Model.Info; readonly ref: Model.Ref }[]): Candidate[] {
+  if (sorted.length === 0) return []
+
+  const candidate = (entry: (typeof sorted)[number], use: string): Candidate => ({
+    ref: entry.ref,
+    key: `${entry.ref.providerID}/${entry.ref.id}`,
+    use,
+    images: readsImages(entry.info),
+    price: price(entry.info),
+  })
+
+  const at = (share: number) => sorted[Math.min(sorted.length - 1, Math.floor(share * (sorted.length - 1)))]
+  const strong = Math.floor(0.8 * (sorted.length - 1))
+
+  const reader =
+    sorted.slice(0, strong + 1).findLast((entry) => readsImages(entry.info)) ??
+    sorted.find((entry) => readsImages(entry.info))
+
+  const picked = [
+    candidate(at(0.2), "Quick, simple requests: short questions, lookups, small talk, one-line answers"),
+    candidate(at(0.5), "Everyday work of moderate difficulty"),
+    candidate(at(0.8), "Hard or multi-step work: coding, debugging, research, careful reasoning"),
+    ...(reader ? [candidate(reader, "Anything that includes an image or screenshot to look at")] : []),
+  ]
+
+  return picked.filter((item, index) => picked.findIndex((other) => other.key === item.key) === index)
+}

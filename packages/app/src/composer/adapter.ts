@@ -23,13 +23,25 @@ export type ComposerControls = {
     loading: boolean
     /** While loading, the expected model's names from a catalog already loaded for another Location. */
     preview?: { provider?: string; model: string; label?: ComposerModelLabel; variant: string; variants: string[] }
+    /** Fork feature: for an Auto choice, its scope and the switched-on models it may pick from. */
+    smart?: ComposerSmartAuto
   }
+}
+
+/** Fork feature: what the server needs to pick a model for an Auto choice, prompt by prompt. */
+export type ComposerSmartAuto = {
+  /** "all" for Auto across every provider, else the provider's ID. */
+  scope: string
+  /** The switched-on models of that scope, as providerID/modelID. */
+  models: string[]
 }
 
 export type ComposerSelection = {
   agent: string
   model: { providerID: string; modelID: string }
   variant?: string
+  /** Fork feature: set for an Auto choice; the server picks a model per prompt from these. */
+  smart?: ComposerSmartAuto
 }
 
 export type ComposerDelivery = "steer" | "queue"
@@ -88,9 +100,7 @@ export type ComposerSession = {
     }
   }
   file: {
-    list: (
-      input: Parameters<ServerSDK["api"]["file"]["list"]>[0],
-    ) => Promise<{ data: readonly { path: string }[] }>
+    list: (input: Parameters<ServerSDK["api"]["file"]["list"]>[0]) => Promise<{ data: readonly { path: string }[] }>
   }
   data: {
     location: { command: Pick<Data["location"]["command"], "list"> }

@@ -529,6 +529,7 @@ function currentSelection(input: ComposerSubmitInput): ComposerSelection | undef
     agent,
     model: { modelID: model.id, providerID: model.provider.id },
     variant: controls.model.selection.variant.current(),
+    smart: controls.model.smart,
   }
 }
 
@@ -824,6 +825,7 @@ async function sendPrompt(
       attachments: request.attachments,
       agent: value.selection.agent,
       model: selectionModel(value.selection),
+      smartAuto: value.selection.smart ?? null,
     },
     prepare: staged ? undefined : () => (committed ??= commit()),
   }

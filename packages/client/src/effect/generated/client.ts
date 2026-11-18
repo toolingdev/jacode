@@ -2058,6 +2058,7 @@ const EndpointExperimentalConfigDecisionsSet =
           model: input?.["model"],
           models: input?.["models"],
           keep: input?.["keep"],
+          allowPaid: input?.["allowPaid"],
           plan: input?.["plan"],
           confidence: input?.["confidence"],
         },

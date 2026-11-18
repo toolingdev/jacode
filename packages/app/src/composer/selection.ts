@@ -99,6 +99,19 @@ export function createComposerControls(input: { model?: ModelSelection } = {}) {
     }
   })
 
+  const smartAuto = (providerID: string) => {
+    const scope = providerID === "auto" ? "all" : providerID
+
+    return {
+      scope,
+      models: local.model
+        .list()
+        .filter((item) => scope === "all" || item.provider.id === scope)
+        .filter((item) => local.model.visible({ providerID: item.provider.id, modelID: item.id }))
+        .map((item) => `${item.provider.id}/${item.id}`),
+    }
+  }
+
   return createMemo<ComposerControls>(() => {
     const selection = input.model ?? local.model
     const key = selection.key()
@@ -122,6 +135,8 @@ export function createComposerControls(input: { model?: ModelSelection } = {}) {
             providers.connected().map((provider) => provider.id),
           ),
         label: key && modelLabels().get(composerModelLabelKey(key.providerID, key.modelID)),
+        // Fork feature: Auto picks per prompt, from the switched-on models of every provider or of its own.
+        smart: key && isAutoModel(key) ? smartAuto(key.providerID) : undefined,
         paid: providers.paid().length > 0,
         // The session's model applies only to its agent, so resolve agents before showing a model.
         loading: loading(),

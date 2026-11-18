@@ -77,3 +77,28 @@ test("a topic kept on a routed model asks one yes-or-no question, only for a mod
   expect(kept[0]?.question.choices.map((choice) => choice.value)).toEqual(["yes", "no"])
   expect(DecisionsPlugin.keeping({}, pool)).toEqual([])
 })
+
+test("smart Auto without routed models skips the price extremes and keeps an image reader", () => {
+  const model = (id: string, input: number, output: number, image = false) => ({
+    ref: { providerID: "nano", id },
+    info: {
+      cost: [{ input, output, cache: { read: 0, write: 0 } }],
+      capabilities: { tools: true, input: image ? ["text", "image"] : ["text"], output: ["text"] },
+    },
+  })
+
+  // SAFETY: tiers only reads the price and the image input of each model.
+  const sorted = [
+    model("tiny", 0.01, 0.02),
+    model("flash", 0.1, 0.2),
+    model("mid", 0.5, 1),
+    model("vision", 1, 2, true),
+    model("pro", 2, 4),
+    model("ultra", 60, 240),
+  ] as never
+
+  const picked = DecisionsPlugin.tiers(sorted).map((candidate) => candidate.key)
+
+  expect(picked).toEqual(["nano/flash", "nano/mid", "nano/pro", "nano/vision"])
+  expect(DecisionsPlugin.tiers([])).toEqual([])
+})

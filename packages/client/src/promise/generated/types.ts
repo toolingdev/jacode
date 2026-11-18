@@ -402,6 +402,7 @@ export type ConfigExperimentalDecisions = {
   model?: string
   models?: { [x: string]: string }
   keep?: { [x: string]: string }
+  allowPaid?: boolean
   plan?: boolean
   confidence?: number
 }
@@ -5052,6 +5053,7 @@ export type ExperimentalConfigDecisionsSetInput = {
   readonly model?: string | undefined
   readonly models?: { readonly [x: string]: string } | undefined
   readonly keep?: { readonly [x: string]: string } | undefined
+  readonly allowPaid?: boolean | undefined
   readonly plan?: boolean | undefined
   readonly confidence?: number | undefined
 }

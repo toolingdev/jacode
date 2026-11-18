@@ -24,7 +24,6 @@ import { Persist, persisted } from "@/runtime/persistence/storage"
 import { SettingsList } from "@/settings/list"
 import { SettingsRow } from "@/settings/row"
 import { CONSOLE_GROUP_KEY, consoleModelGroup, ProviderModelSections } from "@/providers/models/provider-group"
-import { SettingsAutoModels } from "./auto"
 import { SettingsDecisions } from "./decisions"
 import { SettingsSearchEmpty } from "@/settings/search-empty"
 import { SettingsSearchField } from "@/settings/search-field"
@@ -302,7 +301,6 @@ export const SettingsModels: Component<{
 
       <div class="settings-tab-body settings-models">
         <Show when={!searching()}>
-          <SettingsAutoModels />
           <SettingsDecisions />
         </Show>
         <Show

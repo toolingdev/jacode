@@ -114,9 +114,15 @@ const layer = Layer.effect(
         })).model
         if (model.providerID === ref.providerID && model.id === ref.id && model.variant === ref.variant)
           return yield* resolver.resolveModel(selected.info, selected.variant)
-        // Same provider only: the model may be hidden from the picker, and its credentials and hooks stay the selection's.
+        // Same provider: the model may be hidden from the picker, and its credentials and hooks stay the selection's.
         const resolved = model.providerID === ref.providerID ? yield* resolver.resolve(model) : undefined
         if (resolved) return resolved
+        // Fork feature: smart Auto may pick another provider's model; it must be one this location has connected.
+        const other =
+          model.providerID === ref.providerID
+            ? undefined
+            : (yield* available()).find((info) => info.providerID === model.providerID && info.id === model.id)
+        if (other) return yield* resolver.resolveModel(other, model.variant)
         return yield* new ModelUnavailableError({ providerID: model.providerID, modelID: model.id })
       }),
     })

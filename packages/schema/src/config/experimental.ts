@@ -25,6 +25,10 @@ export const Decisions = Schema.Struct({
     description:
       "Topics that always go to one routed model, as providerID/modelID, each with the topics in words, such as money, trading or taxes. A prompt the decision model judges to be about them goes to that model, whatever else it would pick.",
   }),
+  allowPaid: Schema.Boolean.pipe(optional).annotate({
+    description:
+      "Let Auto pick models a provider's subscription does not cover, which are paid per use. Defaults to false: with a subscription, Auto keeps to the models it covers.",
+  }),
   plan: Schema.Boolean.pipe(optional).annotate({
     description:
       "Ask whether a prompt is a large task, and have the assistant reply with a short plan and wait before starting one. Defaults to true.",

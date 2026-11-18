@@ -18455,6 +18455,9 @@
               "type": "string"
             }
           },
+          "allowPaid": {
+            "type": "boolean"
+          },
           "plan": {
             "type": "boolean"
           },
