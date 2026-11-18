@@ -11,6 +11,7 @@ import { createHomeSessionSearchController } from "./sessions/search"
 import { createHomeSessionsController } from "./sessions/controller"
 import { HomeSessions } from "./sessions/region"
 import { HomeWelcome } from "./welcome"
+import { HomeWorkers } from "./workers"
 
 export function Home() {
   const layout = useLayout()
@@ -48,9 +49,10 @@ export function HomeView(props: {
           <HomeProjects projects={props.projects} scroll={scroll} dropdown />
         </div>
       </Show>
-      {/* Fork feature: a new person's first steps, until this computer has a provider. */}
+      {/* Fork feature: a new person's first steps, until this computer has a provider; then each worker at a glance. */}
       <div class="mx-auto w-full max-w-[1080px] shrink-0 px-3 pt-3 empty:hidden lg:px-6">
         <HomeWelcome />
+        <HomeWorkers />
       </div>
       <ScrollView
         class="min-h-0 flex-1 [container-type:size]"

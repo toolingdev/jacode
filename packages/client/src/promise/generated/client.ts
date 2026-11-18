@@ -1874,6 +1874,7 @@ export function make(options: ClientOptions) {
                   enabled: input?.["enabled"],
                   model: input?.["model"],
                   models: input?.["models"],
+                  keep: input?.["keep"],
                   plan: input?.["plan"],
                   confidence: input?.["confidence"],
                 },

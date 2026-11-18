@@ -1,6 +1,9 @@
 export default {
   on: "Routing on",
   off: "Routing off",
+  "off.chat": "Routing off in this chat",
+  "chat.off": "Turn routing off in this chat",
+  "chat.on": "Turn routing back on in this chat",
   routed: "Routed to {{model}}",
   title: "Smart routing",
   "row.none": "No decision yet in this chat",

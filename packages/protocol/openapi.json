@@ -18350,6 +18350,12 @@
               "type": "string"
             }
           },
+          "keep": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
           "plan": {
             "type": "boolean"
           },

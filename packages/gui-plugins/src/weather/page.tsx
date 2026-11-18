@@ -113,6 +113,7 @@ export default function WeatherPage() {
                 variant="neutral"
                 size="small"
                 icon="plus"
+                class="whitespace-nowrap"
                 disabled={!server()}
                 onClick={() => void openForm()}
               >

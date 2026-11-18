@@ -51,7 +51,8 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
     )
   }
 
-  const decision = (input: ComposerPillProps) => lastDecision(input.session.server.data.session.message.list(input.session.id))
+  const decision = (input: ComposerPillProps) =>
+    lastDecision(input.session.server.data.session.message.list(input.session.id))
 
   const toggle = (server: ServerRef, current: ConfigExperimentalDecisions) => {
     const next = { ...current, enabled: current.enabled === false }
@@ -64,6 +65,22 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
         showToast({ variant: "error", title: ctx.t("failed") })
       },
     )
+  }
+
+  // Fork feature: a chat can turn routing off for itself. The flag sits in the chat's metadata, where the server's
+  // decision layer reads it before each prompt.
+  const chatOff = (input: ComposerPillProps) =>
+    input.session.server.data.session.get(input.session.id)?.metadata?.routing === false
+
+  const toggleChat = (input: ComposerPillProps) => {
+    const metadata = input.session.server.data.session.get(input.session.id)?.metadata ?? {}
+
+    void input.session.server.client.session
+      .update({ sessionID: input.session.id, metadata: { ...metadata, routing: chatOff(input) } })
+      .then(
+        () => undefined,
+        () => showToast({ variant: "error", title: ctx.t("failed") }),
+      )
   }
 
   ctx.add(ComposerPill, {
@@ -80,16 +97,28 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
       const model = answers?.find((answer) => answer.name === "model")
       const size = answers?.find((answer) => answer.name === "size")
       const sure = (confidence: number) => ctx.t("sure", { percent: Math.round(confidence * 100) })
-      const on = current.enabled !== false
+      const on = current.enabled !== false && !chatOff(input)
 
       return {
         icon: "branch",
         tone: on ? undefined : "warning",
         title: ctx.t("title"),
-        label: !on ? ctx.t("off") : model ? ctx.t("routed", { model: modelName(input, model.choice) }) : ctx.t("on"),
+        label: chatOff(input)
+          ? ctx.t("off.chat")
+          : !on
+            ? ctx.t("off")
+            : model
+              ? ctx.t("routed", { model: modelName(input, model.choice) })
+              : ctx.t("on"),
         rows: [
           ...(on && model
-            ? [{ id: "model", label: ctx.t("row.model", { model: modelName(input, model.choice) }), detail: sure(model.confidence) }]
+            ? [
+                {
+                  id: "model",
+                  label: ctx.t("row.model", { model: modelName(input, model.choice) }),
+                  detail: sure(model.confidence),
+                },
+              ]
             : []),
           ...(on && size
             ? [
@@ -101,6 +130,16 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
               ]
             : []),
           ...(on && !model && !size ? [{ id: "none", label: ctx.t("row.none") }] : []),
+          ...(current.enabled !== false && input.session.id
+            ? [
+                {
+                  id: "chat",
+                  label: ctx.t(chatOff(input) ? "chat.on" : "chat.off"),
+                  icon: chatOff(input) ? ("refresh" as const) : ("stop" as const),
+                  run: () => toggleChat(input),
+                },
+              ]
+            : []),
           // A remote server may run a build that does not know the switch yet, so only this computer's offers it.
           ...(server.builtin
             ? [
@@ -112,7 +151,12 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
                 },
               ]
             : []),
-          { id: "settings", label: ctx.t("settings"), icon: "settings-gear" as const, run: () => ctx.layout.settings("models") },
+          {
+            id: "settings",
+            label: ctx.t("settings"),
+            icon: "settings-gear" as const,
+            run: () => ctx.layout.settings("models"),
+          },
         ],
       }
     },

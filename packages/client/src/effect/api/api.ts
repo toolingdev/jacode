@@ -2950,6 +2950,7 @@ export type ExperimentalConfigDecisionsSetInput = {
   readonly enabled?: boolean | undefined
   readonly model?: string | undefined
   readonly models?: { readonly [x: string]: string } | undefined
+  readonly keep?: { readonly [x: string]: string } | undefined
   readonly plan?: boolean | undefined
   readonly confidence?: number | undefined
 }

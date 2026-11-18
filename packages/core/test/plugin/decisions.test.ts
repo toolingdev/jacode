@@ -68,3 +68,12 @@ test.each([
 ])("a failed decision names why the layer was skipped", (error, reason) => {
   expect(DecisionsPlugin.skipReason(error)).toBe(reason)
 })
+
+test("a topic kept on a routed model asks one yes-or-no question, only for a model the prompt may go to", () => {
+  const kept = DecisionsPlugin.keeping({ keep: { "nano/pro": "money or trading", "nano/gone": "weather" } }, pool)
+
+  expect(kept.map((rule) => rule.candidate.key)).toEqual(["nano/pro"])
+  expect(kept[0]?.question.instructions).toContain("money or trading")
+  expect(kept[0]?.question.choices.map((choice) => choice.value)).toEqual(["yes", "no"])
+  expect(DecisionsPlugin.keeping({}, pool)).toEqual([])
+})

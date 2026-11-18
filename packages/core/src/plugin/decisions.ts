@@ -72,11 +72,16 @@ export const Plugin = define({
         const settings = decisions(yield* config.entries())
 
         if (!settings || settings.enabled === false) return
+        const session = yield* ctx.session.get({ sessionID: event.sessionID }).pipe(Effect.option)
+
+        // Fork feature: a chat can turn routing off for itself; its own model then answers every prompt.
+        if (Option.isSome(session) && session.value.metadata?.routing === false) return
         const routed = yield* candidates(settings)
         const pool = usable(routed, hasImage(event.prompt))
         // A scheduled prompt was approved when it was scheduled, so it is never held for a plan.
         const plan = settings.plan !== false && event.metadata?.schedule === undefined
-        const questions = ask(pool, plan)
+        const kept = keeping(settings, pool)
+        const questions = [...ask(pool, plan), ...kept.map((rule) => rule.question)]
         // One model left to use is no question: an image prompt goes to the only routed model that reads images.
         // It is set before asking anything, so it holds even when the decision model is skipped.
         const only = pool.length === 1 ? pool[0].ref : undefined
@@ -123,8 +128,11 @@ export const Plugin = define({
         const model = sure(answers, "model", threshold)
         const size = sure(answers, "size", threshold)
 
+        // A topic kept on one model wins over the model question.
+        const keep = kept.find((rule) => sure(answers, rule.question.name, threshold)?.choice === "yes")
+
         const pick = {
-          model: only ?? pool.find((candidate) => candidate.key === model?.choice)?.ref,
+          model: only ?? keep?.candidate.ref ?? pool.find((candidate) => candidate.key === model?.choice)?.ref,
           pool: keys(routed),
           plan: size?.choice === "large",
         } satisfies Pick
@@ -230,6 +238,33 @@ export function ask(pool: readonly Pick_<Candidate, "key" | "use">[], plan: bool
         ]
       : []),
   ]
+}
+
+/** One yes-or-no question per topic kept on a routed model, for the models the prompt may go to. */
+export function keeping<Item extends { readonly key: string }>(
+  settings: Pick_<Settings, "keep">,
+  pool: readonly Item[],
+) {
+  return Object.entries(settings.keep ?? {}).flatMap(([key, topics], index) => {
+    const candidate = pool.find((item) => item.key === key)
+
+    if (!candidate) return []
+
+    return [
+      {
+        candidate,
+        question: {
+          type: "choice" as const,
+          name: `keep-${index}`,
+          instructions: `Is this request about any of these topics: ${topics}?`,
+          choices: [
+            { value: "yes", description: "Yes, it is about one of these topics" },
+            { value: "no", description: "No, it is about something else" },
+          ],
+        },
+      },
+    ]
+  })
 }
 
 /** The answer to a question, when the decision model was sure enough of it to act on. */

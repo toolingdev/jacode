@@ -21,6 +21,10 @@ export const Decisions = Schema.Struct({
     description:
       "Models a prompt may be routed between, as providerID/modelID, each with a sentence saying what it is best for. A session is rerouted only while its own model is one of these, and only within that model's provider.",
   }),
+  keep: Schema.Record(Schema.String, Schema.String).pipe(optional).annotate({
+    description:
+      "Topics that always go to one routed model, as providerID/modelID, each with the topics in words, such as money, trading or taxes. A prompt the decision model judges to be about them goes to that model, whatever else it would pick.",
+  }),
   plan: Schema.Boolean.pipe(optional).annotate({
     description:
       "Ask whether a prompt is a large task, and have the assistant reply with a short plan and wait before starting one. Defaults to true.",
