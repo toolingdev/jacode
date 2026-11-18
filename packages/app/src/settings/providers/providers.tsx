@@ -1,3 +1,4 @@
+import { PluginSettingsSections } from "@/runtime/plugin/settings-page-view"
 import { Button } from "@opencode/ui/button"
 import { Badge } from "@opencode/ui/badge"
 import { useDialog } from "@opencode/ui/context/dialog"
@@ -630,6 +631,8 @@ export const SettingsProviders: Component<{
             {language.t("dialog.provider.viewAll")}
           </button>
         </div>
+        {/* Fork feature: plugins add sections here, such as custom providers. */}
+        <PluginSettingsSections page="providers" />
       </div>
     </>
   )

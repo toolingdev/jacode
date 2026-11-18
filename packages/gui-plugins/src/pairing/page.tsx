@@ -214,68 +214,68 @@ export default function PairingPage(props: {
   onCleanup(() => dispatch({ type: "disposed" }))
 
   return (
-    <ui.SettingsLayout title={ctx.t("title")} description={ctx.t("description")}>
-      <ui.SettingsSection
-        footer={
-          <>
-            <Show when={pageView().remoteError}>
+    // Fork feature: a section of the Workers page, not a page of its own.
+    <ui.SettingsSection
+      title={ctx.t("title")}
+      footer={
+        <>
+          <Show when={pageView().remoteError}>
+            <p class="text-text-danger-base" role="alert">
+              {ctx.t("remote.error")}
+            </p>
+          </Show>
+          <Show when={pageView().screenError}>
+            <div class="flex flex-wrap items-center gap-2">
               <p class="text-text-danger-base" role="alert">
-                {ctx.t("remote.error")}
+                {ctx.t("screenActive.error")}
               </p>
-            </Show>
-            <Show when={pageView().screenError}>
-              <div class="flex flex-wrap items-center gap-2">
-                <p class="text-text-danger-base" role="alert">
-                  {ctx.t("screenActive.error")}
-                </p>
-                <ui.Button size="small" variant="ghost" onClick={() => dispatch({ type: "screen.retry" })}>
-                  {ctx.t("retry")}
-                </ui.Button>
-              </div>
-            </Show>
-            <Show when={pageView().unavailable}>
-              <p class="text-text-danger-base" role="alert">
-                {ctx.t("pair.unavailable")}
-              </p>
-            </Show>
-          </>
-        }
-      >
-        <ui.SettingsRow title={ctx.t("pair.title")} description={ctx.t("pair.description")}>
-          <ui.Button disabled={pageView().pairDisabled} onClick={() => dispatch({ type: "dialog.opened" })}>
-            {ctx.t("pair.open")}
-          </ui.Button>
+              <ui.Button size="small" variant="ghost" onClick={() => dispatch({ type: "screen.retry" })}>
+                {ctx.t("retry")}
+              </ui.Button>
+            </div>
+          </Show>
+          <Show when={pageView().unavailable}>
+            <p class="text-text-danger-base" role="alert">
+              {ctx.t("pair.unavailable")}
+            </p>
+          </Show>
+        </>
+      }
+    >
+      <ui.SettingsRow title={ctx.t("pair.title")} description={ctx.t("pair.description")}>
+        <ui.Button disabled={pageView().pairDisabled} onClick={() => dispatch({ type: "dialog.opened" })}>
+          {ctx.t("pair.open")}
+        </ui.Button>
+      </ui.SettingsRow>
+      <Show when={pageView().mainActive}>
+        <ui.SettingsRow
+          id="settings-remote-access"
+          title={ctx.t("remote.title")}
+          description={ctx.t("remote.description")}
+        >
+          <ui.Switch
+            label={ctx.t("remote.title")}
+            hideLabel
+            checked={pageView().remoteChecked}
+            disabled={pageView().remoteDisabled}
+            onChange={(enabled) => dispatch({ type: "toggled", enabled })}
+          />
         </ui.SettingsRow>
-        <Show when={pageView().mainActive}>
-          <ui.SettingsRow
-            id="settings-remote-access"
-            title={ctx.t("remote.title")}
-            description={ctx.t("remote.description")}
-          >
-            <ui.Switch
-              label={ctx.t("remote.title")}
-              hideLabel
-              checked={pageView().remoteChecked}
-              disabled={pageView().remoteDisabled}
-              onChange={(enabled) => dispatch({ type: "toggled", enabled })}
-            />
-          </ui.SettingsRow>
-          <ui.SettingsRow
-            id="settings-keep-screen-active"
-            title={ctx.t("screenActive.title")}
-            description={ctx.t("screenActive.description")}
-          >
-            <ui.Switch
-              label={ctx.t("screenActive.title")}
-              hideLabel
-              checked={pageView().screenChecked}
-              disabled={pageView().screenDisabled}
-              onChange={(enabled) => dispatch({ type: "screen.toggled", enabled })}
-            />
-          </ui.SettingsRow>
-        </Show>
-      </ui.SettingsSection>
-    </ui.SettingsLayout>
+        <ui.SettingsRow
+          id="settings-keep-screen-active"
+          title={ctx.t("screenActive.title")}
+          description={ctx.t("screenActive.description")}
+        >
+          <ui.Switch
+            label={ctx.t("screenActive.title")}
+            hideLabel
+            checked={pageView().screenChecked}
+            disabled={pageView().screenDisabled}
+            onChange={(enabled) => dispatch({ type: "screen.toggled", enabled })}
+          />
+        </ui.SettingsRow>
+      </Show>
+    </ui.SettingsSection>
   )
 }
 

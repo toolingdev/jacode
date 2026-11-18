@@ -167,54 +167,55 @@ export default function CustomProvidersPage() {
       .join(" · ")
 
   return (
-    <ui.SettingsLayout
+    // Fork feature: a section of the Providers page, not a page of its own.
+    <ui.SettingsSection
       title={ctx.t("title")}
-      description={ctx.t("description")}
-      actions={
-        <ui.Button variant="neutral" size="small" icon="plus" disabled={!server()} onClick={() => openForm()}>
-          {ctx.t("add")}
-        </ui.Button>
+      footer={
+        <div class="flex items-center justify-between gap-3 pt-2">
+          <p class="text-12-regular text-v2-text-text-muted">{ctx.t("description")}</p>
+          <ui.Button variant="neutral" size="small" icon="plus" disabled={!server()} onClick={() => openForm()}>
+            {ctx.t("add")}
+          </ui.Button>
+        </div>
       }
     >
-      <ui.SettingsSection>
-        <Switch>
-          <Match when={!server()}>
-            <ui.SettingsRow title={ctx.t("unavailable")} />
-          </Match>
-          <Match when={loaded.latest === undefined}>
-            <div class="flex min-h-[64px] items-center justify-center">
-              <ui.Loader />
-            </div>
-          </Match>
-          <Match when={rows().length === 0}>
-            <ui.SettingsRow title={ctx.t("empty")} description={ctx.t("empty.description")} />
-          </Match>
-          <Match when={true}>
-            <For each={rows()}>
-              {(row) => (
-                <ui.SettingsRow title={row.name ? `${row.name} · ${row.id}` : row.id} description={summary(row)}>
-                  <div class="flex items-center gap-2">
-                    <Show when={busy().includes(row.id)}>
-                      <ui.Loader />
-                    </Show>
-                    <ui.Menu
-                      label={ctx.t("actions", { name: row.name ?? row.id })}
-                      disabled={busy().includes(row.id)}
-                      items={[
-                        { label: ctx.t("setKey"), icon: "lock", onSelect: () => void setKey(row) },
-                        { label: ctx.t("edit"), icon: "edit", onSelect: () => void openForm(row) },
-                        { type: "separator" },
-                        { label: ctx.t("remove"), icon: "trash", onSelect: () => void remove(row) },
-                      ]}
-                    />
-                  </div>
-                </ui.SettingsRow>
-              )}
-            </For>
-          </Match>
-        </Switch>
-      </ui.SettingsSection>
-    </ui.SettingsLayout>
+      <Switch>
+        <Match when={!server()}>
+          <ui.SettingsRow title={ctx.t("unavailable")} />
+        </Match>
+        <Match when={loaded.latest === undefined}>
+          <div class="flex min-h-[64px] items-center justify-center">
+            <ui.Loader />
+          </div>
+        </Match>
+        <Match when={rows().length === 0}>
+          <ui.SettingsRow title={ctx.t("empty")} description={ctx.t("empty.description")} />
+        </Match>
+        <Match when={true}>
+          <For each={rows()}>
+            {(row) => (
+              <ui.SettingsRow title={row.name ? `${row.name} · ${row.id}` : row.id} description={summary(row)}>
+                <div class="flex items-center gap-2">
+                  <Show when={busy().includes(row.id)}>
+                    <ui.Loader />
+                  </Show>
+                  <ui.Menu
+                    label={ctx.t("actions", { name: row.name ?? row.id })}
+                    disabled={busy().includes(row.id)}
+                    items={[
+                      { label: ctx.t("setKey"), icon: "lock", onSelect: () => void setKey(row) },
+                      { label: ctx.t("edit"), icon: "edit", onSelect: () => void openForm(row) },
+                      { type: "separator" },
+                      { label: ctx.t("remove"), icon: "trash", onSelect: () => void remove(row) },
+                    ]}
+                  />
+                </div>
+              </ui.SettingsRow>
+            )}
+          </For>
+        </Match>
+      </Switch>
+    </ui.SettingsSection>
   )
 }
 

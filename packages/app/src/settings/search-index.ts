@@ -118,6 +118,25 @@ export function settingsSearchIndex(input: {
       )
     }
 
+    // Fork feature: a section on the Providers page, or on another plugin's page, is found under that page.
+    if (setting.page === "providers") {
+      return setting.entries?.forEach((entry) =>
+        addPlugin(item, entry, { type: "root", tab: "providers", target: entry.id }, setting.title, ""),
+      )
+    }
+
+    if (setting.page) {
+      const host = plugins.find((other) => other.value.id === setting.page && !other.value.page)
+
+      if (!host) return
+      // SAFETY: a SettingsPage without a host page is a plugin tab under its id, as `createSettingsPages().tabs` lists.
+      const tab = host.value.id as SettingsPluginTab
+
+      return setting.entries?.forEach((entry) =>
+        addPlugin(item, entry, { type: "root", tab, target: entry.id }, `${host.value.title} / ${setting.title}`, ""),
+      )
+    }
+
     // SAFETY: a SettingsPage without a host page is a plugin tab under its id, as `createSettingsPages().tabs` lists.
     const tab = setting.id as SettingsPluginTab
     const page = setting.entries?.find((entry) => entry.id === setting.id)

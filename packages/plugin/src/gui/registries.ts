@@ -390,11 +390,13 @@ export interface SettingsPage {
   /** A page's settings tab value (`/settings?tab=<id>`), and `Layout.settings`'s argument. */
   readonly id: string
   /**
-   * Adds a section to a host page. Omit it to add a page.
+   * Adds a section to another page. Omit it to add a page.
    * - `general`: the General page.
    * - `servers`: the Servers page.
+   * - `providers`: the Providers page.
+   * - Another `SettingsPage`'s id: that plugin page, under its own sections, so related settings share one page.
    */
-  readonly page?: "general" | "servers"
+  readonly page?: string
   /**
    * `general`: with `page: "general"`, adds rows to that page's General section instead of a section of its own:
    * `render` returns settings rows, which the host places in its list. Search lists the entries under the host

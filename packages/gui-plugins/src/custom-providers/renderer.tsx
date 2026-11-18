@@ -14,6 +14,8 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
   ctx.add(SettingsPage, {
     id: "custom-providers",
+    // Fork feature: custom providers live on the Providers page.
+    page: "providers",
     icon: "providers",
     get title() {
       return ctx.t("title")

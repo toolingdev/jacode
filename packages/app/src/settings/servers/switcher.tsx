@@ -3,6 +3,7 @@ import { Icon } from "@opencode/ui/icon"
 import { Menu } from "@opencode/ui/menu"
 import { For, Show } from "solid-js"
 import { useLanguage } from "@/runtime/i18n/language"
+import { ServerConnection } from "@/runtime/server/registry"
 import { ServerHealthIndicator } from "@/servers/registry/row"
 import { ServerLabel } from "@/servers/registry/label"
 import { useSettingsSurface } from "@/settings/surface"
@@ -27,6 +28,12 @@ export function SettingsServerSwitcher() {
             data-action="settings-server-select"
           >
             <ServerDot server={selected()} />
+            {/* Fork feature: which computer these settings change is said loudly, with its kind of icon. */}
+            <Icon
+              name={serverIcon(selected())}
+              size="small"
+              class="settings-server-switcher-chevron"
+            />
             <span class="settings-server-switcher-label">{language.t("settings.server.switcher.label")}</span>
             <ServerLabel class="settings-server-switcher-name" server={selected().connection} name={selected().name} />
             <Icon name="chevron-down" class="settings-server-switcher-chevron" />
@@ -56,7 +63,7 @@ export function SettingsServerSwitcher() {
               <Menu.Separator />
               <Menu.Item onSelect={() => surface.select("servers")}>
                 <span class="settings-server-switcher-icon">
-                  <Icon name="server" />
+                  <Icon name="worker" />
                 </span>
                 {language.t("settings.server.switcher.manage")}
               </Menu.Item>
@@ -74,4 +81,10 @@ function ServerDot(props: { server: SettingsServer }) {
       <ServerHealthIndicator health={selectSettingsServerHealth(props.server.availability)} />
     </span>
   )
+}
+
+function serverIcon(server: SettingsServer) {
+  const connection = server.connection
+
+  return connection && ServerConnection.builtin(connection) ? "monitor" : "worker"
 }

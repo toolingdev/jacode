@@ -27,6 +27,8 @@ export default function AddWorker(props: { onClose: () => void }) {
   const [checked, setChecked] = createSignal<WorkerReport>()
   const [installed, setInstalled] = createSignal<WorkerReport>()
   const [connected, setConnected] = createSignal<boolean>()
+  // The new worker's server id, so Set up its models opens that worker's Providers.
+  const [made, setMade] = createSignal<string>()
   const [docked, setDocked] = createSignal<WorkerReport>()
   // Whether the worker is given this computer's providers once it is connected, and what came of that.
   const [share, setShare] = createSignal(false)
@@ -161,6 +163,7 @@ export default function AddWorker(props: { onClose: () => void }) {
 
   // Runs the copy when it was asked for, after the worker under `key` is connected.
   const giveIfAsked = (key: string) => {
+    setMade(key)
     if (!share()) return setBusy()
     setBusy("copy")
     reveal()
@@ -228,7 +231,7 @@ export default function AddWorker(props: { onClose: () => void }) {
 
   const models = () => {
     props.onClose()
-    ctx.layout.settings("providers")
+    ctx.layout.settings("providers", made())
   }
 
   const edit = (set: (value: string) => void) => (value: string) => {

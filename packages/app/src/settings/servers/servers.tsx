@@ -10,6 +10,7 @@ import { ServerConnection } from "@/runtime/server/registry"
 import { useServerCollectionController } from "@/servers/registry/controller"
 import { DialogServer } from "@/servers/connect/dialog"
 import { SettingsList } from "@/settings/list"
+import { PluginSettingsSections } from "@/runtime/plugin/settings-page-view"
 import { ShellSetting } from "@/settings/general/general"
 import { createServerShellController } from "@/settings/general/controllers"
 import type { SettingsServer } from "./inventory"
@@ -42,6 +43,8 @@ export const SettingsServerGeneral: Component<{ entry: SettingsServer; onAddServ
             </section>
           )}
         </Show>
+        {/* Fork feature: plugins add sections here, such as pairing a device with this computer. */}
+        <PluginSettingsSections page="servers" />
       </div>
     </>
   )
@@ -80,6 +83,7 @@ export const SettingsServerList: Component<{
             </section>
           )}
         </For>
+        <PluginSettingsSections page="servers" />
       </div>
     </>
   )

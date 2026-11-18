@@ -47,7 +47,7 @@ export default {
   "connect.failed": "Installed, but the app could not connect yet. Close this, then choose Connect on its row.",
   "model.title": "One thing is left",
   "model.about":
-    "A new worker has no AI model yet. Choose Set up its models, pick the worker at the top of Settings, and add a provider the same way you did on this computer.",
+    "A new worker has no AI model yet. Choose Set up its models to open the worker's Providers, and add one the same way you did on this computer.",
   details: "Details",
   "failure.input": "That does not look like an SSH address. Use the form user@host.",
   "failure.connection":

@@ -1,7 +1,7 @@
 export default {
   "command.title": "Pair device",
-  title: "Pairing",
-  description: "Connect another device to this machine's OpenCode server.",
+  title: "Pair a device",
+  description: "Connect another device, such as a phone or another computer, to JaCode on this computer.",
   "pair.title": "Pair a device",
   "pair.description":
     "Connect a phone, tablet, or another computer from anywhere through an end-to-end encrypted tunnel.",

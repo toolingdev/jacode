@@ -22,6 +22,8 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
   ctx.add(SettingsPage, {
     id: "pairing",
+    // Fork feature: pairing a device lives on the Workers page.
+    page: "servers",
     icon: "outline-pair",
     get title() {
       return ctx.t("title")

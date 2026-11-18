@@ -14,6 +14,8 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
   ctx.add(SettingsPage, {
     id: "weather",
+    // Fork feature: weather sources live on the Cards page.
+    page: "visuals",
     icon: "globe",
     get title() {
       return ctx.t("title")

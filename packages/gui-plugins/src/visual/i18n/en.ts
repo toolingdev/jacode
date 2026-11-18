@@ -1,8 +1,9 @@
 export default {
   title: "Visual",
-  "page.title": "Visuals",
-  "page.description": "How weather cards and charts look when a reply shows them. Each tile is a live sample.",
-  "command.title": "Choose visual styles",
+  "page.title": "Cards",
+  "page.description":
+    "Cards are the pictures a reply can show: weather, charts, usage, quotes and outlines. Pick how each looks; each tile is a live sample.",
+  "command.title": "Choose how cards look",
   "command.group": "Settings",
   "weather.title": "Weather cards",
   "chart.title": "Charts and graphs",

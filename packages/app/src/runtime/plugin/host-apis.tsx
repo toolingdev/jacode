@@ -109,7 +109,7 @@ type Attached = {
     /** `width` and `resize` take the panel's host key, `${plugin}:${panel id}`. */
     side: Layout["side"]
   }
-  settings: (page?: string) => void
+  settings: (page?: string, server?: string) => void
   project: (server: string, title: string) => void
   draft: Layout["draft"]
   command: (id: string) => void
@@ -479,7 +479,7 @@ export function createHostApis() {
         get: (session, key) => current()?.layout.scroll.get(session, key),
         set: (session, key, value) => write((connected) => connected.layout.scroll.set(session, key, value)),
       },
-      settings: (page) => write((value) => value.settings(page)),
+      settings: (page, server) => write((value) => value.settings(page, server)),
       project: (server, title) => write((value) => value.project(server, title)),
       draft: (input) => write((value) => value.draft(input)),
       command: (id) => write((value) => value.command(id)),
@@ -1177,8 +1177,15 @@ export function createPluginAttachment(apis: HostApis) {
     matches: command.matches,
     servers: () => global.servers.list().map(ServerConnection.key),
     server,
-    // SAFETY: a plugin names a page it contributed through `SettingsPage`, which settings lists as a plugin tab.
-    settings: (page) => surface.open(page as Parameters<typeof surface.open>[0]),
+    // Fork feature: a section opens the page it sits on, and a server picks whose per-server settings show.
+    settings: (page, server) => {
+      const section = surface.plugins.items().find((item) => item.value.id === page && item.value.page)
+      // SAFETY: a plugin names a page it contributed through `SettingsPage`, which settings lists as a plugin tab.
+      const tab = (section?.value.page ?? page ?? "general") as NonNullable<Parameters<typeof surface.open>[0]>
+
+      if (!server) return surface.open(tab)
+      surface.replace({ type: "root", tab, server })
+    },
     layout: {
       ready: layout.ready,
       open,

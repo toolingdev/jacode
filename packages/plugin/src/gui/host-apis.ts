@@ -961,9 +961,11 @@ export interface Layout {
   /**
    * Opens Settings.
    *
-   * @param page - A `SettingsPage` id you contributed, or a host page tab; defaults to `general`.
+   * @param page - A `SettingsPage` id you contributed, or a host page tab; defaults to `general`. A section's id opens
+   * the page it sits on.
+   * @param server - The server whose settings a per-server page such as Providers shows; defaults to the one shown.
    */
-  settings(page?: string): void
+  settings(page?: string, server?: string): void
   /**
    * Opens a project on a server: a directory picker titled `title`, then a new draft. Waits until the server is listed.
    *

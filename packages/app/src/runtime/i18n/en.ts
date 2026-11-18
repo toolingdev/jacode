@@ -1053,9 +1053,9 @@ export const dict = {
   "settings.servers.thisComputer": "JaCode's own engine, on this computer. Not a worker.",
   "settings.server.description": "Manage this server’s connection and preferences",
   "settings.server.section.connection": "Connection",
-  "settings.server.switcher.label": "Server",
+  "settings.server.switcher.label": "Settings for",
   "settings.server.switcher.unreachable": "Unreachable",
-  "settings.server.switcher.manage": "Manage servers…",
+  "settings.server.switcher.manage": "Manage workers…",
   "settings.server.unreachable.title": "Can't reach {{server}}",
   "settings.server.unreachable.description":
     "{{server}} isn't responding. Its settings will appear here once it reconnects.",

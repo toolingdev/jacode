@@ -13,6 +13,7 @@ import { Select } from "@opencode/ui/select"
 import { Switch } from "@opencode/ui/switch"
 import { TextInput } from "@opencode/ui/text-input"
 import { Tooltip } from "@opencode/ui/tooltip"
+import { PluginSettingsSections, usePluginSettingsPage } from "./settings-page-view"
 
 const loaderSize = { small: 14, normal: 16, large: 20 }
 
@@ -238,7 +239,10 @@ export const ui: Ui = {
           <div class="settings-tab-header-actions">{props.actions}</div>
         </div>
       </div>
-      <div class="settings-tab-body settings-tab-body--sectioned">{props.children}</div>
+      <div class="settings-tab-body settings-tab-body--sectioned">
+        {props.children}
+        <SettingsLayoutSections />
+      </div>
     </>
   ),
   SettingsSection: (props) => (
@@ -289,4 +293,11 @@ function fence(content: string, language: string | undefined) {
   const info = (language ?? "").replace(/[^\w#+.-]/g, "")
 
   return `${ticks}${info}\n${content.endsWith("\n") ? content : `${content}\n`}${ticks}`
+}
+
+// Fork feature: the sections other plugins add to the plugin page this layout frames.
+function SettingsLayoutSections() {
+  const page = usePluginSettingsPage()
+
+  return <Show when={page}>{(id) => <PluginSettingsSections page={id()} />}</Show>
 }

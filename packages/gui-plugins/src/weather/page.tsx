@@ -62,7 +62,9 @@ export default function WeatherPage() {
     setSaved(next)
 
     return (
-      next ? client.experimental.config.weather.set({ sources: [...next] }) : client.experimental.config.weather.remove()
+      next
+        ? client.experimental.config.weather.set({ sources: [...next] })
+        : client.experimental.config.weather.remove()
     ).then(
       () => undefined,
       () => {
@@ -91,83 +93,92 @@ export default function WeatherPage() {
   }
 
   return (
-    <ui.SettingsLayout
+    // Fork feature: a section of the Cards page, not a page of its own.
+    <ui.SettingsSection
       title={ctx.t("title")}
-      description={ctx.t("description")}
-      actions={
-        <div class="flex items-center gap-2">
-          <Show when={saved()}>
-            <ui.Button variant="ghost" size="small" onClick={() => void save(null)}>
-              {ctx.t("reset")}
-            </ui.Button>
+      footer={
+        <div class="flex flex-col gap-2 pt-2">
+          <Show when={server() && saved() === null}>
+            <p class="px-1 text-12-regular text-v2-text-text-muted">{ctx.t("defaults")}</p>
           </Show>
-          <ui.Button variant="neutral" size="small" icon="plus" disabled={!server()} onClick={() => void openForm()}>
-            {ctx.t("add")}
-          </ui.Button>
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-12-regular text-v2-text-text-muted">{ctx.t("description")}</p>
+            <div class="flex shrink-0 items-center gap-2">
+              <Show when={saved()}>
+                <ui.Button variant="ghost" size="small" onClick={() => void save(null)}>
+                  {ctx.t("reset")}
+                </ui.Button>
+              </Show>
+              <ui.Button
+                variant="neutral"
+                size="small"
+                icon="plus"
+                disabled={!server()}
+                onClick={() => void openForm()}
+              >
+                {ctx.t("add")}
+              </ui.Button>
+            </div>
+          </div>
         </div>
       }
     >
-      <ui.SettingsSection>
-        <Switch>
-          <Match when={!server()}>
-            <ui.SettingsRow title={ctx.t("unavailable")} />
-          </Match>
-          <Match when={sources().length === 0}>
-            <ui.SettingsRow title={ctx.t("empty")} description={ctx.t("empty.description")} />
-          </Match>
-          <Match when={true}>
-            <For each={sources()}>
-              {(source, index) => (
-                <ui.SettingsRow
-                  title={`${index() + 1}. ${name(source)}`}
-                  description={source.url || ctx.t(`about.${source.type}`)}
-                >
-                  <div class="flex items-center gap-2">
-                    <ui.Switch
-                      label={ctx.t("enabled", { name: name(source) })}
-                      hideLabel
-                      checked={source.disabled !== true}
-                      onChange={(enabled) => {
-                        const { disabled: _, ...rest } = source
+      <Switch>
+        <Match when={!server()}>
+          <ui.SettingsRow title={ctx.t("unavailable")} />
+        </Match>
+        <Match when={sources().length === 0}>
+          <ui.SettingsRow title={ctx.t("empty")} description={ctx.t("empty.description")} />
+        </Match>
+        <Match when={true}>
+          <For each={sources()}>
+            {(source, index) => (
+              <ui.SettingsRow
+                title={`${index() + 1}. ${name(source)}`}
+                description={source.url || ctx.t(`about.${source.type}`)}
+              >
+                <div class="flex items-center gap-2">
+                  <ui.Switch
+                    label={ctx.t("enabled", { name: name(source) })}
+                    hideLabel
+                    checked={source.disabled !== true}
+                    onChange={(enabled) => {
+                      const { disabled: _, ...rest } = source
 
-                        void replace(index(), enabled ? rest : { ...rest, disabled: true })
-                      }}
-                    />
-                    <ui.Menu
-                      label={ctx.t("actions", { name: name(source) })}
-                      items={[
-                        { label: ctx.t("edit"), icon: "edit", onSelect: () => void openForm(index()) },
-                        {
-                          label: ctx.t("up"),
-                          icon: "arrow-up",
-                          disabled: index() === 0,
-                          onSelect: () => void save(moveSource(sources(), index(), -1)),
-                        },
-                        {
-                          label: ctx.t("down"),
-                          icon: "arrow-down-to-line",
-                          disabled: index() === sources().length - 1,
-                          onSelect: () => void save(moveSource(sources(), index(), 1)),
-                        },
-                        { type: "separator" },
-                        {
-                          label: ctx.t("remove"),
-                          icon: "trash",
-                          onSelect: () => void save(sources().filter((_, at) => at !== index())),
-                        },
-                      ]}
-                    />
-                  </div>
-                </ui.SettingsRow>
-              )}
-            </For>
-          </Match>
-        </Switch>
-      </ui.SettingsSection>
-      <Show when={server() && saved() === null}>
-        <p class="px-1 text-12-regular text-v2-text-text-muted">{ctx.t("defaults")}</p>
-      </Show>
-    </ui.SettingsLayout>
+                      void replace(index(), enabled ? rest : { ...rest, disabled: true })
+                    }}
+                  />
+                  <ui.Menu
+                    label={ctx.t("actions", { name: name(source) })}
+                    items={[
+                      { label: ctx.t("edit"), icon: "edit", onSelect: () => void openForm(index()) },
+                      {
+                        label: ctx.t("up"),
+                        icon: "arrow-up",
+                        disabled: index() === 0,
+                        onSelect: () => void save(moveSource(sources(), index(), -1)),
+                      },
+                      {
+                        label: ctx.t("down"),
+                        icon: "arrow-down-to-line",
+                        disabled: index() === sources().length - 1,
+                        onSelect: () => void save(moveSource(sources(), index(), 1)),
+                      },
+                      { type: "separator" },
+                      {
+                        label: ctx.t("remove"),
+                        icon: "trash",
+                        onSelect: () => void save(sources().filter((_, at) => at !== index())),
+                      },
+                    ]}
+                  />
+                </div>
+              </ui.SettingsRow>
+            )}
+          </For>
+        </Match>
+      </Switch>
+    </ui.SettingsSection>
   )
 }
 

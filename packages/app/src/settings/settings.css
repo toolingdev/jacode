@@ -653,10 +653,14 @@
   display: none;
 }
 
+/* Fork feature: the computer these settings change is hard to miss. */
 .settings-server-switcher[data-component="button-v2"] {
-  max-width: 240px;
+  max-width: 320px;
   gap: 6px;
-  padding-inline: 6px;
+  padding-inline: 8px;
+  border-color: var(--v2-border-border-strong);
+  background: var(--v2-background-bg-layer-01);
+  font-weight: 540;
 }
 
 .settings-server-switcher-icon {
