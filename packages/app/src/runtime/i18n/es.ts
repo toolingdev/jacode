@@ -997,6 +997,10 @@ export const dict = {
     "Un chat solo se reenruta mientras usa uno de estos modelos, y solo entre modelos del mismo proveedor.",
   "settings.decisions.models.add.choose": "Elegir un modelo",
   "settings.models.auto.title": "Automático",
+  "settings.models.auto.about":
+    "Auto elige un modelo para cada mensaje entre los modelos que activaste. Auto en todos los proveedores usa los proveedores activados aquí; Auto en un proveedor usa solo ese proveedor.",
+  "settings.models.auto.included": "Auto puede usar sus modelos",
+  "settings.models.auto.excluded": "Auto en todos los proveedores lo deja fuera",
   "settings.models.auto.all.title": "Automático, todos los proveedores",
   "settings.models.auto.all.description":
     "El modelo que usa Automático cuando puede elegir entre todos los proveedores.",

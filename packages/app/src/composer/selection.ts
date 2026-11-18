@@ -7,7 +7,7 @@ import { useProviders } from "@/providers/catalog/providers"
 import { useData } from "@/runtime/server/current"
 import { normalizeAgentList, normalizeProviderList } from "@/runtime/server/global-sync/utils"
 import { useModels } from "@/providers/models/models"
-import { createAutoSelection, isAutoModel } from "@/providers/models/auto"
+import { createAutoSelection, isAutoModel, useAutoModels } from "@/providers/models/auto"
 import {
   cycleModelVariant,
   durableVariantSelection,
@@ -99,6 +99,8 @@ export function createComposerControls(input: { model?: ModelSelection } = {}) {
     }
   })
 
+  const autoModels = useAutoModels()
+
   const smartAuto = (providerID: string) => {
     const scope = providerID === "auto" ? "all" : providerID
 
@@ -106,7 +108,9 @@ export function createComposerControls(input: { model?: ModelSelection } = {}) {
       scope,
       models: local.model
         .list()
-        .filter((item) => scope === "all" || item.provider.id === scope)
+        .filter((item) =>
+          scope === "all" ? !autoModels.chosen.excluded?.[item.provider.id] : item.provider.id === scope,
+        )
         .filter((item) => local.model.visible({ providerID: item.provider.id, modelID: item.id }))
         .map((item) => `${item.provider.id}/${item.id}`),
     }
@@ -208,9 +212,7 @@ export function createComposerModelSelection(input: {
 
   // Fork feature: Auto moves a prompt with images to the model chosen for images.
   const image = createMemo(() =>
-    prompt
-      .current()
-      .some((part) => part.type === "image" || (part.type === "path" && part.mime.startsWith("image/"))),
+    prompt.current().some((part) => part.type === "image" || (part.type === "path" && part.mime.startsWith("image/"))),
   )
 
   const current = () => {

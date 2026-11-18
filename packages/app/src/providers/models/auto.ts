@@ -20,6 +20,8 @@ export const AutoModelsSchema = Schema.Struct({
   image: Persistence.optional(Schema.Struct({ providerID: Schema.String, modelID: Schema.String })),
   /** What Auto within a provider uses, as that provider's model ID. */
   providers: Persistence.record(Persistence.fallback(Schema.String, () => "")),
+  /** Fork feature: providers Auto across every provider leaves out, such as one billed per use. */
+  excluded: Persistence.optional(Schema.Record(Schema.String, Schema.Boolean)),
 })
 
 export type AutoModels = typeof AutoModelsSchema.Type
@@ -131,7 +133,7 @@ export function useAutoModels() {
     setAll: (model: ModelRef | undefined) => setChosen({ all: model }),
     setImage: (model: ModelRef | undefined) => setChosen({ image: model }),
     setProvider: (providerID: string, modelID: string | undefined) => setChosen("providers", providerID, modelID ?? ""),
+    setExcluded: (providerID: string, excluded: boolean) =>
+      setChosen({ excluded: { ...chosen.excluded, [providerID]: excluded } }),
   }
 }
-
-

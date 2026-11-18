@@ -205,6 +205,10 @@ export const dict = {
     "A chat is rerouted only while it is on one of these models, and only between models of the same provider.",
   "settings.decisions.models.add.choose": "Choose a model",
   "settings.models.auto.title": "Auto",
+  "settings.models.auto.about":
+    "Auto picks a model for each prompt from the models you switched on. Auto on every provider draws from the providers switched on here; Auto on one provider uses only that provider.",
+  "settings.models.auto.included": "Auto may use its models",
+  "settings.models.auto.excluded": "Auto on every provider leaves it out",
   "settings.models.auto.all.title": "Auto, every provider",
   "settings.models.auto.all.description": "The model Auto uses when it may choose from every provider.",
   "settings.models.auto.provider.description": "The model Auto uses within this provider.",
