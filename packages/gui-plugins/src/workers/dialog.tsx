@@ -140,16 +140,23 @@ export default function AddWorker(props: { onClose: () => void }) {
       return { status: "ok", name: step.id, detail: ctx.t("share.key") }
     }
 
+    // The server's own error text, kept for Details; the list says what failed in plain words.
+    const raw: string[] = []
+
     // One after another: a provider is saved before its key is stored.
     const checks = await plan.reduce(
       async (done, step) => [
         ...(await done),
-        await run(step).catch((error: Error) => ({ status: "fail" as const, name: step.id, detail: error.message })),
+        await run(step).catch((error: Error) => {
+          raw.push(`${step.id}: ${error.message}`)
+
+          return { status: "fail" as const, name: step.id, detail: ctx.t("share.error") }
+        }),
       ],
       Promise.resolve<WorkerReport["checks"][number][]>([]),
     )
 
-    return { passed: checks.every((check) => check.status !== "fail"), checks, output: "" }
+    return { passed: checks.every((check) => check.status !== "fail"), checks, output: raw.join("\n") }
   }
 
   // Runs the copy when it was asked for, after the worker under `key` is connected.

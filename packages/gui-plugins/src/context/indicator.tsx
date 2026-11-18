@@ -5,7 +5,7 @@ import { Menu } from "@opencode/ui/menu"
 import { Tooltip } from "@opencode/ui/tooltip"
 import { useI18n } from "@opencode/ui/context/i18n"
 import { lastAssistantWithUsage } from "@opencode/client/solid"
-import { usePlugin, type MountedSession } from "@opencode/plugin/gui"
+import { createLatest, usePlugin, type MountedSession } from "@opencode/plugin/gui"
 import { catalogModel, syncCatalog } from "./catalog"
 
 export function SessionContextUsage(props: {
@@ -75,11 +75,26 @@ export function SessionContextUsage(props: {
 
   const cost = createMemo(() => usd().format(spent()))
 
+  // Fork feature: providers on a flat-rate subscription, whose $0.00 means nothing; the header's ring shows their quota.
+  const subscribed = createLatest(
+    () => {
+      const location = props.session.location
+
+      return props.active !== false && location && JSON.stringify([props.session.key, location.directory])
+    },
+    (_key, signal) =>
+      props.session.server.client.experimental.usage
+        .subscriptions({ location: props.session.location }, { signal })
+        .then((output) => output.data),
+  )
+
   const showCost = createMemo(() => {
     if (spent() > 0) return true
     const ref = info()?.model ?? messages().findLast((item) => item.type === "assistant")?.model
 
     if (ref?.providerID === "opencode-go") return false
+
+    if (subscribed.latest?.some((subscription) => subscription.providerID === ref?.providerID)) return false
     const model = ref ? catalogModel(props.session, ref)?.model : undefined
 
     if (!model) return true

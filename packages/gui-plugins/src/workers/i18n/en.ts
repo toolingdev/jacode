@@ -82,6 +82,7 @@ export default {
   "share.key": "API key copied",
   "share.nokey": "no API key found on this computer",
   "share.signin": "sign in to this one on the worker",
+  "share.error": "could not be copied",
   "share.unknown": "The worker does not know this provider.",
   "share.passed": "The worker has this computer's providers.",
   "share.failed": "Some providers could not be copied. Add them on the worker under Providers.",

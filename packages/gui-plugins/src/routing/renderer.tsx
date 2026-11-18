@@ -39,6 +39,18 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
     },
   )
 
+  // A routed model by the name the model picker shows, falling back to its short ID while the list loads.
+  const modelName = (input: ComposerPillProps, key: string) => {
+    const providerID = key.slice(0, key.indexOf("/"))
+    const id = key.slice(key.indexOf("/") + 1)
+
+    return (
+      input.session.server.data.location.model
+        .list(input.session.directory ? { directory: input.session.directory } : undefined)
+        ?.findLast((item) => item.providerID === providerID && item.id === id)?.name ?? shortModel(key)
+    )
+  }
+
   const decision = (input: ComposerPillProps) => lastDecision(input.session.server.data.session.message.list(input.session.id))
 
   const toggle = (server: ServerRef, current: ConfigExperimentalDecisions) => {
@@ -74,10 +86,10 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
         icon: "branch",
         tone: on ? undefined : "warning",
         title: ctx.t("title"),
-        label: !on ? ctx.t("off") : model ? ctx.t("routed", { model: shortModel(model.choice) }) : ctx.t("on"),
+        label: !on ? ctx.t("off") : model ? ctx.t("routed", { model: modelName(input, model.choice) }) : ctx.t("on"),
         rows: [
           ...(on && model
-            ? [{ id: "model", label: ctx.t("row.model", { model: shortModel(model.choice) }), detail: sure(model.confidence) }]
+            ? [{ id: "model", label: ctx.t("row.model", { model: modelName(input, model.choice) }), detail: sure(model.confidence) }]
             : []),
           ...(on && size
             ? [

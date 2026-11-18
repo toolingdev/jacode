@@ -322,11 +322,12 @@ export const { use: useServers, provider: ServersProvider } = createSimpleContex
 
     const local = (conn?: ServerConnection.Any) => ServerConnection.local(conn, ownUrl())
 
+    // Fork feature: the app's own server is always "This computer", never the machine's host name.
     const label = (conn: ServerConnection.Any) =>
       serverLabel(
         conn,
         current(conn)
-          ? { hostname: store.hostnames[ServerConnection.key(conn)], fallback: language.t("server.thisComputer") }
+          ? { fallback: language.t("server.thisComputer") }
           : undefined,
       )
 

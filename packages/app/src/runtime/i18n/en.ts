@@ -489,25 +489,25 @@ export const dict = {
   "server.connect.link": "Pairing link",
   "server.connect.link.placeholder": "http://192.168.1.2:4096/auth/connect/…",
   "server.connect.link.invalid":
-    "Paste the full pairing link from opencode pair, or from Settings → Pairing on the worker.",
+    "Paste the whole pairing link. On the worker's JaCode, find it under Settings › Workers › Pair a device.",
   "server.connect.password.prompt": "No pairing link?",
   "server.connect.password.use": "Use password",
-  "server.connect.password.hint": "To see it, run opencode service get password on the worker.",
+  "server.connect.password.hint": "The person who set up the worker can give it to you. A pairing link is easier.",
   "server.connect.link.prompt": "Have a pairing link?",
   "server.connect.link.use": "Use pairing link",
   "server.connect.button": "Connect",
   "server.connect.address.invalid": "Enter a valid HTTP or HTTPS worker address.",
   "server.connect.failed": "Could not connect. Check the worker address and password, then try again.",
-  "server.connect.pair.link": "Run this command on the worker to get a pairing link and QR code.",
+  "server.connect.pair.link": "No JaCode window on the worker? Run this on it to print a pairing link and QR code.",
   "server.connect.scan": "Scan QR code",
-  "server.connect.scan.description": "Point your camera at the QR code shown by opencode pair.",
-  "server.connect.scan.invalid": "This is not an OpenCode pairing code. Scan the code shown by opencode pair.",
+  "server.connect.scan.description": "Point your camera at the worker's pairing QR code.",
+  "server.connect.scan.invalid": "This is not a JaCode pairing code. Scan the worker's pairing QR code.",
   "server.connect.scan.failed": "This browser could not read the QR code. Enter your connection details manually.",
-  "server.connect.link.expired": "This pairing link expired or was already used. Run opencode pair to get a new one.",
+  "server.connect.link.expired": "This pairing link expired or was already used. Get a new one from the worker.",
   "server.connect.link.unreachable":
     "Could not reach {{url}}. Check that this device can reach the worker, then try again.",
   "server.connect.link.legacy":
-    "This pairing code is from an older version of OpenCode. Update OpenCode on the worker, then run opencode pair again.",
+    "This pairing code is from an older JaCode on the worker. Update the worker, then get a new pairing link.",
   "server.connect.camera": "Pairing camera",
   "server.connect.camera.starting": "Opening camera…",
   "server.connect.mixedContent":
@@ -527,7 +527,7 @@ export const dict = {
   "dialog.server.menu.show": "Show in project list",
 
   "server.row.incompatible":
-    "This worker is running OpenCode {{version}}, which isn't compatible with this app. Upgrade it to OpenCode V2 to continue.",
+    "This worker runs an older version ({{version}}) that this app can't use. Update the worker to continue.",
 
   "dialog.project.edit.title": "Edit project",
   "dialog.project.edit.icon": "Icon",
@@ -689,7 +689,7 @@ export const dict = {
   "session.error.notFound.closeTab": "Close Tab",
   "session.error.incompatible": "This server version isn't supported",
   "session.error.incompatible.description":
-    "{{server}} is running OpenCode {{version}}, which isn't compatible with this app. Upgrade the server to OpenCode V2 to continue.",
+    "{{server}} runs an older version ({{version}}) that this app can't use. Update it to continue.",
   "session.error.unreachable": "Can't reach this server",
   "session.error.unreachable.description":
     "{{server}} isn't responding, so this session can't load. It will open automatically once the server is reachable again.",

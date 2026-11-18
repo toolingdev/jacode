@@ -462,6 +462,13 @@ function HomeServerRow(props: {
             class="flex min-w-0 flex-1 items-center gap-1"
             classList={{ "opacity-60": !healthy() && !incompatible() }}
           >
+            {/* Fork feature: this computer and workers are told apart at a glance. */}
+            <Icon
+              name={ServerConnection.builtin(props.server) ? "monitor" : "worker"}
+              size="small"
+              class="shrink-0 text-v2-icon-icon-muted"
+              aria-hidden="true"
+            />
             <span class="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{props.serverLabel(props.server)}</span>
             <Show when={props.server.label}>
               {(label) => (
