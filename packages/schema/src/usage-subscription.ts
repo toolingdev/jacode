@@ -49,3 +49,11 @@ export const History = Schema.Struct({
   to: Schema.String,
   models: Schema.Array(ModelUsage),
 }).annotate({ identifier: "UsageSubscription.History" })
+
+/** Fork feature: the models a provider's subscription covers; any other model of the provider is paid per use. */
+export interface Included extends Schema.Schema.Type<typeof Included> {}
+export const Included = Schema.Struct({
+  providerID: Provider.ID,
+  /** Model IDs as the provider names them, which are the IDs OpenCode lists for it. */
+  models: Schema.Array(Schema.String),
+}).annotate({ identifier: "UsageSubscription.Included" })

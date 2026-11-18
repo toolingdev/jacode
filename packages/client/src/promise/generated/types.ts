@@ -425,6 +425,8 @@ export type LocationPublicInfo = {
 
 export type ModelRef = { id: string; providerID: ProviderID; variant?: string }
 
+export type UsageSubscriptionIncluded = { providerID: ProviderID; models: Array<string> }
+
 export type ProviderCache = { ttl?: ProviderCacheTTL; warming?: ProviderCacheWarming }
 
 export type ModelVariantSettings = { compaction?: ProviderCompaction; encoding?: ProviderEncoding } & {
@@ -4972,6 +4974,12 @@ export type ExperimentalUsageHistoryInput = {
 
 export type ExperimentalUsageHistoryOutput = { location: LocationPublicRef; data: Array<UsageSubscriptionHistory> }
 
+export type ExperimentalUsageIncludedInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+
+export type ExperimentalUsageIncludedOutput = { location: LocationPublicRef; data: Array<UsageSubscriptionIncluded> }
+
 export type ConfigGetInput = { readonly location?: { readonly directory?: string | undefined } | undefined }
 
 export type ConfigGetOutput = Array<ConfigEntry>
@@ -5242,6 +5250,12 @@ export type UsageHistoryInput = ExperimentalUsageHistoryInput
 
 /** @deprecated Use `ExperimentalUsageHistoryOutput`. Removed in the next minor. */
 export type UsageHistoryOutput = ExperimentalUsageHistoryOutput
+
+/** @deprecated Use `ExperimentalUsageIncludedInput`. Removed in the next minor. */
+export type UsageIncludedInput = ExperimentalUsageIncludedInput
+
+/** @deprecated Use `ExperimentalUsageIncludedOutput`. Removed in the next minor. */
+export type UsageIncludedOutput = ExperimentalUsageIncludedOutput
 
 /** @deprecated Use `ExperimentalConfigUpdateInput`. Removed in the next minor. */
 export type ConfigUpdateInput = ExperimentalConfigUpdateInput

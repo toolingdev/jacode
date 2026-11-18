@@ -51,5 +51,20 @@ export const UsageHandler = HttpApiBuilder.group(Api, "server.usage", (handlers)
           )
         }),
       )
+      .handle(
+        "usage.included",
+        Effect.fn("server.usage.included")(function* () {
+          const subscriptions = yield* UsageSubscription.Service
+          return yield* response(
+            subscriptions
+              .included()
+              .pipe(
+                Effect.mapError(
+                  (error) => new ServiceUnavailableError({ message: error.message, service: error.service }),
+                ),
+              ),
+          )
+        }),
+      )
   }),
 )

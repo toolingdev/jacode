@@ -700,6 +700,11 @@ export const dict = {
   "settings.providers.tag.config": "Configuración",
   "settings.providers.tag.custom": "Personalizado",
   "settings.providers.tag.other": "Otro",
+  "settings.models.price": "{{input}} entrada · {{output}} salida por 1M tokens",
+  "settings.models.free": "Gratis",
+  "settings.models.context": "{{tokens}} de contexto",
+  "settings.models.plan.included": "En el plan",
+  "settings.models.plan.paid": "Pago por uso",
   "settings.models.title": "Modelos",
   "settings.models.description": "La configuración de modelos estará disponible aquí.",
 

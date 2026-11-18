@@ -55,6 +55,22 @@ export const UsageGroup = HttpApiGroup.make("server.usage")
         }),
       ),
   )
+  .add(
+    HttpApiEndpoint.get("usage.included", "/api/experimental/usage/included", {
+      query: LocationQuery,
+      success: Location.response(Schema.Array(UsageSubscription.Included)),
+      error: ServiceUnavailableError,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "experimental.usage.included",
+          summary: "Get subscription models",
+          description:
+            "Experimental: may change without compatibility guarantees. Return the models each subscription provider of the location covers; its other models are paid per use. Empty when no provider reports one.",
+        }),
+      ),
+  )
   .annotateMerge(
     OpenApi.annotations({
       title: "usage",

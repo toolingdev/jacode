@@ -321,6 +321,8 @@ import type {
   ExperimentalUsageSubscriptionsOutput,
   ExperimentalUsageHistoryInput,
   ExperimentalUsageHistoryOutput,
+  ExperimentalUsageIncludedInput,
+  ExperimentalUsageIncludedOutput,
   ConfigGetInput,
   ConfigGetOutput,
   ConfigShellsOutput,
@@ -1794,6 +1796,18 @@ export function make(options: ClientOptions) {
             },
             requestOptions,
           ),
+        included: (input?: ExperimentalUsageIncludedInput, requestOptions?: RequestOptions) =>
+          request<ExperimentalUsageIncludedOutput>(
+            {
+              method: "GET",
+              path: `/api/experimental/usage/included`,
+              query: { location: input?.["location"] },
+              successStatus: 200,
+              declaredStatuses: [400, 401, 404, 503],
+              empty: false,
+            },
+            requestOptions,
+          ),
       },
       config: {
         update: (input: ExperimentalConfigUpdateInput, requestOptions?: RequestOptions) =>
@@ -3014,6 +3028,8 @@ export function make(options: ClientOptions) {
       subscriptions: client.experimental.usage.subscriptions,
       /** @deprecated Use `client.experimental.usage.history`. Removed in the next minor. */
       history: client.experimental.usage.history,
+      /** @deprecated Use `client.experimental.usage.included`. Removed in the next minor. */
+      included: client.experimental.usage.included,
     },
     config: {
       ...client.config,

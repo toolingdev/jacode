@@ -319,6 +319,8 @@ import type {
   ExperimentalUsageSubscriptionsOutput,
   ExperimentalUsageHistoryInput,
   ExperimentalUsageHistoryOutput,
+  ExperimentalUsageIncludedInput,
+  ExperimentalUsageIncludedOutput,
   ConfigGetInput,
   ConfigGetOutput,
   ConfigShellsOutput,
@@ -1982,10 +1984,17 @@ const EndpointExperimentalUsageHistory = (raw: RawClient["server.usage"]) => (in
     raw["usage.history"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
   )
 
+const EndpointExperimentalUsageIncluded =
+  (raw: RawClient["server.usage"]) => (input?: ExperimentalUsageIncludedInput) =>
+    preserveEffect<ExperimentalUsageIncludedOutput>()(
+      raw["usage.included"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
 const adaptGroupExperimentalUsage = (raw: RawClient["server.usage"]) => ({
   limits: EndpointExperimentalUsageLimits(raw),
   subscriptions: EndpointExperimentalUsageSubscriptions(raw),
   history: EndpointExperimentalUsageHistory(raw),
+  included: EndpointExperimentalUsageIncluded(raw),
 })
 
 const EndpointConfigGet = (raw: RawClient["server.config"]) => (input?: ConfigGetInput) =>
@@ -2244,6 +2253,8 @@ const adaptClient = (raw: RawClient) => {
       subscriptions: client.experimental.usage.subscriptions,
       /** @deprecated Use `client.experimental.usage.history`. Removed in the next minor. */
       history: client.experimental.usage.history,
+      /** @deprecated Use `client.experimental.usage.included`. Removed in the next minor. */
+      included: client.experimental.usage.included,
     },
     config: {
       ...client.config,

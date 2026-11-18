@@ -17,6 +17,8 @@ import { Persistence } from "@/runtime/persistence/schema"
 import { useLanguage } from "@/runtime/i18n/language"
 import { useModels } from "@/providers/models/models"
 import { useServerSDK } from "@/runtime/server/client"
+import { useData } from "@/runtime/server/current"
+import { createExtensionLoad } from "@/settings/extension-load"
 import { popularProviders } from "@/providers/catalog/providers"
 import { Persist, persisted } from "@/runtime/persistence/storage"
 import { SettingsList } from "@/settings/list"
@@ -87,6 +89,58 @@ export const SettingsModels: Component<{
     },
   })
 
+  // Fork feature: which models each subscription covers, so a row can say whether it is in the plan or paid per use.
+  const data = useData()
+
+  const included = createExtensionLoad({
+    key: () => serverSdk.scope,
+    task: (_, signal) =>
+      serverSdk.api.experimental.usage
+        .included({ location: data.location.default() }, { signal })
+        .then(
+          (result) =>
+            new Map<string, Set<string>>(result.data.map((entry) => [entry.providerID, new Set(entry.models)])),
+        ),
+  })
+
+  const plan = (item: ModelItem) => {
+    const view = included.view()
+
+    if (view.status !== "ready") return undefined
+    const models = view.value.get(item.provider.id)
+
+    if (!models) return undefined
+
+    return models.has(item.id) ? "included" : "paid"
+  }
+
+  const money = new Intl.NumberFormat(language.locale(), {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+  })
+
+  const tokens = new Intl.NumberFormat(language.locale(), { notation: "compact", maximumFractionDigits: 0 })
+
+  // Price per million tokens in and out, and how much the model can read at once.
+  const details = (item: ModelItem) => {
+    const cost = item.cost
+
+    const price =
+      cost && (cost.input > 0 || cost.output > 0)
+        ? language.t("settings.models.price", { input: money.format(cost.input), output: money.format(cost.output) })
+        : cost
+          ? language.t("settings.models.free")
+          : undefined
+
+    const context =
+      item.limit.context > 0
+        ? language.t("settings.models.context", { tokens: tokens.format(item.limit.context) })
+        : undefined
+
+    return [price, context].filter((part) => part !== undefined).join(" · ")
+  }
+
   const managed = createMemo(() => consoleModelGroup(models.list()))
   const searching = () => list.filter().length > 0
   const expanded = (key: string) => searching() || !store.collapsed[key]
@@ -105,8 +159,23 @@ export const SettingsModels: Component<{
             const key = { providerID: item.provider.id, modelID: item.id }
 
             return (
-              <SettingsRow title={item.name} description="">
-                <div>
+              <SettingsRow title={item.name} description={details(item)}>
+                <div class="flex items-center gap-3">
+                  <Show when={plan(item)}>
+                    {(kind) => (
+                      <span
+                        class="rounded-full px-2 py-0.5 text-11-medium whitespace-nowrap"
+                        classList={{
+                          "bg-v2-state-bg-success text-v2-state-fg-success": kind() === "included",
+                          "bg-v2-state-bg-warning text-v2-state-fg-warning": kind() === "paid",
+                        }}
+                      >
+                        {language.t(
+                          kind() === "included" ? "settings.models.plan.included" : "settings.models.plan.paid",
+                        )}
+                      </span>
+                    )}
+                  </Show>
                   <Switch
                     checked={models.visible(key)}
                     onChange={(checked) => models.setVisibility(key, checked)}

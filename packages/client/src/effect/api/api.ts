@@ -2823,10 +2823,22 @@ export type ExperimentalUsageHistoryOperation<E = never> = (
   input?: ExperimentalUsageHistoryInput,
 ) => Effect.Effect<ExperimentalUsageHistoryOutput, E>
 
+export type ExperimentalUsageIncludedInput = {
+  readonly location?: { readonly directory?: string | undefined } | undefined
+}
+export type ExperimentalUsageIncludedOutput = {
+  readonly location: Location.PublicRef
+  readonly data: ReadonlyArray<UsageSubscription.Included>
+}
+export type ExperimentalUsageIncludedOperation<E = never> = (
+  input?: ExperimentalUsageIncludedInput,
+) => Effect.Effect<ExperimentalUsageIncludedOutput, E>
+
 export interface ExperimentalUsageApi<E = never> {
   readonly limits: ExperimentalUsageLimitsOperation<E>
   readonly subscriptions: ExperimentalUsageSubscriptionsOperation<E>
   readonly history: ExperimentalUsageHistoryOperation<E>
+  readonly included: ExperimentalUsageIncludedOperation<E>
 }
 
 export type ConfigGetInput = { readonly location?: { readonly directory?: string | undefined } | undefined }
@@ -3273,6 +3285,15 @@ export type UsageHistoryOutput = ExperimentalUsageHistoryOutput
 /** @deprecated Use `ExperimentalUsageHistoryOperation`. Removed in the next minor. */
 export type UsageHistoryOperation<E = never> = ExperimentalUsageHistoryOperation<E>
 
+/** @deprecated Use `ExperimentalUsageIncludedInput`. Removed in the next minor. */
+export type UsageIncludedInput = ExperimentalUsageIncludedInput
+
+/** @deprecated Use `ExperimentalUsageIncludedOutput`. Removed in the next minor. */
+export type UsageIncludedOutput = ExperimentalUsageIncludedOutput
+
+/** @deprecated Use `ExperimentalUsageIncludedOperation`. Removed in the next minor. */
+export type UsageIncludedOperation<E = never> = ExperimentalUsageIncludedOperation<E>
+
 /** @deprecated Use `ExperimentalConfigUpdateInput`. Removed in the next minor. */
 export type ConfigUpdateInput = ExperimentalConfigUpdateInput
 
@@ -3476,5 +3497,8 @@ export interface AppApi<E = never> {
 
     /** @deprecated Use `client.experimental.usage.history`. Removed in the next minor. */
     readonly history: ExperimentalUsageHistoryOperation<E>
+
+    /** @deprecated Use `client.experimental.usage.included`. Removed in the next minor. */
+    readonly included: ExperimentalUsageIncludedOperation<E>
   }
 }

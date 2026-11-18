@@ -15,6 +15,9 @@ export type Info = UsageSubscription.Info
 export const History = UsageSubscription.History
 export type History = UsageSubscription.History
 
+export const Included = UsageSubscription.Included
+export type Included = UsageSubscription.Included
+
 export class UnavailableError extends Schema.TaggedError<UnavailableError>()("UsageSubscription.UnavailableError", {
   message: Schema.String,
   service: Schema.String,
@@ -25,6 +28,8 @@ export interface Interface {
   readonly list: () => Effect.Effect<readonly Info[], UnavailableError>
   /** What those providers recorded by model over the last 30 days, for the API key each is used with. */
   readonly history: () => Effect.Effect<readonly History[], UnavailableError>
+  /** Fork feature: the models each subscription covers, so the rest can be marked as paid per use. */
+  readonly included: () => Effect.Effect<readonly Included[], UnavailableError>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@opencode/UsageSubscription") {}
@@ -63,7 +68,12 @@ export const layer = Layer.effect(
       return yield* readable(entries.map((entry) => readNanoGPTHistory(http, entry.provider, entry.key, days)))
     })
 
-    return Service.of({ list, history })
+    const included = Effect.fn("UsageSubscription.included")(function* () {
+      const entries = yield* subscribed()
+      return yield* readable(entries.map((entry) => readNanoGPTIncluded(http, entry.provider, entry.key)))
+    })
+
+    return Service.of({ list, history, included })
   }),
 )
 
@@ -101,6 +111,30 @@ const NANOGPT_HOST = "nano-gpt.com"
 // Fixed rather than derived from the provider's baseURL, so the key is only ever sent to NanoGPT's own origin.
 const NANOGPT_USAGE_URL = `https://${NANOGPT_HOST}/api/subscription/v1/usage`
 const NANOGPT_HISTORY_URL = `https://${NANOGPT_HOST}/api/v1/usage`
+const NANOGPT_INCLUDED_URL = `https://${NANOGPT_HOST}/api/subscription/v1/models`
+
+// `GET /api/subscription/v1/models` lists the models the subscription covers, in the OpenAI list shape.
+const NanoGPTIncluded = Schema.Struct({ data: Schema.Array(Schema.Struct({ id: Schema.String })) })
+
+function readNanoGPTIncluded(http: HttpClient.HttpClient, provider: Provider.Info, key: string) {
+  return HttpClient.withScope(http)
+    .execute(
+      HttpClientRequest.get(NANOGPT_INCLUDED_URL).pipe(
+        HttpClientRequest.acceptJson,
+        HttpClientRequest.bearerToken(key),
+      ),
+    )
+    .pipe(
+      Effect.flatMap(HttpClientResponse.filterStatusOk),
+      Effect.flatMap(HttpClientResponse.schemaBodyJson(NanoGPTIncluded)),
+      Effect.map((body): Included => ({ providerID: provider.id, models: body.data.map((model) => model.id) })),
+      Effect.scoped,
+      Effect.mapError(
+        (error) =>
+          new UnavailableError({ message: `NanoGPT models are unavailable: ${error.message}`, service: "nanogpt" }),
+      ),
+    )
+}
 
 function isNanoGPT(provider: Provider.Info) {
   const baseURL = provider.settings?.baseURL
