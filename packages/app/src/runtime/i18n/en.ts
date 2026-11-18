@@ -1333,7 +1333,7 @@ export const dict = {
   "settings.providers.tag.other": "Other",
   "settings.models.price": "{{input}} in · {{output}} out per 1M tokens",
   "settings.models.free": "Free",
-  "settings.models.planOnly": "Show only models in my plan",
+  "settings.models.planOnly": "Only in my plan",
   "settings.models.context": "{{tokens}} context",
   "settings.models.plan.included": "In plan",
   "settings.models.plan.paid": "Pay as you go",

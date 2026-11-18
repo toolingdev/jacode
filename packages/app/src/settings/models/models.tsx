@@ -89,17 +89,17 @@ export const SettingsModels: Component<{
     return models.has(item.id) ? "included" : "paid"
   }
 
-  // Fork feature: show only the models a subscription covers. Offered only once a provider reports one.
-  const [planOnly, setPlanOnly] = createSignal(false)
+  // Fork feature: per provider with a subscription, show only the models it covers. Other providers are untouched.
+  const [planOnly, setPlanOnly] = createSignal<Record<string, boolean>>({})
 
-  const hasPlan = () => {
+  const hasPlan = (providerID: string) => {
     const view = included.view()
 
-    return view.status === "ready" && view.value.size > 0
+    return view.status === "ready" && view.value.has(providerID)
   }
 
   const list = useFilteredList<ModelItem>({
-    items: (_filter) => models.list().filter((item) => !planOnly() || plan(item) === "included"),
+    items: (_filter) => models.list().filter((item) => !planOnly()[item.provider.id] || plan(item) !== "paid"),
     key: (x) => `${x.provider.id}:${x.id}`,
     filterKeys: ["provider.name", "name", "id"],
     sortBy: (a, b) => a.name.localeCompare(b.name),
@@ -298,14 +298,6 @@ export const SettingsModels: Component<{
           }}
           placeholder={language.t("dialog.model.search.placeholder")}
         />
-        <Show when={hasPlan()}>
-          <div class="flex items-center gap-2 pt-1">
-            <Switch checked={planOnly()} onChange={setPlanOnly} hideLabel>
-              {language.t("settings.models.planOnly")}
-            </Switch>
-            <span class="text-12-regular text-v2-text-text-base">{language.t("settings.models.planOnly")}</span>
-          </div>
-        </Show>
       </div>
 
       <div class="settings-tab-body settings-models">
@@ -342,6 +334,20 @@ export const SettingsModels: Component<{
               disabled={searching()}
               onExpandedChange={(key, value) => setStore("collapsed", key, !value)}
               onSetVisibility={setProviderVisibility}
+              action={(group) => (
+                <Show when={hasPlan(group.category)}>
+                  <div class="flex items-center gap-2 text-12-regular font-normal text-v2-text-text-muted">
+                    <span>{language.t("settings.models.planOnly")}</span>
+                    <Switch
+                      checked={planOnly()[group.category] ?? false}
+                      onChange={(checked) => setPlanOnly((current) => ({ ...current, [group.category]: checked }))}
+                      hideLabel
+                    >
+                      {language.t("settings.models.planOnly")}
+                    </Switch>
+                  </div>
+                </Show>
+              )}
               ref={(providerID, element) => {
                 sections.set(providerID, element)
                 // A ref runs before the section joins the document.
