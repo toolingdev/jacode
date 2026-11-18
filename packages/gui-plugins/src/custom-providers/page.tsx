@@ -173,7 +173,14 @@ export default function CustomProvidersPage() {
       footer={
         <div class="flex items-center justify-between gap-3 pt-2">
           <p class="text-12-regular text-v2-text-text-muted">{ctx.t("description")}</p>
-          <ui.Button variant="neutral" size="small" icon="plus" disabled={!server()} onClick={() => openForm()}>
+          <ui.Button
+              variant="neutral"
+              size="small"
+              icon="plus"
+              class="shrink-0 whitespace-nowrap"
+              disabled={!server()}
+              onClick={() => openForm()}
+            >
             {ctx.t("add")}
           </ui.Button>
         </div>

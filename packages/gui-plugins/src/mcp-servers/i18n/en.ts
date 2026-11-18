@@ -1,10 +1,11 @@
 export default {
-  title: "MCP servers",
-  description: "Add, remove and control the MCP servers saved in your global config.",
-  "command.title": "Manage MCP servers",
+  title: "Connected tools",
+  description:
+    "Outside tools the AI can use, such as a calendar, a database or a trading account. Each one is an MCP server; add, switch off or remove them here.",
+  "command.title": "Manage connected tools",
   "command.group": "Settings",
-  add: "Add server",
-  empty: "No MCP servers yet",
+  add: "Add tool",
+  empty: "No connected tools yet",
   "empty.description": "Add one to give models more tools.",
   unavailable: "No server is connected",
   "status.connected": "Connected",

@@ -43,7 +43,7 @@ export default {
   "install.failed": "The install did not finish. The details below say where it stopped.",
   "connect.run": "Connect to it",
   "connect.running": "Connecting…",
-  "connect.passed": "Connected. The worker is in the list on this page; start a session on it from Home.",
+  "connect.passed": "Connected. The worker is in the list on this page; start a chat on it from Home.",
   "connect.failed": "Installed, but the app could not connect yet. Close this, then choose Connect on its row.",
   "model.title": "One thing is left",
   "model.about":

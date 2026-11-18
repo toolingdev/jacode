@@ -164,6 +164,7 @@ export default function AddWorker(props: { onClose: () => void }) {
   // Runs the copy when it was asked for, after the worker under `key` is connected.
   const giveIfAsked = (key: string) => {
     setMade(key)
+
     if (!share()) return setBusy()
     setBusy("copy")
     reveal()

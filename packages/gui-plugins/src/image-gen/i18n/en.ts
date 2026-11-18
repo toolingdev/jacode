@@ -1,8 +1,8 @@
 export default {
   title: "Generate image",
-  description: "Images are saved to the generated-images folder of this session's directory.",
+  description: "Images are saved to the generated-images folder of this chat's directory.",
   "command.title": "Generate image",
-  "command.group": "Session",
+  "command.group": "Chat",
   prompt: "Prompt",
   "prompt.placeholder": "Describe the image",
   model: "Model",

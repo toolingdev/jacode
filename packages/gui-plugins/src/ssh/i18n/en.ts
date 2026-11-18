@@ -10,7 +10,7 @@ export default {
   "session.disconnected": "SSH connection inactive",
   "session.connecting": "Connecting to SSH server",
   "session.reconnectDescription":
-    "Reconnect to view this session and continue working. Your remote session is preserved.",
+    "Reconnect to view this chat and continue working. Your remote chat is preserved.",
   "session.reconnect": "Reconnect",
   trust: "Trust and connect",
   continue: "Continue",

@@ -17,8 +17,8 @@ export default {
   "tps.tip": "Output and reasoning tokens per second across the latest turn's model requests, excluding tool time.",
   "session.label": "SESSION",
   "session.tip": "{{id}}. Click to copy.",
-  "session.none": "No session open",
-  "session.copyFailed": "Failed to copy session ID",
+  "session.none": "No chat open",
+  "session.copyFailed": "Failed to copy chat ID",
   "memory.label": "MEMLOG",
   "memory.tip":
     "Memory diagnostics: log app memory to the desktop logs every 30 seconds. Stays on across restarts until turned off; the bar stays open while it runs.",
