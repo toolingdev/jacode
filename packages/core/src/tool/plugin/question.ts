@@ -9,11 +9,13 @@ import { Question } from "@opencode/schema/question"
 
 export const name = "question"
 
+// Fork feature: point 5, so an agent hands the screen to the user instead of stalling on a sign-in or a CAPTCHA.
 export const description = `Use this tool when you need to ask the user questions during execution. This allows you to:
 1. Gather user preferences or requirements
 2. Clarify ambiguous instructions
 3. Get decisions on implementation choices as you work
 4. Offer choices to the user about what direction to take.
+5. Hand the screen to the user when a step needs a person: a sign-in, a two-factor code, a CAPTCHA, a payment, or a page you cannot get past. Say what to do on screen and offer "Done, carry on". The user is notified, can take control of this computer's screen from the app, and answers when finished.
 
 Usage notes:
 - A "Type your own answer" option is added automatically; don't include a separate option for free form answers

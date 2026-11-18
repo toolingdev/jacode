@@ -75,6 +75,12 @@ export default {
   "failure.docker-stopped":
     "Docker no se inició. Abre Docker Desktop, espera a que indique que está en ejecución e inténtalo de nuevo.",
   "failure.docker": "Falló un paso de Docker.",
+  "screen.title": "Pantalla del worker",
+  "screen.toggle": "Mostrar u ocultar la pantalla del worker",
+  "screen.control": "Tomar el control",
+  "screen.control.off": "Solo mirando. Actívalo para usar su ratón y teclado.",
+  "screen.control.on": "Tu ratón y teclado llegan al worker. Desactívalo al terminar.",
+  "screen.open": "Abrir en el navegador",
   "models.run": "Configurar sus modelos",
   "share.label": "Darle los mismos proveedores que este equipo",
   "share.hint":

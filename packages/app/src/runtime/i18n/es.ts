@@ -1654,12 +1654,4 @@ export const dict = {
   "usage.signedOut.body": "Conecta OpenCode Console para ver los presupuestos de tu espacio de trabajo y tu uso de Go.",
   "usage.error": "No se pudieron cargar los límites de uso.",
   "usage.retry": "Reintentar",
-  "home.workers.busy": "Trabajando",
-  "home.workers.idle": "Inactivo",
-  "home.workers.nothing": "Sin tareas en curso",
-  "home.workers.working": "Trabajando en: {{title}}",
-  "home.workers.finished": "Último terminado: {{title}}",
-  "home.workers.untitled": "Chat sin título",
-  "home.workers.screen": "Pantalla del worker",
-  "home.workers.open": "Ver su pantalla",
 }

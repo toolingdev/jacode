@@ -72,6 +72,12 @@ export default {
   "failure.docker-missing": "Docker is not installed on this computer. Install Docker Desktop, then try again.",
   "failure.docker-stopped": "Docker did not start. Open Docker Desktop, wait until it says it is running, then try again.",
   "failure.docker": "A Docker step failed.",
+  "screen.title": "Worker screen",
+  "screen.toggle": "Show or hide the worker's screen",
+  "screen.control": "Take control",
+  "screen.control.off": "Watching only. Turn on to use its mouse and keyboard.",
+  "screen.control.on": "Your mouse and keyboard reach the worker. Turn off when done.",
+  "screen.open": "Open in browser",
   "models.run": "Set up its models",
   "share.label": "Give it the same providers as this computer",
   "share.hint":

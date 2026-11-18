@@ -1,8 +1,20 @@
-import { Command, MenuItem, Server, type Plugin, type ServerEntry } from "@opencode/plugin/gui"
+import {
+  Command,
+  createKeyed,
+  MenuItem,
+  Panel,
+  Server,
+  Slot,
+  type MountedSession,
+  type PanelTab,
+  type Plugin,
+  type ServerEntry,
+} from "@opencode/plugin/gui"
 import { onIdle } from "@opencode/plugin/gui/builtin"
-import { lazy, onCleanup, Suspense } from "solid-js"
+import { lazy, onCleanup, Show, Suspense } from "solid-js"
 import { Workers } from "./contract"
 import type definition from "./index"
+import { screenUrl } from "./screen"
 
 /**
  * Fork feature: the guided way to add a worker, in the Add menu of the Workers settings page (the host's Servers
@@ -76,6 +88,62 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
   })
 
   ctx.add(MenuItem, (): MenuItem => ({ menu: "server.add", id: "setup", title: ctx.t("add"), order: 0, run: open }))
+
+  // Fork feature: the worker's screen, as a side tab of a chat that runs on that worker. A button in the chat's
+  // header opens or hides it; it is not on Home, which lists every computer at once.
+  const Screen = lazy(() => import("./screen"))
+
+  const screenTab: PanelTab = {
+    id: "screen",
+    get title() {
+      return ctx.t("screen.title")
+    },
+  }
+
+  ctx.add(Slot, {
+    at: "session.header",
+    order: 5,
+    render: (input) => (
+      <Show when={screenUrl(input.session.server)}>
+        <AskedToTakeOver session={input.session} active={input.active} />
+        <ctx.ui.IconButton
+          icon="worker"
+          label={ctx.t("screen.toggle")}
+          variant="ghost"
+          size="small"
+          pressed={ctx.layout.state(`${ctx.id}:screen`, input.session) === "visible"}
+          onClick={() => ctx.layout.toggle(`${ctx.id}:screen`, input.session)}
+        />
+      </Show>
+    ),
+  })
+
+  // When a chat on a worker asks the user something, such as to sign in for it, its screen opens beside the question,
+  // so taking control is one switch away. The app already notifies about the question itself.
+  function AskedToTakeOver(props: { session: MountedSession; active: boolean }) {
+    createKeyed(
+      () => {
+        const asking = (props.session.server.data.session.form.list(props.session.id) ?? []).length > 0
+
+        return props.active && asking && props.session.id
+      },
+      () => ctx.layout.open(`${ctx.id}:screen`, props.session),
+    )
+
+    return null
+  }
+
+  ctx.add(Panel, {
+    id: "screen",
+    region: "side",
+    width: 640,
+    list: (input) => (input.open.includes("screen") && screenUrl(input.session.server) ? [screenTab] : []),
+    render: (props) => (
+      <Suspense>
+        <Screen session={props.session} />
+      </Suspense>
+    ),
+  })
 
   ctx.add(Command, () => ({
     id: "open",
