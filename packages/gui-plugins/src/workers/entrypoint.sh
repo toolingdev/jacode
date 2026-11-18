@@ -36,6 +36,10 @@ openbox &
 x11vnc -display :99 -localhost -forever -shared -nopw -quiet &
 websockify --web /usr/share/novnc 0.0.0.0:6080 localhost:5900 >/dev/null 2>&1 &
 
+# The volume remembers the server of the container's last run. Nothing of that run is alive in a container that
+# is just starting, and left in place the note makes the commands below wait on a server that is not there.
+rm -f "${XDG_STATE_HOME:-$HOME/.local/state}"/opencode/service*.json
+
 opencode service set hostname 0.0.0.0 >/dev/null
 opencode service set port "${WORKER_PORT:-4096}" >/dev/null
 opencode service set password "$(cat "$HOME/.worker-password")" >/dev/null

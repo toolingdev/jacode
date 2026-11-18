@@ -73,5 +73,18 @@ export default {
   "failure.docker-stopped": "Docker did not start. Open Docker Desktop, wait until it says it is running, then try again.",
   "failure.docker": "A Docker step failed.",
   "models.run": "Set up its models",
+  "share.label": "Give it the same providers as this computer",
+  "share.hint":
+    "Copies the providers you added and the API keys saved in this app to the worker, once it is connected. Providers you sign in to with a browser are not copied.",
+  "share.providers": "providers",
+  "share.none": "This computer has no providers with an API key to copy.",
+  "share.added": "provider added",
+  "share.key": "API key copied",
+  "share.nokey": "no API key found on this computer",
+  "share.signin": "sign in to this one on the worker",
+  "share.unknown": "The worker does not know this provider.",
+  "share.passed": "The worker has this computer's providers.",
+  "share.failed": "Some providers could not be copied. Add them on the worker under Providers.",
+  "copy.running": "Copying providers…",
   "link.about": "Close this, choose Add worker, then Connect one already set up, and paste the pairing link, or type the address and password.",
 }

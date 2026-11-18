@@ -66,6 +66,14 @@ export const Workers = Ipc.define({
       input: Schema.Struct({}),
       output: Schema.NullOr(Schema.Struct({ url: Schema.String, password: Schema.String })),
     },
+    /**
+     * The values this computer's environment gives the named variables, for API keys its config reads from there.
+     * A variable that is not set is left out.
+     */
+    environment: {
+      input: Schema.Struct({ names: Schema.Array(Schema.String) }),
+      output: Schema.Record(Schema.String, Schema.String),
+    },
     /** Stops and removes the Docker worker. Its work stays in its Docker volume. */
     dockerRemove: { input: Schema.Struct({}) },
   },

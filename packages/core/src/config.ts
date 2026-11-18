@@ -3,7 +3,7 @@ export * as Config from "./config.js"
 import { makeLocationNode } from "@opencode/util/effect/app-node"
 import path from "path"
 import { isDeepStrictEqual } from "node:util"
-import { applyEdits, modify, type ParseError, parse } from "jsonc-parser"
+import { applyEdits, findNodeAtLocation, modify, type ParseError, parse, parseTree } from "jsonc-parser"
 import { Context, Effect, FiberMap, Layer, Option, PubSub, Ref, Schema, Semaphore, Stream } from "effect"
 import { Directory, Document, Info, type Patch, type Entry, Event } from "@opencode/schema/config"
 import type { ConfigExperimental } from "@opencode/schema/config/experimental"
@@ -28,6 +28,19 @@ import { Connection } from "@opencode/schema/connection"
 import { WellKnown } from "./wellknown.js"
 import { AppProcess } from "@opencode/util/process"
 import { ChildProcess } from "effect/process"
+
+/**
+ * A config document's text without the entry at `at`, formatted as the edits here are. A document that has no such
+ * entry comes back as it is: removing one whose parent is missing is an error to the JSON editor, and a fresh
+ * config has none of the old-format sections these edits clear.
+ */
+export function withoutEntry(text: string, at: readonly string[]) {
+  const root = parseTree(text)
+
+  if (!root || !findNodeAtLocation(root, [...at])) return text
+
+  return applyEdits(text, modify(text, [...at], undefined, { formattingOptions: { tabSize: 2, insertSpaces: true } }))
+}
 
 export function latest<K extends keyof Info>(entries: readonly Entry[], key: K): Info[K] | undefined {
   return entries.findLast((entry): entry is Document => entry.type === "document" && entry.info[key] !== undefined)
@@ -544,7 +557,7 @@ export const layer = (options?: Options) =>
           const cleared =
             server === "servers" || server === "timeout"
               ? text
-              : applyEdits(text, modify(text, ["mcp", server], undefined, formatting))
+              : withoutEntry(text, ["mcp", server])
           return applyEdits(cleared, modify(cleared, ["mcp", "servers", server], config, formatting))
         })
       })
@@ -552,7 +565,7 @@ export const layer = (options?: Options) =>
       const provider = Effect.fn("Config.provider")(function* (id: string, config: ConfigProvider.Info | undefined) {
         yield* editGlobal("config.provider", (text) => {
           // A V1 document defines providers under `provider`; drop that entry so the ID is not defined twice.
-          const cleared = applyEdits(text, modify(text, ["provider", id], undefined, formatting))
+          const cleared = withoutEntry(text, ["provider", id])
           return applyEdits(cleared, modify(cleared, ["providers", id], config, formatting))
         })
       })

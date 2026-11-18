@@ -90,6 +90,8 @@ const setup: Plugin.MainSetup = (ctx) => {
     state: () => ({ docker: saved.value ? { name: saved.value.name, state: live.state, http: live.http } : null }),
     check: (request) => report(request, "check"),
     install: (request) => report(request, "install"),
+    environment: async (input) =>
+      Object.fromEntries(input.names.flatMap((name) => (process.env[name] ? [[name, process.env[name]]] : []))),
     dockerStart: (input) => start(input.name),
     dockerResolve: async () => {
       if (!saved.value) return null
