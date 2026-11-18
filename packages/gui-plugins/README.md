@@ -673,7 +673,7 @@ const setup: Plugin.MainSetup = (ctx) => {
 export default setup
 ```
 
-4. **Write the window entry.** Pairing exists only on desktop, so setup returns at once on the web. The settings page is heavy, so it loads behind `lazy()` and compiles while the app idles; its search entries are indexed without mounting it. The page receives the desktop's own server, found through `ctx.servers` by `builtin`, and `ctx.use(Pairing)`. The search entries for remote access and the display setting, like the settings themselves, exist only while main answers (see `main` under [Live and failure handling](#live-and-failure-handling)).
+4. **Write the window entry.** Pairing exists only on desktop, so setup returns at once on the web. Its settings sit as a section on the Workers page (`page: "servers"`); they are heavy, so they load behind `lazy()` and compiles while the app idles; its search entries are indexed without mounting it. The page receives the desktop's own server, found through `ctx.servers` by `builtin`, and `ctx.use(Pairing)`. The search entries for remote access and the display setting, like the settings themselves, exist only while main answers (see `main` under [Live and failure handling](#live-and-failure-handling)).
 
 <!-- source: src/pairing/renderer.tsx -->
 
@@ -702,6 +702,8 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
   ctx.add(SettingsPage, {
     id: "pairing",
+    // Fork feature: pairing a device lives on the Workers page.
+    page: "servers",
     icon: "outline-pair",
     get title() {
       return ctx.t("title")
