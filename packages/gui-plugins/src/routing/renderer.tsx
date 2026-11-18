@@ -94,7 +94,15 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
       if (!current) return
 
       const answers = decision(input)
-      const model = answers?.find((answer) => answer.name === "model")
+      // A topic kept on one model can overrule the model answer, so a kept prompt names the model that answered it.
+      const kept = answers?.some((answer) => answer.name.startsWith("keep-") && answer.choice === "yes")
+
+      const answered = input.session.server.data.session.message
+        .list(input.session.id)
+        .findLast((message) => message.type === "assistant")?.model
+
+      const picked = answers?.find((answer) => answer.name === "model")
+      const model = kept && answered && picked ? { ...picked, choice: `${answered.providerID}/${answered.id}` } : picked
       const size = answers?.find((answer) => answer.name === "size")
       const sure = (confidence: number) => ctx.t("sure", { percent: Math.round(confidence * 100) })
       const on = current.enabled !== false && !chatOff(input)
