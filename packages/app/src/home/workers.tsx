@@ -82,13 +82,12 @@ function WorkerCard(props: { conn: ServerConnection.Any }) {
       </div>
       <Show when={screen()}>
         {(url) => (
-          <div class="relative aspect-video w-full overflow-hidden rounded-[6px] bg-v2-background-bg-deep">
+          <div class="relative h-[150px] w-full overflow-hidden rounded-[6px] bg-v2-background-bg-deep">
             {/* View only and scaled down: a picture of the screen, not a way to work on it. */}
             <iframe
               src={`${url()}/vnc.html?autoconnect=1&view_only=1&resize=scale&reconnect=1`}
               title={language.t("home.workers.screen")}
-              class="pointer-events-none absolute inset-0 size-full border-0"
-              loading="lazy"
+              class="pointer-events-none absolute inset-0 h-full w-full border-0"
             />
           </div>
         )}
