@@ -294,9 +294,12 @@ export default function AddWorker(props: { onClose: () => void }) {
   )
 
   const shareBox = () => (
-    <div class="flex flex-col gap-1">
-      <ui.Switch label={ctx.t("share.label")} checked={share()} onChange={setShare} />
-      <span class="text-12-regular text-v2-text-text-muted">{ctx.t("share.hint")}</span>
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex min-w-0 flex-col gap-1">
+        <span class="text-13-medium text-v2-text-text-base">{ctx.t("share.label")}</span>
+        <span class="text-12-regular text-v2-text-text-muted">{ctx.t("share.hint")}</span>
+      </div>
+      <ui.Switch label={ctx.t("share.label")} hideLabel checked={share()} onChange={setShare} />
     </div>
   )
 
