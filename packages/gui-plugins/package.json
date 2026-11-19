@@ -7,6 +7,7 @@
   "license": "MIT",
   "exports": {
     "./renderer": "./src/renderer.ts",
+    "./custom-providers/action": "./src/custom-providers/action.ts",
     "./main": "./src/main.ts",
     "./terminal": "./src/terminal/index.ts",
     "./debug/options": "./src/debug/options.ts"

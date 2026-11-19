@@ -5,6 +5,7 @@ import { useDialog } from "@opencode/ui/context/dialog"
 import { Icon } from "@opencode/ui/icon"
 import { IconButton } from "@opencode/ui/icon-button"
 import { Menu } from "@opencode/ui/menu"
+import { Option, Schema } from "effect"
 import { OpenCodeLogo } from "@/providers/opencode-logo"
 import { showToast } from "@/shell/notifications/toast"
 import { popularProviders, useProviders } from "@/providers/catalog/providers"
@@ -14,6 +15,8 @@ import { createEffect, createMemo, createSignal, on, untrack, type Component, Fo
 import { useLanguage } from "@/runtime/i18n/language"
 import { useServerSDK } from "@/runtime/server/client"
 import { DialogProviderConfig } from "./provider-config"
+import { useGlobalConfig } from "@/settings/global-config"
+import { CUSTOM_PROVIDER_ACTION } from "@opencode/gui-plugins/custom-providers/action"
 import { formatServerError } from "@/runtime/server/errors"
 import { CONSOLE_INTEGRATION } from "@/providers/connect/dialog-machine"
 import { DialogConnectProvider, useProviderConnectController } from "@/providers/connect/dialog"
@@ -34,6 +37,9 @@ import {
 import "@/settings/settings.css"
 
 type ProviderSource = "env" | "api" | "account" | "config" | "custom"
+
+// Provider settings are open JSON; the address is read as text or not at all.
+const decodeURL = Schema.decodeUnknownOption(Schema.String)
 
 type ProviderItem = ReturnType<ReturnType<typeof useProviders>["connected"]>[number]
 
@@ -295,6 +301,68 @@ export const SettingsProviders: Component<{
     return currentSource !== "env" && currentSource !== "config"
   }
 
+  // Fork feature: a provider the config file sets up, and the address of one it defines itself (a custom one). Such a
+  // provider is listed only here, with its config, key and, for a custom one, editing and removal.
+  const globalConfig = useGlobalConfig()
+
+  const configured = (id: string) => {
+    const entry = globalConfig.documents()?.findLast((document) => document.providers?.[id] !== undefined)?.providers?.[id]
+
+    if (!entry) return
+
+    return { url: Option.getOrUndefined(decodeURL(entry.settings?.baseURL)) }
+  }
+
+  // Edit and Remove of a custom provider run in the Custom providers section, which owns that form.
+  const customAction = (action: "edit" | "remove", id: string) =>
+    window.dispatchEvent(new CustomEvent(CUSTOM_PROVIDER_ACTION, { detail: { action, id } }))
+
+  const ConfiguredActions: Component<{ item: ProviderItem }> = (actionProps) => {
+    const item = () => actionProps.item
+
+    return (
+      <div class="flex min-w-0 items-center gap-1">
+        <Button
+          size="normal"
+          variant="ghost-muted"
+          onClick={() => void dialog.show(() => <DialogProviderConfig id={item().id} name={item().name} />)}
+        >
+          {language.t("settings.providers.connected.showConfig")}
+        </Button>
+        <Menu placement="bottom-end" gutter={6}>
+          <Menu.Trigger
+            as={IconButton}
+            variant="ghost-muted"
+            size="large"
+            icon={<Icon name="outline-dots" />}
+            aria-label={language.t("settings.providers.connected.more", { provider: item().name })}
+          />
+          <Menu.Portal>
+            <Menu.Content>
+              <Menu.Item onSelect={() => connect(item().id)}>
+                {language.t("settings.providers.connected.connectKey")}
+              </Menu.Item>
+              <Show when={configured(item().id)?.url}>
+                <Menu.Item onSelect={() => customAction("edit", item().id)}>
+                  {language.t("settings.providers.connected.edit")}
+                </Menu.Item>
+              </Show>
+              <Show when={canDisconnect(item())}>
+                <Menu.Item onSelect={() => disconnect(item(), item().name)}>{language.t("common.disconnect")}</Menu.Item>
+              </Show>
+              <Show when={configured(item().id)?.url}>
+                <Menu.Separator />
+                <Menu.Item onSelect={() => customAction("remove", item().id)}>
+                  {language.t("settings.providers.connected.remove")}
+                </Menu.Item>
+              </Show>
+            </Menu.Content>
+          </Menu.Portal>
+        </Menu>
+      </div>
+    )
+  }
+
   const canManageAccounts = (item: ProviderItem) => providerAccounts(integration(item)).length > 0
 
   const note = (id: string) => PROVIDER_NOTES.find((item) => item.match(id))?.key
@@ -475,45 +543,35 @@ export const SettingsProviders: Component<{
                           <div class="settings-provider-lead">
                             <ProviderModelIcon provider={item} class="settings-provider-icon shrink-0" />
 
-                            <div class="settings-provider-main">
-                              <span class="settings-provider-name truncate">{item.name}</span>
-                              <Badge>{type(item)}</Badge>
+                            <div class="flex min-w-0 flex-col">
+                              <div class="settings-provider-main">
+                                <span class="settings-provider-name truncate">{item.name}</span>
+                                <Badge>{type(item)}</Badge>
+                              </div>
+                              <Show when={configured(item.id)?.url}>
+                                {(url) => <span class="truncate text-12-regular text-v2-text-text-muted">{url()}</span>}
+                              </Show>
                             </div>
                           </div>
                           <Show
-                            when={canManageAccounts(item)}
+                            when={!configured(item.id) && canManageAccounts(item)}
                             fallback={
+                              <Show
+                                when={!configured(item.id)}
+                                fallback={<ConfiguredActions item={item} />}
+                              >
                               <Show
                                 when={canDisconnect(item)}
                                 fallback={
-                                  <Show
-                                    when={source(item) === "config"}
-                                    fallback={
-                                      <span class="settings-provider-env-hint">
-                                        {language.t("settings.providers.connected.environmentDescription")}
-                                      </span>
-                                    }
-                                  >
-                                    <div class="flex min-w-0 items-center gap-1">
-                                      <Button
-                                        size="normal"
-                                        variant="ghost-muted"
-                                        onClick={() =>
-                                          void dialog.show(() => <DialogProviderConfig id={item.id} name={item.name} />)
-                                        }
-                                      >
-                                        {language.t("settings.providers.connected.showConfig")}
-                                      </Button>
-                                      <Button size="normal" variant="ghost-muted" onClick={() => connect(item.id)}>
-                                        {language.t("settings.providers.connected.connectKey")}
-                                      </Button>
-                                    </div>
-                                  </Show>
+                                  <span class="settings-provider-env-hint">
+                                    {language.t("settings.providers.connected.environmentDescription")}
+                                  </span>
                                 }
                               >
                                 <Button size="normal" variant="ghost-muted" onClick={() => disconnect(item, item.name)}>
                                   {language.t("common.disconnect")}
                                 </Button>
+                              </Show>
                               </Show>
                             }
                           >

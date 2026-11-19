@@ -767,6 +767,9 @@ export const dict = {
   "settings.providers.config.valid": "Todo bien.",
   "settings.providers.config.check": "Comprobar",
   "settings.providers.config.save": "Guardar",
+  "settings.providers.connected.more": "Más para {{provider}}",
+  "settings.providers.connected.edit": "Editar",
+  "settings.providers.connected.remove": "Quitar proveedor",
   "settings.providers.connected.environmentDescription": "Conectado desde tus variables de entorno",
 
   "dialog.server.add.passwordPlaceholder": "contraseña",

@@ -2,7 +2,7 @@ import type { OpenCodeClient } from "@opencode/client/promise"
 import { createLatest, usePlugin } from "@opencode/plugin/gui"
 import { TextField } from "@opencode/ui/text-field"
 import { showToast } from "@opencode/ui/toast"
-import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
+import { createMemo, createSignal, Match, onCleanup, Show, Switch } from "solid-js"
 import {
   emptyProviderForm,
   providerForm,
@@ -12,12 +12,18 @@ import {
   type ProviderFormResult,
 } from "./form"
 import type definition from "./index"
+import { Option, Schema } from "effect"
+import { CUSTOM_PROVIDER_ACTION } from "./action"
 import { providerRows, type ProviderRow } from "./view"
 
 /** How long a saved provider may take to load before its key can be stored, and how often that is checked. */
 const LOAD_TIMEOUT_MS = 20_000
 
 const LOAD_POLL_MS = 500
+
+const decodeAction = Schema.decodeUnknownOption(
+  Schema.Struct({ action: Schema.Literals(["edit", "remove"]), id: Schema.String }),
+)
 
 export default function CustomProvidersPage() {
   const ctx = usePlugin<typeof definition>()
@@ -32,7 +38,6 @@ export default function CustomProvidersPage() {
 
   const location = () => ctx.sessions.current()?.location ?? server()?.data.location.default()
   const [revision, setRevision] = createSignal(0)
-  const [busy, setBusy] = createSignal<readonly string[]>([])
 
   // Read again after every change this page makes: a string key, so only a new revision or place loads.
   const loaded = createLatest(
@@ -69,12 +74,7 @@ export default function CustomProvidersPage() {
     })
 
   // Runs one request for a provider's row, which stays busy until the list is read again.
-  const act = <T,>(id: string, request: () => Promise<T>) => {
-    setBusy((ids) => [...ids, id])
-    void request()
-      .then(refresh, report)
-      .finally(() => setBusy((ids) => ids.filter((item) => item !== id)))
-  }
+  const act = <T,>(request: () => Promise<T>) => void request().then(refresh, report)
 
   // A saved provider loads with the config reload, a moment after the write returns; its key can be stored once
   // its integration exists. Waits for that on this side, as the server never waits for plugins.
@@ -117,23 +117,6 @@ export default function CustomProvidersPage() {
       />
     ))
 
-  const setKey = async (row: ProviderRow) => {
-    const client = server()?.client
-
-    if (!client) return
-
-    const key = await ctx.dialogs.prompt({
-      title: ctx.t("key.title", { name: row.name ?? row.id }),
-      description: ctx.t("key.description"),
-      placeholder: ctx.t("key.placeholder"),
-      secret: true,
-      submit: ctx.t("key.save"),
-    })
-
-    if (!key) return
-    act(row.id, () => storeKey(client, row.id, key.trim()))
-  }
-
   const remove = async (row: ProviderRow) => {
     const client = server()?.client
 
@@ -147,24 +130,27 @@ export default function CustomProvidersPage() {
     })
 
     if (!confirmed) return
-    act(row.id, () =>
+    act(() =>
       client.experimental.config.provider
         .remove({ provider: row.id })
         .then(() => new Promise<void>((resolve) => setTimeout(resolve, LOAD_POLL_MS))),
     )
   }
 
-  const summary = (row: ProviderRow) =>
-    [
-      row.baseURL,
-      ctx.t("row.models", { count: Object.keys(row.models).length }),
-      Object.keys(row.imageModels).length > 0
-        ? ctx.t("row.images", { count: Object.keys(row.imageModels).length })
-        : undefined,
-      ctx.t(`key.${row.key}`),
-    ]
-      .filter((part) => part !== undefined)
-      .join(" · ")
+  // The Providers page lists custom providers with the connected ones and asks here to edit or remove one.
+  const onAction = (event: Event) => {
+    const detail = event instanceof CustomEvent ? Option.getOrUndefined(decodeAction(event.detail)) : undefined
+    const row = detail && rows().find((item) => item.id === detail.id)
+
+    if (!detail || !row) return
+
+    if (detail.action === "edit") return void openForm(row)
+
+    void remove(row)
+  }
+
+  window.addEventListener(CUSTOM_PROVIDER_ACTION, onAction)
+  onCleanup(() => window.removeEventListener(CUSTOM_PROVIDER_ACTION, onAction))
 
   return (
     // Fork feature: a section of the Providers page, not a page of its own.
@@ -194,32 +180,6 @@ export default function CustomProvidersPage() {
           <div class="flex min-h-[64px] items-center justify-center">
             <ui.Loader />
           </div>
-        </Match>
-        <Match when={rows().length === 0}>
-          <ui.SettingsRow title={ctx.t("empty")} description={ctx.t("empty.description")} />
-        </Match>
-        <Match when={true}>
-          <For each={rows()}>
-            {(row) => (
-              <ui.SettingsRow title={row.name ? `${row.name} · ${row.id}` : row.id} description={summary(row)}>
-                <div class="flex items-center gap-2">
-                  <Show when={busy().includes(row.id)}>
-                    <ui.Loader />
-                  </Show>
-                  <ui.Menu
-                    label={ctx.t("actions", { name: row.name ?? row.id })}
-                    disabled={busy().includes(row.id)}
-                    items={[
-                      { label: ctx.t("setKey"), icon: "lock", onSelect: () => void setKey(row) },
-                      { label: ctx.t("edit"), icon: "edit", onSelect: () => void openForm(row) },
-                      { type: "separator" },
-                      { label: ctx.t("remove"), icon: "trash", onSelect: () => void remove(row) },
-                    ]}
-                  />
-                </div>
-              </ui.SettingsRow>
-            )}
-          </For>
         </Match>
       </Switch>
     </ui.SettingsSection>
