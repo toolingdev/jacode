@@ -1,45 +1,14 @@
-import type { ConfigExperimentalDecisions } from "@opencode/client/promise"
-import { ComposerPill, createKeyed, type ComposerPillProps, type Plugin, type ServerRef } from "@opencode/plugin/gui"
-import { showToast } from "@opencode/ui/toast"
-import { createStore } from "solid-js/store"
+import { ComposerPill, type ComposerPillProps, type Plugin } from "@opencode/plugin/gui"
 import { lastDecision, shortModel } from "./decision"
 import type definition from "./index"
 
 /**
- * Fork feature: smart routing made visible. A decision model looks at every prompt and picks the model that answers
- * it; this pill above the composer says what it picked for the chat's latest prompt and how surely, and turns
- * routing off or on. Routing is one setting of the server, so the switch is for every chat on it.
+ * Fork feature: Auto made visible. In an Auto chat, a decision model reads every prompt and Auto answers it with the
+ * model for that kind of task; this pill above the composer says which model answered the latest prompt and why.
+ * With plans on, it also says whether the prompt was judged a large task.
  */
 const setup: Plugin.Setup<typeof definition> = (ctx) => {
-  // Each server's routing settings: `undefined` until read, `null` when the server has none.
-  const [settings, setSettings] = createStore<Record<string, ConfigExperimentalDecisions | null>>({})
-
-  const read = (server: ServerRef) =>
-    server.client.config.get().then(
-      (entries) => {
-        const boundary = entries.findIndex((entry) => entry.type === "directory")
-
-        setSettings(
-          server.id,
-          (boundary === -1 ? entries : entries.slice(0, boundary))
-            .flatMap((entry) => (entry.type === "document" ? [entry.info.experimental?.decisions] : []))
-            .findLast((found) => found !== undefined) ?? null,
-        )
-      },
-      () => undefined,
-    )
-
-  // Read once per server; the settings page and this pill's own switch are the only things that change them.
-  createKeyed(
-    () => ctx.sessions.current()?.server.id,
-    () => {
-      const server = ctx.sessions.current()?.server
-
-      if (server) void read(server)
-    },
-  )
-
-  // A routed model by the name the model picker shows, falling back to its short ID while the list loads.
+  // A model by the name the model picker shows, falling back to its short ID while the list loads.
   const modelName = (input: ComposerPillProps, key: string) => {
     const providerID = key.slice(0, key.indexOf("/"))
     const id = key.slice(key.indexOf("/") + 1)
@@ -51,111 +20,45 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
     )
   }
 
-  const decision = (input: ComposerPillProps) =>
-    lastDecision(input.session.server.data.session.message.list(input.session.id))
-
-  const toggle = (server: ServerRef, current: ConfigExperimentalDecisions) => {
-    const next = { ...current, enabled: current.enabled === false }
-
-    setSettings(server.id, next)
-    void server.client.experimental.config.decisions.set(next).then(
-      () => undefined,
-      () => {
-        setSettings(server.id, current)
-        showToast({ variant: "error", title: ctx.t("failed") })
-      },
-    )
-  }
-
-  // Fork feature: a chat can turn routing off for itself. The flag sits in the chat's metadata, where the server's
-  // decision layer reads it before each prompt.
-  const chatOff = (input: ComposerPillProps) =>
-    input.session.server.data.session.get(input.session.id)?.metadata?.routing === false
-
-  const toggleChat = (input: ComposerPillProps) => {
-    const metadata = input.session.server.data.session.get(input.session.id)?.metadata ?? {}
-
-    void input.session.server.client.session
-      .update({ sessionID: input.session.id, metadata: { ...metadata, routing: chatOff(input) } })
-      .then(
-        () => undefined,
-        () => showToast({ variant: "error", title: ctx.t("failed") }),
-      )
-  }
-
   ctx.add(ComposerPill, {
     id: "routing",
     order: 20,
     show: (input) => {
-      const server = input.session.server
-      const current = settings[server.id]
+      const decision = lastDecision(input.session.server.data.session.message.list(input.session.id))
+      const size = decision?.answers.find((answer) => answer.name === "size")
+      const auto = decision?.auto
+      const large = size?.choice === "large"
 
-      // A server with no routing set up shows nothing; Settings is where it is set up.
-      if (!current) return
+      // Outside Auto, only a prompt held for a plan is worth a pill.
+      if (!auto && !large) return
 
-      const answers = decision(input)
-      // A topic kept on one model can overrule the model answer, so a kept prompt names the model that answered it.
-      const kept = answers?.some((answer) => answer.name.startsWith("keep-") && answer.choice === "yes")
-
-      const answered = input.session.server.data.session.message
-        .list(input.session.id)
-        .findLast((message) => message.type === "assistant")?.model
-
-      const picked = answers?.find((answer) => answer.name === "model")
-      const model = kept && answered && picked ? { ...picked, choice: `${answered.providerID}/${answered.id}` } : picked
-      const size = answers?.find((answer) => answer.name === "size")
-      const sure = (confidence: number) => ctx.t("sure", { percent: Math.round(confidence * 100) })
-      const on = current.enabled !== false && !chatOff(input)
+      const task = decision?.answers.find((answer) => answer.name === "task")
+      const percent = (confidence: number) => Math.round(confidence * 100)
 
       return {
         icon: "branch",
-        tone: on ? undefined : "warning",
         title: ctx.t("title"),
-        label: chatOff(input)
-          ? ctx.t("off.chat")
-          : !on
-            ? ctx.t("off")
-            : model
-              ? ctx.t("routed", { model: modelName(input, model.choice) })
-              : ctx.t("on"),
+        label: auto ? ctx.t("used", { model: modelName(input, auto.model) }) : ctx.t("plan"),
         rows: [
-          ...(on && model
+          ...(auto
             ? [
+                { id: "model", label: ctx.t("row.model", { model: modelName(input, auto.model) }) },
                 {
-                  id: "model",
-                  label: ctx.t("row.model", { model: modelName(input, model.choice) }),
-                  detail: sure(model.confidence),
+                  id: "tier",
+                  label: ctx.t(`row.tier.${auto.tier}`),
+                  detail:
+                    auto.reason === "sure" && task
+                      ? ctx.t("reason.sure", { percent: percent(task.confidence) })
+                      : ctx.t(`reason.${auto.reason}`),
                 },
               ]
             : []),
-          ...(on && size
+          ...(size
             ? [
                 {
                   id: "size",
-                  label: ctx.t(size.choice === "large" ? "row.size.large" : "row.size.small"),
-                  detail: sure(size.confidence),
-                },
-              ]
-            : []),
-          ...(on && !model && !size ? [{ id: "none", label: ctx.t("row.none") }] : []),
-          ...(current.enabled !== false && input.session.id
-            ? [
-                {
-                  id: "chat",
-                  label: ctx.t(chatOff(input) ? "chat.on" : "chat.off"),
-                  icon: chatOff(input) ? ("refresh" as const) : ("stop" as const),
-                  run: () => toggleChat(input),
-                },
-              ]
-            : []),
-          // A remote server may run a build that does not know the switch yet, so only this computer's offers it.
-          ...(server.builtin
-            ? [
-                {
-                  id: "toggle",
-                  label: ctx.t(on ? "turn.off" : "turn.on"),
-                  icon: on ? ("stop" as const) : ("refresh" as const),
-                  run: () => toggle(server, current),
+                  label: ctx.t(large ? "row.size.large" : "row.size.small"),
+                  detail: ctx.t("sure", { percent: percent(size.confidence) }),
                 },
               ]
             : []),

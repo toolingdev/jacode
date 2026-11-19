@@ -7,7 +7,7 @@ import { useProviders } from "@/providers/catalog/providers"
 import { useData } from "@/runtime/server/current"
 import { normalizeAgentList, normalizeProviderList } from "@/runtime/server/global-sync/utils"
 import { useModels } from "@/providers/models/models"
-import { createAutoSelection, isAutoModel, useAutoModels } from "@/providers/models/auto"
+import { AUTO, createAutoSelection, isAutoModel, useAutoModels } from "@/providers/models/auto"
 import {
   cycleModelVariant,
   durableVariantSelection,
@@ -130,14 +130,15 @@ export function createComposerControls(input: { model?: ModelSelection } = {}) {
       },
       model: {
         selection,
+        // Auto on every provider names no provider: the server may answer with any of them.
         providerName:
-          key &&
-          composerProviderName(
-            // Auto across providers names the provider it chose.
-            (isAutoModel(key) ? selection.current()?.provider.id : undefined) ?? key.providerID,
-            providers.all(),
-            providers.connected().map((provider) => provider.id),
-          ),
+          key && key.providerID !== AUTO
+            ? composerProviderName(
+                key.providerID,
+                providers.all(),
+                providers.connected().map((provider) => provider.id),
+              )
+            : undefined,
         label: key && modelLabels().get(composerModelLabelKey(key.providerID, key.modelID)),
         // Fork feature: Auto picks per prompt, from the switched-on models of every provider or of its own.
         smart: key && isAutoModel(key) ? smartAuto(key.providerID) : undefined,
@@ -210,15 +211,10 @@ export function createComposerModelSelection(input: {
     )
   }
 
-  // Fork feature: Auto moves a prompt with images to the model chosen for images.
-  const image = createMemo(() =>
-    prompt.current().some((part) => part.type === "image" || (part.type === "path" && part.mime.startsWith("image/"))),
-  )
-
   const current = () => {
     const item = key()
 
-    return item ? auto.find(item, { image: image() }) : undefined
+    return item ? auto.find(item) : undefined
   }
 
   const recentModels = createMemo(() =>

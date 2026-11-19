@@ -2059,13 +2059,14 @@ const EndpointExperimentalConfigDecisionsSet =
     preserveEffect<ExperimentalConfigDecisionsSetOutput>()(
       raw["config.decisions.set"]({
         payload: {
-          enabled: input?.["enabled"],
           model: input?.["model"],
-          models: input?.["models"],
-          keep: input?.["keep"],
+          tiers: input?.["tiers"],
           allowPaid: input?.["allowPaid"],
           plan: input?.["plan"],
           confidence: input?.["confidence"],
+          enabled: input?.["enabled"],
+          models: input?.["models"],
+          keep: input?.["keep"],
         },
       }).pipe(Effect.mapError(mapClientError)),
     )

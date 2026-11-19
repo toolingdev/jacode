@@ -5,25 +5,23 @@ describe("routing decision", () => {
   test("reads the latest decided prompt and skips undecided ones", () => {
     expect(
       lastDecision([
-        { type: "user", metadata: { decisions: { answers: [{ name: "model", choice: "a/old", confidence: 0.9 }] } } },
+        { type: "user", metadata: { decisions: { answers: [{ name: "task", choice: "hard", confidence: 0.9 }] } } },
         { type: "assistant" },
         {
           type: "user",
           metadata: {
             decisions: {
-              answers: [
-                { name: "model", choice: "nano-gpt/deepseek/deepseek-v4-flash", confidence: 0.93 },
-                { name: "size", choice: "small", confidence: 0.8 },
-              ],
+              answers: [{ name: "task", choice: "quick", confidence: 0.93 }],
+              auto: { tier: "quick", model: "nano/flash", reason: "sure" },
             },
           },
         },
         { type: "user" },
       ]),
-    ).toEqual([
-      { name: "model", choice: "nano-gpt/deepseek/deepseek-v4-flash", confidence: 0.93 },
-      { name: "size", choice: "small", confidence: 0.8 },
-    ])
+    ).toEqual({
+      answers: [{ name: "task", choice: "quick", confidence: 0.93 }],
+      auto: { tier: "quick", model: "nano/flash", reason: "sure" },
+    })
   })
 
   test("is nothing for a chat with no decision, or one kept in a shape it does not know", () => {

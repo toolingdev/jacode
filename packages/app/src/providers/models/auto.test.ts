@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { AUTO, autoImageModel, isAutoModel, resolveAutoModel } from "./auto"
+import { AUTO, autoAcceptsImages, isAutoModel, resolveAutoModel } from "./auto"
 
 const catalog = new Set(["nano:deepseek", "nano:kimi", "other:gpt"])
 
@@ -46,21 +46,8 @@ test("Auto within a provider never leaves it", () => {
 
 const reader = (id: string, image: boolean) => ({ id, capabilities: { input: { text: true, image } } })
 
-test("Auto sends a prompt with images to the image model", () => {
-  expect(autoImageModel(reader("deepseek", false), reader("kimi", true), true).id).toBe("kimi")
-})
-
-test("Auto keeps a usual model that reads images", () => {
-  expect(autoImageModel(reader("qwen", true), reader("kimi", true), true).id).toBe("qwen")
-})
-
-test("Auto accepts images before one is attached, without leaving its usual model", () => {
-  expect(autoImageModel(reader("deepseek", false), reader("kimi", true), false)).toEqual(reader("deepseek", true))
-})
-
-test("Auto without a usable image model is unchanged", () => {
-  const usual = reader("deepseek", false)
-
-  expect(autoImageModel(usual, undefined, true)).toBe(usual)
-  expect(autoImageModel(usual, reader("glm", false), true)).toBe(usual)
+test("Auto accepts images whatever model it stands on, since the server sends them to one that reads them", () => {
+  expect(autoAcceptsImages(reader("deepseek", false))).toEqual(reader("deepseek", true))
+  const qwen = reader("qwen", true)
+  expect(autoAcceptsImages(qwen)).toBe(qwen)
 })

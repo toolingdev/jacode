@@ -16,7 +16,7 @@ type ModelRef = { providerID: string; modelID: string }
 export const AutoModelsSchema = Schema.Struct({
   /** What Auto across every provider uses. */
   all: Persistence.optional(Schema.Struct({ providerID: Schema.String, modelID: Schema.String })),
-  /** What Auto uses for a prompt with images, when the model it would use cannot read them. */
+  /** Deprecated: the server picks the image model now. */
   image: Persistence.optional(Schema.Struct({ providerID: Schema.String, modelID: Schema.String })),
   /** What Auto within a provider uses, as that provider's model ID. */
   providers: Persistence.record(Persistence.fallback(Schema.String, () => "")),
@@ -56,14 +56,11 @@ export function resolveAutoModel(
 type ImageReader = { capabilities: { input: { image: boolean } } }
 
 /**
- * The model Auto sends a prompt with: the image model when the prompt has images its usual model cannot read.
- * Before any image is attached, the usual model is reported as reading images, so an image attaches as one instead
- * of as a file path and the prompt can then move to the image model.
+ * Auto as a catalog model: it reports reading images, because the server sends a prompt with images to a model in
+ * Auto's scope that reads them. So an image attaches as one instead of as a file path.
  */
-export function autoImageModel<Model extends ImageReader>(usual: Model, image: Model | undefined, attached: boolean) {
-  if (!image?.capabilities.input.image || usual.capabilities.input.image) return usual
-
-  if (attached) return image
+export function autoAcceptsImages<Model extends ImageReader>(usual: Model) {
+  if (usual.capabilities.input.image) return usual
 
   return { ...usual, capabilities: { ...usual.capabilities, input: { ...usual.capabilities.input, image: true } } }
 }
@@ -81,7 +78,9 @@ export function createAutoSelection(input: {
   const auto = useAutoModels()
   const language = useLanguage()
 
-  const resolve = (item: ModelRef, prompt?: { image: boolean }) => {
+  // The catalog model Auto stands on until the server picks one per prompt. It is never shown by name: the server
+  // may answer with any model in Auto's scope, so every surface says Auto.
+  const resolve = (item: ModelRef) => {
     const target = resolveAutoModel(item, auto.chosen, {
       valid: input.valid,
       fallback: input.fallback,
@@ -93,25 +92,16 @@ export function createAutoSelection(input: {
           .find(input.valid),
     })
 
-    const usual = target && models.find(target)
+    const found = target && models.find(target)
 
-    const found =
-      usual &&
-      autoImageModel(
-        usual,
-        auto.chosen.image && input.valid(auto.chosen.image) ? models.find(auto.chosen.image) : undefined,
-        !!prompt?.image,
-      )
-
-    return found && { ...found, name: language.t("dialog.model.auto.named", { name: found.name }) }
+    return found && { ...autoAcceptsImages(found), name: language.t("dialog.model.auto") }
   }
 
   return {
     resolve,
     valid: (model: ModelRef) =>
       isAutoModel(model) ? model.providerID === AUTO || input.connected(model.providerID) : input.valid(model),
-    find: (item: ModelRef, prompt?: { image: boolean }) =>
-      isAutoModel(item) ? resolve(item, prompt) : models.find(item),
+    find: (item: ModelRef) => (isAutoModel(item) ? resolve(item) : models.find(item)),
   }
 }
 
@@ -130,9 +120,6 @@ export function useAutoModels() {
 
   return {
     chosen,
-    setAll: (model: ModelRef | undefined) => setChosen({ all: model }),
-    setImage: (model: ModelRef | undefined) => setChosen({ image: model }),
-    setProvider: (providerID: string, modelID: string | undefined) => setChosen("providers", providerID, modelID ?? ""),
     setExcluded: (providerID: string, excluded: boolean) =>
       setChosen({ excluded: { ...chosen.excluded, [providerID]: excluded } }),
   }

@@ -2974,13 +2974,23 @@ export type ExperimentalConfigProviderRemoveOperation<E = never> = (
 ) => Effect.Effect<ExperimentalConfigProviderRemoveOutput, E>
 
 export type ExperimentalConfigDecisionsSetInput = {
-  readonly enabled?: boolean | undefined
   readonly model?: string | undefined
-  readonly models?: { readonly [x: string]: string } | undefined
-  readonly keep?: { readonly [x: string]: string } | undefined
+  readonly tiers?:
+    | {
+        readonly [x: string]: {
+          readonly quick?: string | undefined
+          readonly everyday?: string | undefined
+          readonly hard?: string | undefined
+          readonly image?: string | undefined
+        }
+      }
+    | undefined
   readonly allowPaid?: boolean | undefined
   readonly plan?: boolean | undefined
   readonly confidence?: number | undefined
+  readonly enabled?: boolean | undefined
+  readonly models?: { readonly [x: string]: string } | undefined
+  readonly keep?: { readonly [x: string]: string } | undefined
 }
 export type ExperimentalConfigDecisionsSetOutput = void
 export type ExperimentalConfigDecisionsSetOperation<E = never> = (

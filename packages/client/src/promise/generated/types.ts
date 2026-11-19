@@ -401,15 +401,7 @@ export type ConfigExperimentalTime = { servers: Array<string> }
 
 export type ConfigExperimentalWorker = { name: string; url: string; password?: string }
 
-export type ConfigExperimentalDecisions = {
-  enabled?: boolean
-  model?: string
-  models?: { [x: string]: string }
-  keep?: { [x: string]: string }
-  allowPaid?: boolean
-  plan?: boolean
-  confidence?: number
-}
+export type ConfigExperimentalAutoTiers = { quick?: string; everyday?: string; hard?: string; image?: string }
 
 export type ConfigShellOption = { path: string; name: string; acceptable: boolean }
 
@@ -1050,6 +1042,17 @@ export type ConfigModelCapabilities = {
 export type ConfigExperimentalWeather = { sources: Array<ConfigExperimentalWeatherSource> }
 
 export type ConfigExperimentalWorkers = { list: Array<ConfigExperimentalWorker> }
+
+export type ConfigExperimentalDecisions = {
+  model?: string
+  tiers?: { [x: string]: ConfigExperimentalAutoTiers }
+  allowPaid?: boolean
+  plan?: boolean
+  confidence?: number
+  enabled?: boolean
+  models?: { [x: string]: string }
+  keep?: { [x: string]: string }
+}
 
 export type SessionMessageLocationSwitched = {
   id: SessionMessageID
@@ -5057,13 +5060,23 @@ export type ExperimentalConfigProviderRemoveInput = { readonly provider: string 
 export type ExperimentalConfigProviderRemoveOutput = void
 
 export type ExperimentalConfigDecisionsSetInput = {
-  readonly enabled?: boolean | undefined
   readonly model?: string | undefined
-  readonly models?: { readonly [x: string]: string } | undefined
-  readonly keep?: { readonly [x: string]: string } | undefined
+  readonly tiers?:
+    | {
+        readonly [x: string]: {
+          readonly quick?: string
+          readonly everyday?: string
+          readonly hard?: string
+          readonly image?: string
+        }
+      }
+    | undefined
   readonly allowPaid?: boolean | undefined
   readonly plan?: boolean | undefined
   readonly confidence?: number | undefined
+  readonly enabled?: boolean | undefined
+  readonly models?: { readonly [x: string]: string } | undefined
+  readonly keep?: { readonly [x: string]: string } | undefined
 }
 
 export type ExperimentalConfigDecisionsSetOutput = void
