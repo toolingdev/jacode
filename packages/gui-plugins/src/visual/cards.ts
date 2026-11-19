@@ -18,8 +18,11 @@ export const CARD_LABEL_KEYS = [
   "more",
   "daily",
   "weekly",
+  "monthly",
   "input_tokens",
   "images",
+  "usd",
+  "credits",
   "outline",
   "closing",
 ] as const
@@ -106,7 +109,12 @@ export const USAGE_CARD_SCRIPT = String.raw`(() => {${CARD_BASE}
       (provider.active === false ? '<div class="off">' + esc(t("inactive")) + "</div>" : "") +
       list(provider.meters).map((meter) => {
         const percent = Math.max(0, Math.min(100, Number(meter.percent) || 0));
-        return '<div class="meter"><div class="row"><span><span class="big" style="color:' + level(percent) + '">' + percent + '%</span> <span class="of">' + esc(t(meter.window)) + " " + esc(t(meter.unit)) + '</span></span><span class="of">' + count(meter.used) + " " + esc(t("of")) + " " + count(meter.limit) + " · " + esc(t("refills")) + " " + until(meter.resetsAt, data.asOf ?? Date.now()) + "</span></div>" +
+        // Money reads as dollars; prepaid credits never refill, so they have no countdown.
+        const money = meter.unit === "usd";
+        const amount = (value) => money ? "$" + (Number(value) || 0).toFixed(2) : count(value);
+        const label = money && meter.window === "total" ? t("credits") : t(meter.window) + " " + t(meter.unit);
+        const refill = meter.resetsAt === undefined ? "" : " · " + esc(t("refills")) + " " + until(meter.resetsAt, data.asOf ?? Date.now());
+        return '<div class="meter"><div class="row"><span><span class="big" style="color:' + level(percent) + '">' + percent + '%</span> <span class="of">' + esc(label) + '</span></span><span class="of">' + amount(meter.used) + " " + esc(t("of")) + " " + amount(meter.limit) + refill + "</span></div>" +
           '<div class="track"><div class="fill" style="width:' + percent + "%;background:" + level(percent) + '"></div></div></div>';
       }).join("") +
       (shown.length === 0 ? "" :

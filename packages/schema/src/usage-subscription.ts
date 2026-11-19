@@ -9,16 +9,17 @@ const Instant = Schema.Finite.annotate({ description: "Milliseconds since the Un
 /** One allowance of a provider subscription: an amount that refills when its window resets. */
 export interface Meter extends Schema.Schema.Type<typeof Meter> {}
 export const Meter = Schema.Struct({
-  /** What the allowance counts. */
-  unit: Schema.Literals(["input_tokens", "images"]),
-  /** How often the allowance refills. */
-  window: Schema.Literals(["daily", "weekly"]),
+  /** What the allowance counts: tokens, images, or money in US dollars (credits or a spending limit). */
+  unit: Schema.Literals(["input_tokens", "images", "usd"]),
+  /** How often the allowance refills; `total` never does, as with prepaid credits. */
+  window: Schema.Literals(["daily", "weekly", "monthly", "total"]),
   used: Schema.Finite,
   limit: Schema.Finite,
-  resetsAt: Instant,
+  /** When the allowance refills; absent for one that never does. */
+  resetsAt: Instant.pipe(Schema.optionalKey),
 }).annotate({ identifier: "UsageSubscription.Meter" })
 
-/** What a configured provider's flat-rate subscription has used of its allowances. */
+/** What a configured provider's plan or account has used of its allowances: a subscription's, or prepaid credits. */
 export interface Info extends Schema.Schema.Type<typeof Info> {}
 export const Info = Schema.Struct({
   providerID: Provider.ID,

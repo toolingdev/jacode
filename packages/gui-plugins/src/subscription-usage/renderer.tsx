@@ -99,12 +99,13 @@ function SubscriptionUsage(props: { session: MountedSession; active: boolean; co
                     <div class="flex min-w-0 items-center gap-4">
                       <span class="shrink-0 text-v2-text-text-muted">{ctx.t(`meter.${row.unit}.${row.window}`)}</span>
                       <span class="ml-auto min-w-0 truncate text-right tabular-nums text-v2-text-text-base">
-                        {amount().format(row.used)} / {amount().format(row.limit)} · {row.percent}%
+                        {(row.unit === "usd" ? usd() : amount()).format(row.used)} /{" "}
+                        {(row.unit === "usd" ? usd() : amount()).format(row.limit)} · {row.percent}%
                       </span>
                     </div>
-                    <span class="text-v2-text-text-faint">
-                      {ctx.t("resets", { time: time().format(row.resetsAt) })}
-                    </span>
+                    <Show when={row.resetsAt}>
+                      {(at) => <span class="text-v2-text-text-faint">{ctx.t("resets", { time: time().format(at()) })}</span>}
+                    </Show>
                   </div>
                 )}
               </For>

@@ -9,7 +9,8 @@ export type MeterRow = {
   readonly limit: number
   /** How much of the allowance is used, from 0 to 100. */
   readonly percent: number
-  readonly resetsAt: number
+  /** When it refills; absent for one that never does, such as prepaid credits. */
+  readonly resetsAt: number | undefined
 }
 
 /** Every allowance of the loaded subscriptions, in the order the server lists them. */

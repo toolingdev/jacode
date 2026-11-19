@@ -373,11 +373,11 @@ export type WebSearchResult = { url: string; title?: string; content?: string; t
 export type UsageLimitsMeter = { percent: number; limited: boolean; resetsAt: number }
 
 export type UsageSubscriptionMeter = {
-  unit: "input_tokens" | "images"
-  window: "daily" | "weekly"
+  unit: "input_tokens" | "images" | "usd"
+  window: "daily" | "weekly" | "monthly" | "total"
   used: number
   limit: number
-  resetsAt: number
+  resetsAt?: number
 }
 
 export type McpProtocol = "legacy" | "auto" | "2026-07-28"

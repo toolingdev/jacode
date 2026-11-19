@@ -116,8 +116,10 @@ it.effect("reads a NanoGPT subscription's allowances with the key the provider i
         ],
       },
     ])
+    // Each key goes only to its own provider's origin; OpenRouter's answer here is not one it reads, so it adds none.
     expect(requests.map((request) => [request.url, request.headers.authorization])).toEqual([
       ["https://nano-gpt.com/api/subscription/v1/usage", "Bearer sub-key"],
+      ["https://openrouter.ai/api/v1/key", "Bearer other-key"],
     ])
   }),
 )
@@ -246,5 +248,32 @@ it.effect("reads what the provider's key used by model over the last 30 UTC days
     expect(requests.map((request) => [request.url, request.headers.authorization])).toEqual([
       ["https://nano-gpt.com/api/v1/usage?from=2026-10-16&to=2026-11-14", "Bearer sub-key"],
     ])
+  }),
+)
+
+it.effect("an OpenRouter key's spending limit and the account's credits are meters in dollars", () =>
+  Effect.sync(() => {
+    const now = Date.UTC(2026, 10, 19, 15)
+    const key = { usage: 12, limit: 20, limit_reset: "monthly", usage_daily: 1, usage_weekly: 3, usage_monthly: 9 }
+
+    expect(UsageSubscription.openRouterMeters(key, { total_credits: 10, total_usage: 4 }, now)).toEqual([
+      { unit: "usd", window: "monthly", used: 9, limit: 20, resetsAt: Date.UTC(2026, 11, 1) },
+      { unit: "usd", window: "total", used: 4, limit: 10 },
+    ])
+    expect(UsageSubscription.openRouterMeters({ usage: 2, limit: null }, undefined, now)).toEqual([])
+    expect(UsageSubscription.openRouterMeters({ usage: 2, limit: 5, limit_reset: null }, undefined, now)).toEqual([
+      { unit: "usd", window: "total", used: 2, limit: 5 },
+    ])
+  }),
+)
+
+it.effect("a limit resets at the next UTC midnight, Monday or first of the month", () =>
+  Effect.sync(() => {
+    // A Thursday afternoon.
+    const now = Date.UTC(2026, 10, 19, 15)
+
+    expect(UsageSubscription.nextReset("daily", now)).toBe(Date.UTC(2026, 10, 20))
+    expect(UsageSubscription.nextReset("weekly", now)).toBe(Date.UTC(2026, 10, 23))
+    expect(UsageSubscription.nextReset("monthly", now)).toBe(Date.UTC(2026, 11, 1))
   }),
 )

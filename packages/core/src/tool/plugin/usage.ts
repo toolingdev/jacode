@@ -10,17 +10,17 @@ import { UsageSubscription } from "../../usage-subscription.js"
 
 export const name = "usage"
 
-export const description = `Get what the user's model subscriptions have used: each allowance (such as weekly input tokens or daily images) with its limit and when it refills, and the last 30 days by model. Use this when the user asks about their usage, quota, limits, remaining tokens or which models they used most.`
+export const description = `Get what the user's model subscriptions and prepaid accounts have used: each allowance (such as weekly input tokens, daily images, a spending limit or prepaid credits) with its limit and when it refills, and the last 30 days by model. Use this when the user asks about their usage, quota, limits, remaining tokens or which models they used most.`
 
 export const Input = Schema.Struct({})
 
 const Meter = Schema.Struct({
-  unit: Schema.Literals(["input_tokens", "images"]),
-  window: Schema.Literals(["daily", "weekly"]),
+  unit: Schema.Literals(["input_tokens", "images", "usd"]),
+  window: Schema.Literals(["daily", "weekly", "monthly", "total"]),
   used: Schema.Finite,
   limit: Schema.Finite,
   percent: Schema.Finite,
-  resetsAt: Schema.Finite,
+  resetsAt: Schema.optionalKey(Schema.Finite),
 })
 
 const ModelUsage = Schema.Struct({
@@ -65,12 +65,8 @@ export function combine(input: {
         name: subscription.name,
         active: subscription.active,
         meters: subscription.meters.map((meter) => ({
-          unit: meter.unit,
-          window: meter.window,
-          used: meter.used,
-          limit: meter.limit,
+          ...meter,
           percent: meter.limit > 0 ? Math.round((meter.used / meter.limit) * 100) : 0,
-          resetsAt: meter.resetsAt,
         })),
         ...(history ? { from: history.from, to: history.to } : {}),
         models: (history?.models ?? [])
@@ -89,6 +85,7 @@ export function combine(input: {
 
 /** The result as the short text the model reads. */
 export function usageText(usage: Output) {
+  const refill = (at: number | undefined) => (at === undefined ? "" : `, refills ${new Date(at).toISOString()}`)
   const count = (value: number) => new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(value)
 
   return usage.providers
@@ -96,7 +93,9 @@ export function usageText(usage: Output) {
       `${provider.name}${provider.active ? "" : " (subscription not active)"}`,
       ...provider.meters.map(
         (meter) =>
-          `${meter.window} ${meter.unit.replace("_", " ")}: ${count(meter.used)} of ${count(meter.limit)} (${meter.percent}%), refills ${new Date(meter.resetsAt).toISOString()}`,
+          meter.unit === "usd"
+            ? `${meter.window === "total" ? "credits" : `${meter.window} spending limit`}: $${meter.used.toFixed(2)} of $${meter.limit.toFixed(2)} spent (${meter.percent}%)${refill(meter.resetsAt)}`
+            : `${meter.window} ${meter.unit.replace("_", " ")}: ${count(meter.used)} of ${count(meter.limit)} (${meter.percent}%)${refill(meter.resetsAt)}`,
       ),
       ...(provider.from ? [`By model, ${provider.from} to ${provider.to}:`] : []),
       ...provider.models

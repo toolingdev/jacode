@@ -1,4 +1,11 @@
 export default {
+  "short.monthly": "{{percent}}% of month",
+  "short.total": "{{percent}}% used",
+  "meter.input_tokens.monthly": "Monthly input tokens",
+  "meter.usd.daily": "Daily spending limit",
+  "meter.usd.weekly": "Weekly spending limit",
+  "meter.usd.monthly": "Monthly spending limit",
+  "meter.usd.total": "Credits spent",
   view: "Subscription usage",
   "short.weekly": "{{percent}}% of week",
   "short.daily": "{{percent}}% of day",
