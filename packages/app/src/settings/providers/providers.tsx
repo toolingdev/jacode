@@ -336,11 +336,12 @@ export const SettingsProviders: Component<{
     ),
   )
 
-  // A switched-off provider is gone from the catalog, so its name comes from the config that defines it, if any.
+  // A switched-off provider is gone from the catalog, but its integration still lists, by the same ID and with its
+  // name; a custom one also has its name in the config that defines it.
   const offName = (id: string) =>
+    integrations.list().find((entry) => entry.id === id)?.name ??
     globalConfig.documents()?.findLast((document) => document.providers?.[id]?.name !== undefined)?.providers?.[id]
       ?.name ??
-    providers.all().get(id)?.name ??
     id
 
   const [switching, setSwitching] = createSignal<string>()
