@@ -1,7 +1,7 @@
 export default {
   title: "Servidores de hora",
   description:
-    "Relojes de internet (NTP) a los que el asistente pide la hora exacta, en orden. Se usan cuando el momento importa, como la apertura del mercado y las tareas programadas.",
+    "Relojes de internet (NTP) a los que el asistente pide la hora exacta, en orden. Se usan cuando el momento importa, como los plazos, los horarios de apertura y las tareas programadas.",
   defaults: "Usando los servidores incluidos. Agrega uno para hacer la lista tuya.",
   add: "Agregar servidor",
   reset: "Restablecer",

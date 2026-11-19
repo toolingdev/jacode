@@ -178,6 +178,19 @@ export const ConfigGroup = HttpApiGroup.make("server.config")
     ),
   )
   .add(
+    HttpApiEndpoint.put("config.addons.set", "/api/experimental/config/addons", {
+      payload: ConfigExperimental.Addons,
+      success: HttpApiSchema.NoContent,
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.addons.set",
+        summary: "Save add-ons",
+        description:
+          "Experimental: may change without compatibility guarantees. Set which add-ons that come with the app are switched on, in the highest-precedence global configuration file.",
+      }),
+    ),
+  )
+  .add(
     HttpApiEndpoint.put("config.workers.set", "/api/experimental/config/workers", {
       payload: ConfigExperimental.Workers,
       success: HttpApiSchema.NoContent,

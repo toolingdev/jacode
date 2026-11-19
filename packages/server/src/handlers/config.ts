@@ -147,6 +147,15 @@ export const ConfigHandler = HttpApiBuilder.group(Api, "server.config", (handler
       }),
     )
     .handle(
+      "config.addons.set",
+      Effect.fn(function* (ctx) {
+        const config = yield* Config.Service
+        if (!config.addons) return yield* Effect.die(new Error("Config updates are unavailable"))
+        yield* config.addons(ctx.payload).pipe(Effect.orDie)
+        return HttpApiSchema.NoContent.make()
+      }),
+    )
+    .handle(
       "config.workers.set",
       Effect.fn(function* (ctx) {
         const config = yield* Config.Service

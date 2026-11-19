@@ -399,6 +399,8 @@ export type ConfigExperimentalWeatherSource = {
 
 export type ConfigExperimentalTime = { servers: Array<string> }
 
+export type ConfigExperimentalBibleAddon = { enabled: boolean; spanish?: boolean }
+
 export type ConfigExperimentalWorker = { name: string; url: string; password?: string }
 
 export type ConfigExperimentalAutoTiers = { quick?: string; everyday?: string; hard?: string; image?: string }
@@ -1039,7 +1041,12 @@ export type ConfigModelCapabilities = {
   reasoning?: ConfigModelReasoning
 }
 
-export type ConfigExperimentalWeather = { sources: Array<ConfigExperimentalWeatherSource> }
+export type ConfigExperimentalWeather = {
+  sources?: Array<ConfigExperimentalWeatherSource>
+  units?: "fahrenheit" | "celsius"
+}
+
+export type ConfigExperimentalAddons = { bible?: ConfigExperimentalBibleAddon }
 
 export type ConfigExperimentalWorkers = { list: Array<ConfigExperimentalWorker> }
 
@@ -2662,6 +2669,7 @@ export type ConfigEntry =
           visuals?: boolean
           weather?: ConfigExperimentalWeather
           time?: ConfigExperimentalTime
+          addons?: ConfigExperimentalAddons
           workers?: ConfigExperimentalWorkers
           decisions?: ConfigExperimentalDecisions
           subagent_depth?: number
@@ -5084,12 +5092,15 @@ export type ExperimentalConfigDecisionsSetOutput = void
 export type ExperimentalConfigDecisionsRemoveOutput = void
 
 export type ExperimentalConfigWeatherSetInput = {
-  readonly sources: ReadonlyArray<{
-    readonly type: "met-norway" | "open-meteo" | "wttr"
-    readonly name?: string
-    readonly url?: string
-    readonly disabled?: boolean
-  }>
+  readonly sources?:
+    | ReadonlyArray<{
+        readonly type: "met-norway" | "open-meteo" | "wttr"
+        readonly name?: string
+        readonly url?: string
+        readonly disabled?: boolean
+      }>
+    | undefined
+  readonly units?: "fahrenheit" | "celsius" | undefined
 }
 
 export type ExperimentalConfigWeatherSetOutput = void
@@ -5101,6 +5112,12 @@ export type ExperimentalConfigTimeSetInput = { readonly servers: ReadonlyArray<s
 export type ExperimentalConfigTimeSetOutput = void
 
 export type ExperimentalConfigTimeRemoveOutput = void
+
+export type ExperimentalConfigAddonsSetInput = {
+  readonly bible?: { readonly enabled: boolean; readonly spanish?: boolean } | undefined
+}
+
+export type ExperimentalConfigAddonsSetOutput = void
 
 export type ExperimentalConfigWorkersSetInput = {
   readonly list: ReadonlyArray<{ readonly name: string; readonly url: string; readonly password?: string }>
@@ -5348,6 +5365,12 @@ export type ConfigTimeSetOutput = ExperimentalConfigTimeSetOutput
 
 /** @deprecated Use `ExperimentalConfigTimeRemoveOutput`. Removed in the next minor. */
 export type ConfigTimeRemoveOutput = ExperimentalConfigTimeRemoveOutput
+
+/** @deprecated Use `ExperimentalConfigAddonsSetInput`. Removed in the next minor. */
+export type ConfigAddonsSetInput = ExperimentalConfigAddonsSetInput
+
+/** @deprecated Use `ExperimentalConfigAddonsSetOutput`. Removed in the next minor. */
+export type ConfigAddonsSetOutput = ExperimentalConfigAddonsSetOutput
 
 /** @deprecated Use `ExperimentalConfigWorkersSetInput`. Removed in the next minor. */
 export type ConfigWorkersSetInput = ExperimentalConfigWorkersSetInput

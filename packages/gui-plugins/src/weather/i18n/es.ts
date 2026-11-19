@@ -1,4 +1,9 @@
 export default {
+  "units.title": "Unidades",
+  "units.description": "Cómo dan los pronósticos la temperatura y el viento.",
+  "units.auto": "La región de esta computadora",
+  "units.fahrenheit": "Fahrenheit, mph",
+  "units.celsius": "Celsius, km/h",
   title: "Clima",
   description:
     "De dónde obtiene su pronóstico la herramienta del clima. Las fuentes se prueban de arriba hacia abajo; se usa la primera que responde.",

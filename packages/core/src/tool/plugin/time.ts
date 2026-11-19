@@ -8,12 +8,12 @@ import { Effect, Schema } from "effect"
 import { Config } from "../../config.js"
 
 // Fork feature: the exact time, read from NTP servers rather than trusted from this computer's clock, so the model
-// can reason precisely about market opens, deadlines and schedules. The servers are listed in config
+// can reason precisely about deadlines, opening hours and schedules. The servers are listed in config
 // (`experimental.time.servers`) and tried in order; the clock's own offset from them is reported too.
 
 export const name = "time"
 
-export const description = `Get the exact current time from internet time servers (NTP), in UTC and in a time zone, with how far this computer's clock is off. Use this whenever the precise time matters: before scheduling something, judging whether a market or business is open, or counting down to a deadline. Do not guess the time from the conversation.`
+export const description = `Get the exact current time from internet time servers (NTP), in UTC and in a time zone, with how far this computer's clock is off. Use this whenever the precise time matters: before scheduling something, judging whether a business or service is open, or counting down to a deadline. Do not guess the time from the conversation.`
 
 export const Input = Schema.Struct({
   timezone: Schema.optionalKey(

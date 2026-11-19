@@ -54,8 +54,8 @@ export const SAMPLE_CARD_FRAGMENT = `<quote-card><script type="application/json"
 /** A weather card with made-up numbers, for the previews in Settings. */
 export const SAMPLE_WEATHER = {
   source: "Sample",
-  place: "Denver, California",
-  timezone: "America/Los_Angeles",
+  place: "Denver, Colorado",
+  timezone: "America/Denver",
   temperatureUnit: "°F",
   windUnit: "mph",
   current: { condition: "Partly cloudy", icon: "partly-cloudy-day", temperature: 72, humidity: 40, wind: 6 },

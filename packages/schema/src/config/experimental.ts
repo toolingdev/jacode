@@ -68,8 +68,11 @@ export const WeatherSource = Schema.Struct({
 export type WeatherSource = typeof WeatherSource.Type
 
 export const Weather = Schema.Struct({
-  sources: Schema.Array(WeatherSource).annotate({
-    description: "The sources the weather tool tries, in order; the first that answers is used.",
+  sources: Schema.Array(WeatherSource).pipe(optional).annotate({
+    description: "The sources the weather tool tries, in order; the first that answers is used. Defaults to MET Norway, then Open-Meteo.",
+  }),
+  units: Schema.Literals(["fahrenheit", "celsius"]).pipe(optional).annotate({
+    description: "The temperature unit forecasts are given in. Defaults to the one this computer's region uses.",
   }),
 }).annotate({ identifier: "ConfigExperimental.Weather" })
 export type Weather = typeof Weather.Type
@@ -95,6 +98,21 @@ export const Workers = Schema.Struct({
   list: Schema.Array(Worker).annotate({ description: "Workers by name, with the address their server answers on." }),
 }).annotate({ identifier: "ConfigExperimental.Workers" })
 export type Workers = typeof Workers.Type
+
+// Fork feature: add-ons that come with the app, off until switched on in Settings › Add-ons.
+export const BibleAddon = Schema.Struct({
+  enabled: Schema.Boolean.annotate({ description: "Offer the verse tool, which quotes Bible passages exactly." }),
+  spanish: Schema.Boolean.pipe(optional).annotate({
+    description: "Also give each passage in Spanish (Reina-Valera 1909), and outlines a second-language line. Defaults to false.",
+  }),
+}).annotate({ identifier: "ConfigExperimental.BibleAddon" })
+
+export const Addons = Schema.Struct({
+  bible: BibleAddon.pipe(optional).annotate({
+    description: "Bible passages: exact quotes from public-domain translations, and sermon and study outlines.",
+  }),
+}).annotate({ identifier: "ConfigExperimental.Addons" })
+export type Addons = typeof Addons.Type
 
 export class Info extends Schema.Class<Info>("ConfigExperimental.Info")({
   portable_shell_scanner: Schema.Boolean.pipe(optional).annotate({
@@ -141,6 +159,9 @@ export class Info extends Schema.Class<Info>("ConfigExperimental.Info")({
   time: Time.pipe(optional).annotate({
     description:
       "NTP servers for the time tool. Without this it asks time.cloudflare.com, then time.google.com, then pool.ntp.org.",
+  }),
+  addons: Addons.pipe(optional).annotate({
+    description: "Add-ons that come with the app, switched on here. Without this, none is on.",
   }),
   workers: Workers.pipe(optional).annotate({
     description:

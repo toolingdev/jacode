@@ -2904,6 +2904,12 @@ export interface ConfigApi<E = never> {
     readonly remove: ExperimentalConfigTimeRemoveOperation<E>
   }
 
+  /** @deprecated Use `client.experimental.config.addons`. Removed in the next minor. */
+  readonly addons: {
+    /** @deprecated Use `client.experimental.config.addons.set`. Removed in the next minor. */
+    readonly set: ExperimentalConfigAddonsSetOperation<E>
+  }
+
   /** @deprecated Use `client.experimental.config.workers`. Removed in the next minor. */
   readonly workers: {
     /** @deprecated Use `client.experimental.config.workers.set`. Removed in the next minor. */
@@ -3004,16 +3010,19 @@ export type ExperimentalConfigDecisionsRemoveOperation<E = never> = () => Effect
 >
 
 export type ExperimentalConfigWeatherSetInput = {
-  readonly sources: ReadonlyArray<{
-    readonly type: "met-norway" | "open-meteo" | "wttr"
-    readonly name?: string | undefined
-    readonly url?: string | undefined
-    readonly disabled?: boolean | undefined
-  }>
+  readonly sources?:
+    | ReadonlyArray<{
+        readonly type: "met-norway" | "open-meteo" | "wttr"
+        readonly name?: string | undefined
+        readonly url?: string | undefined
+        readonly disabled?: boolean | undefined
+      }>
+    | undefined
+  readonly units?: "fahrenheit" | "celsius" | undefined
 }
 export type ExperimentalConfigWeatherSetOutput = void
 export type ExperimentalConfigWeatherSetOperation<E = never> = (
-  input: ExperimentalConfigWeatherSetInput,
+  input?: ExperimentalConfigWeatherSetInput,
 ) => Effect.Effect<ExperimentalConfigWeatherSetOutput, E>
 
 export type ExperimentalConfigWeatherRemoveOutput = void
@@ -3033,6 +3042,14 @@ export type ExperimentalConfigTimeRemoveOperation<E = never> = () => Effect.Effe
   ExperimentalConfigTimeRemoveOutput,
   E
 >
+
+export type ExperimentalConfigAddonsSetInput = {
+  readonly bible?: { readonly enabled: boolean; readonly spanish?: boolean | undefined } | undefined
+}
+export type ExperimentalConfigAddonsSetOutput = void
+export type ExperimentalConfigAddonsSetOperation<E = never> = (
+  input?: ExperimentalConfigAddonsSetInput,
+) => Effect.Effect<ExperimentalConfigAddonsSetOutput, E>
 
 export type ExperimentalConfigWorkersSetInput = {
   readonly list: ReadonlyArray<{ readonly name: string; readonly url: string; readonly password?: string | undefined }>
@@ -3088,6 +3105,7 @@ export interface ExperimentalConfigApi<E = never> {
     readonly set: ExperimentalConfigTimeSetOperation<E>
     readonly remove: ExperimentalConfigTimeRemoveOperation<E>
   }
+  readonly addons: { readonly set: ExperimentalConfigAddonsSetOperation<E> }
   readonly workers: { readonly set: ExperimentalConfigWorkersSetOperation<E> }
   readonly plugin: {
     readonly add: ExperimentalConfigPluginAddOperation<E>
@@ -3434,6 +3452,15 @@ export type ConfigTimeRemoveOutput = ExperimentalConfigTimeRemoveOutput
 
 /** @deprecated Use `ExperimentalConfigTimeRemoveOperation`. Removed in the next minor. */
 export type ConfigTimeRemoveOperation<E = never> = ExperimentalConfigTimeRemoveOperation<E>
+
+/** @deprecated Use `ExperimentalConfigAddonsSetInput`. Removed in the next minor. */
+export type ConfigAddonsSetInput = ExperimentalConfigAddonsSetInput
+
+/** @deprecated Use `ExperimentalConfigAddonsSetOutput`. Removed in the next minor. */
+export type ConfigAddonsSetOutput = ExperimentalConfigAddonsSetOutput
+
+/** @deprecated Use `ExperimentalConfigAddonsSetOperation`. Removed in the next minor. */
+export type ConfigAddonsSetOperation<E = never> = ExperimentalConfigAddonsSetOperation<E>
 
 /** @deprecated Use `ExperimentalConfigWorkersSetInput`. Removed in the next minor. */
 export type ConfigWorkersSetInput = ExperimentalConfigWorkersSetInput

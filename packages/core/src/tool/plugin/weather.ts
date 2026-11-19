@@ -15,15 +15,18 @@ import { Config } from "../../config.js"
 
 export const name = "weather"
 
-export const description = `Get the current weather and a daily forecast for a place by name (a city, optionally with a state or country, such as "Denver, CA" or "Lyon, France"). Data comes from a free forecast service chosen in Settings. Use this instead of searching the web for weather.
+export const description = `Get the current weather and a daily forecast for a place by name (a city, optionally with a state or country, such as "Denver, CO" or "Lyon, France"). Data comes from a free forecast service chosen in Settings. Use this instead of searching the web for weather.
 
 Each condition comes with an \`icon\` name. When you show the result as a visual, draw it with <weather-icon name="..."></weather-icon>.`
 
 export const Input = Schema.Struct({
-  location: Schema.String.annotate({ description: 'The place, e.g. "Denver, CA", "Paris" or "Tokyo, Japan"' }),
-  units: Schema.Literals(["fahrenheit", "celsius"])
-    .annotate({ description: "Temperature unit. Fahrenheit also gives wind in mph; Celsius in km/h. Defaults to fahrenheit." })
-    .pipe(Schema.withDecodingDefaultKey(Effect.succeed("fahrenheit" as const))),
+  location: Schema.String.annotate({ description: 'The place, e.g. "Denver, CO", "Paris" or "Tokyo, Japan"' }),
+  units: Schema.optionalKey(
+    Schema.Literals(["fahrenheit", "celsius"]).annotate({
+      description:
+        "Temperature unit. Fahrenheit also gives wind in mph; Celsius in km/h. Leave it out to use the user's setting.",
+    }),
+  ),
   days: Schema.Int.check(Schema.isGreaterThanOrEqualTo(1), Schema.isLessThanOrEqualTo(10))
     .annotate({ description: "How many days of forecast, 1 to 10. Defaults to 5." })
     .pipe(Schema.withDecodingDefaultKey(Effect.succeed(5))),
@@ -389,9 +392,23 @@ export const DEFAULT_SOURCES: readonly Source[] = [{ type: "met-norway" }, { typ
 export function activeSources(entries: readonly Entry[]) {
   return (
     entries.findLast(
-      (entry): entry is Document => entry.type === "document" && entry.info.experimental?.weather !== undefined,
+      (entry): entry is Document => entry.type === "document" && entry.info.experimental?.weather?.sources !== undefined,
     )?.info.experimental?.weather?.sources ?? DEFAULT_SOURCES
   ).filter((source) => source.disabled !== true)
+}
+
+type Asked = Omit<typeof Input.Type, "units"> & { readonly units: "fahrenheit" | "celsius" }
+
+// Regions that measure temperature in Fahrenheit.
+const FAHRENHEIT = new Set(["US", "LR", "MM", "BS", "BZ", "KY", "PW", "FM", "MH"])
+
+/** The unit the user set in Settings, else the one this computer's region uses. */
+export function units(entries: readonly Entry[], locale = Intl.DateTimeFormat().resolvedOptions().locale) {
+  const set = entries.findLast(
+    (entry): entry is Document => entry.type === "document" && entry.info.experimental?.weather?.units !== undefined,
+  )?.info.experimental?.weather?.units
+
+  return set ?? (FAHRENHEIT.has(new Intl.Locale(locale).maximize().region ?? "") ? "fahrenheit" : "celsius")
 }
 
 /** The result as the short text the model reads. */
@@ -446,7 +463,7 @@ export const Plugin = {
     const empty = Effect.fail(new Error("The forecast came back empty"))
 
     // One source's forecast for a found place, in the asked units.
-    const ask = (source: Source, place: Place, input: typeof Input.Type): Effect.Effect<Output, unknown> => {
+    const ask = (source: Source, place: Place, input: Asked): Effect.Effect<Output, unknown> => {
       const kind = SOURCE_TYPES[source.type]
       const label = source.name || kind.label
       const url = source.url || kind.url
@@ -515,7 +532,9 @@ export const Plugin = {
           output: Output,
           execute: (input) =>
             Effect.gen(function* () {
-              const sources = activeSources(yield* config.entries())
+              const entries = yield* config.entries()
+              const sources = activeSources(entries)
+              const asked = { ...input, units: input.units ?? units(entries) }
 
               if (sources.length === 0)
                 return yield* Effect.fail(new Error("No weather source is turned on. Add one in Settings, under Weather."))
@@ -543,7 +562,7 @@ export const Plugin = {
                 if (!source) return Effect.fail(new Error(failures.join("; ")))
                 const label = source.name || SOURCE_TYPES[source.type].label
 
-                return ask(source, place, input).pipe(
+                return ask(source, place, asked).pipe(
                   Effect.timeoutOrElse({ duration: TIMEOUT, orElse: () => Effect.fail(new Error("timed out")) }),
                   Effect.catch((error) =>
                     from(index + 1, [...failures, `${label}: ${error instanceof Error ? error.message : String(error)}`]),

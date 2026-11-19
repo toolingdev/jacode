@@ -26,6 +26,8 @@ export default function WeatherPage() {
 
   // What the config lists: `undefined` until read, `null` when it lists nothing and the tool uses its defaults.
   const [saved, setSaved] = createSignal<readonly WeatherSource[] | null>()
+  // The unit forecasts come in: `undefined` while the config sets none and the region decides.
+  const [units, setUnits] = createSignal<"fahrenheit" | "celsius">()
 
   const read = () => {
     const current = server()
@@ -35,11 +37,12 @@ export default function WeatherPage() {
       (entries) => {
         const boundary = entries.findIndex((entry) => entry.type === "directory")
 
-        setSaved(
-          (boundary === -1 ? entries : entries.slice(0, boundary))
-            .flatMap((entry) => (entry.type === "document" ? [entry.info.experimental?.weather] : []))
-            .findLast((found) => found !== undefined)?.sources ?? null,
+        const blocks = (boundary === -1 ? entries : entries.slice(0, boundary)).flatMap((entry) =>
+          entry.type === "document" ? [entry.info.experimental?.weather] : [],
         )
+
+        setSaved(blocks.findLast((found) => found?.sources !== undefined)?.sources ?? null)
+        setUnits(blocks.findLast((found) => found?.units !== undefined)?.units)
       },
       () => undefined,
     )
@@ -52,6 +55,31 @@ export default function WeatherPage() {
 
   const sources = () => saved() ?? DEFAULT_WEATHER_SOURCES
 
+  // The sources and the unit share one config block, so each write carries both; nothing set removes the block.
+  const write = (list: WeatherSource[] | undefined, unit: "fahrenheit" | "celsius" | undefined) => {
+    const client = server()?.client
+
+    if (!client) return Promise.resolve()
+
+    if (!list && !unit) return client.experimental.config.weather.remove()
+
+    return client.experimental.config.weather.set({ sources: list, units: unit })
+  }
+
+  const changeUnits = (next: string) => {
+    const unit = next === "fahrenheit" || next === "celsius" ? next : undefined
+    const before = units()
+
+    setUnits(unit)
+    void write(saved() ? [...(saved() ?? [])] : undefined, unit).then(
+      () => undefined,
+      () => {
+        setUnits(before)
+        showToast({ variant: "error", title: ctx.t("failed") })
+      },
+    )
+  }
+
   const name = (source: WeatherSource) => source.name || ctx.t(`type.${source.type}`)
 
   // Shown at once; the config is read again when the write fails, so the page never shows what was not saved.
@@ -61,11 +89,7 @@ export default function WeatherPage() {
     if (!client) return Promise.resolve()
     setSaved(next)
 
-    return (
-      next
-        ? client.experimental.config.weather.set({ sources: [...next] })
-        : client.experimental.config.weather.remove()
-    ).then(
+    return write(next ? [...next] : undefined, units()).then(
       () => undefined,
       () => {
         showToast({ variant: "error", title: ctx.t("failed") })
@@ -124,6 +148,20 @@ export default function WeatherPage() {
         </div>
       }
     >
+      <Show when={server()}>
+        <ui.SettingsRow title={ctx.t("units.title")} description={ctx.t("units.description")}>
+          <ui.Select
+            label={ctx.t("units.title")}
+            options={[
+              { value: "auto", label: ctx.t("units.auto") },
+              { value: "fahrenheit", label: ctx.t("units.fahrenheit") },
+              { value: "celsius", label: ctx.t("units.celsius") },
+            ]}
+            value={units() ?? "auto"}
+            onChange={changeUnits}
+          />
+        </ui.SettingsRow>
+      </Show>
       <Switch>
         <Match when={!server()}>
           <ui.SettingsRow title={ctx.t("unavailable")} />

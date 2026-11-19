@@ -82,6 +82,8 @@ export interface Interface {
   readonly weather?: (settings: ConfigExperimental.Weather | undefined) => Effect.Effect<void, FSUtil.Error>
   /** Fork feature: saves the time tool's NTP servers in the global config, or removes them to use the defaults. */
   readonly time?: (settings: ConfigExperimental.Time | undefined) => Effect.Effect<void, FSUtil.Error>
+  /** Fork feature: saves which add-ons that come with the app are switched on. */
+  readonly addons?: (settings: ConfigExperimental.Addons | undefined) => Effect.Effect<void, FSUtil.Error>
   /** Fork feature: saves the workers chats may schedule tasks on, or removes them. */
   readonly workers?: (settings: ConfigExperimental.Workers | undefined) => Effect.Effect<void, FSUtil.Error>
   /**
@@ -592,6 +594,12 @@ export const layer = (options?: Options) =>
         )
       })
 
+      const addons = Effect.fn("Config.addons")(function* (settings: ConfigExperimental.Addons | undefined) {
+        yield* editGlobal("config.addons", (text) =>
+          applyEdits(text, modify(text, ["experimental", "addons"], settings, formatting)),
+        )
+      })
+
       const workers = Effect.fn("Config.workers")(function* (settings: ConfigExperimental.Workers | undefined) {
         yield* editGlobal("config.workers", (text) =>
           applyEdits(text, modify(text, ["experimental", "workers"], settings, formatting)),
@@ -628,6 +636,7 @@ export const layer = (options?: Options) =>
         decisions,
         weather,
         time,
+        addons,
         workers,
         listed,
         integration: Effect.fn("Config.integration")(function* (integrationID, document) {

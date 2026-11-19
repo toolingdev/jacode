@@ -290,7 +290,7 @@ echo "Worker is running: $(/usr/local/bin/opencode --version) at http://$LISTEN:
 [ "$LISTEN" = "127.0.0.1" ] && echo "It listens on this machine only. Reach it from the app's computer with: ssh -N -L $PORT:127.0.0.1:$PORT $RUN_AS@$(hostname)"
 echo
 echo "Two things are left, both yours:"
-echo "  1. Give it a model provider: add the provider's key to $ENV_FILE (for example NANOGPT_API_KEY=...),"
+echo "  1. Give it a model provider: add the provider's key to $ENV_FILE (for example OPENAI_API_KEY=...),"
 echo "     list the provider in $CONFIG, then: sudo systemctl restart opencode-worker"
 echo "  2. Connect the app: Settings, Servers, Add server, and paste a pairing link from below."
 echo

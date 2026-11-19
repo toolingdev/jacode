@@ -1,7 +1,7 @@
 export default {
   title: "Connected tools",
   description:
-    "Outside tools the AI can use, such as a calendar, a database or a trading account. Each one is an MCP server; add, switch off or remove them here.",
+    "Outside tools the AI can use, such as a calendar, a database or an issue tracker. Each one is an MCP server; add, switch off or remove them here.",
   "command.title": "Manage connected tools",
   "command.group": "Settings",
   add: "Add tool",

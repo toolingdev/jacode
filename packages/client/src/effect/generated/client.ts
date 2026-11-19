@@ -343,6 +343,8 @@ import type {
   ExperimentalConfigTimeSetInput,
   ExperimentalConfigTimeSetOutput,
   ExperimentalConfigTimeRemoveOutput,
+  ExperimentalConfigAddonsSetInput,
+  ExperimentalConfigAddonsSetOutput,
   ExperimentalConfigWorkersSetInput,
   ExperimentalConfigWorkersSetOutput,
   ExperimentalConfigPluginAddInput,
@@ -2077,9 +2079,11 @@ const EndpointExperimentalConfigDecisionsRemove = (raw: RawClient["server.config
   )
 
 const EndpointExperimentalConfigWeatherSet =
-  (raw: RawClient["server.config"]) => (input: ExperimentalConfigWeatherSetInput) =>
+  (raw: RawClient["server.config"]) => (input?: ExperimentalConfigWeatherSetInput) =>
     preserveEffect<ExperimentalConfigWeatherSetOutput>()(
-      raw["config.weather.set"]({ payload: { sources: input["sources"] } }).pipe(Effect.mapError(mapClientError)),
+      raw["config.weather.set"]({ payload: { sources: input?.["sources"], units: input?.["units"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
     )
 
 const EndpointExperimentalConfigWeatherRemove = (raw: RawClient["server.config"]) => () =>
@@ -2097,6 +2101,12 @@ const EndpointExperimentalConfigTimeRemove = (raw: RawClient["server.config"]) =
   preserveEffect<ExperimentalConfigTimeRemoveOutput>()(
     raw["config.time.remove"]({}).pipe(Effect.mapError(mapClientError)),
   )
+
+const EndpointExperimentalConfigAddonsSet =
+  (raw: RawClient["server.config"]) => (input?: ExperimentalConfigAddonsSetInput) =>
+    preserveEffect<ExperimentalConfigAddonsSetOutput>()(
+      raw["config.addons.set"]({ payload: { bible: input?.["bible"] } }).pipe(Effect.mapError(mapClientError)),
+    )
 
 const EndpointExperimentalConfigWorkersSet =
   (raw: RawClient["server.config"]) => (input: ExperimentalConfigWorkersSetInput) =>
@@ -2138,6 +2148,7 @@ const adaptGroupExperimentalConfig = (raw: RawClient["server.config"]) => ({
   },
   weather: { set: EndpointExperimentalConfigWeatherSet(raw), remove: EndpointExperimentalConfigWeatherRemove(raw) },
   time: { set: EndpointExperimentalConfigTimeSet(raw), remove: EndpointExperimentalConfigTimeRemove(raw) },
+  addons: { set: EndpointExperimentalConfigAddonsSet(raw) },
   workers: { set: EndpointExperimentalConfigWorkersSet(raw) },
   plugin: { add: EndpointExperimentalConfigPluginAdd(raw), remove: EndpointExperimentalConfigPluginRemove(raw) },
   skill: { add: EndpointExperimentalConfigSkillAdd(raw), remove: EndpointExperimentalConfigSkillRemove(raw) },
@@ -2320,6 +2331,11 @@ const adaptClient = (raw: RawClient) => {
         set: client.experimental.config.time.set,
         /** @deprecated Use `client.experimental.config.time.remove`. Removed in the next minor. */
         remove: client.experimental.config.time.remove,
+      },
+      /** @deprecated Use `client.experimental.config.addons`. Removed in the next minor. */
+      addons: {
+        /** @deprecated Use `client.experimental.config.addons.set`. Removed in the next minor. */
+        set: client.experimental.config.addons.set,
       },
       /** @deprecated Use `client.experimental.config.workers`. Removed in the next minor. */
       workers: {

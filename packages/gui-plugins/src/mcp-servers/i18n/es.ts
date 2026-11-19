@@ -1,7 +1,7 @@
 export default {
   title: "Herramientas conectadas",
   description:
-    "Herramientas externas que la IA puede usar, como un calendario, una base de datos o una cuenta de inversión. Cada una es un servidor MCP; agrégalas, desactívalas o quítalas aquí.",
+    "Herramientas externas que la IA puede usar, como un calendario, una base de datos o un gestor de tareas. Cada una es un servidor MCP; agrégalas, desactívalas o quítalas aquí.",
   "command.title": "Administrar herramientas conectadas",
   "command.group": "Ajustes",
   add: "Agregar herramienta",

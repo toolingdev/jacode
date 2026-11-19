@@ -345,6 +345,8 @@ import type {
   ExperimentalConfigTimeSetInput,
   ExperimentalConfigTimeSetOutput,
   ExperimentalConfigTimeRemoveOutput,
+  ExperimentalConfigAddonsSetInput,
+  ExperimentalConfigAddonsSetOutput,
   ExperimentalConfigWorkersSetInput,
   ExperimentalConfigWorkersSetOutput,
   ExperimentalConfigPluginAddInput,
@@ -1918,12 +1920,12 @@ export function make(options: ClientOptions) {
             ),
         },
         weather: {
-          set: (input: ExperimentalConfigWeatherSetInput, requestOptions?: RequestOptions) =>
+          set: (input?: ExperimentalConfigWeatherSetInput, requestOptions?: RequestOptions) =>
             request<ExperimentalConfigWeatherSetOutput>(
               {
                 method: "PUT",
                 path: `/api/experimental/config/weather`,
-                body: { sources: input["sources"] },
+                body: { sources: input?.["sources"], units: input?.["units"] },
                 successStatus: 204,
                 declaredStatuses: [400, 401, 404],
                 empty: true,
@@ -1960,6 +1962,20 @@ export function make(options: ClientOptions) {
               {
                 method: "DELETE",
                 path: `/api/experimental/config/time`,
+                successStatus: 204,
+                declaredStatuses: [400, 401, 404],
+                empty: true,
+              },
+              requestOptions,
+            ),
+        },
+        addons: {
+          set: (input?: ExperimentalConfigAddonsSetInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigAddonsSetOutput>(
+              {
+                method: "PUT",
+                path: `/api/experimental/config/addons`,
+                body: { bible: input?.["bible"] },
                 successStatus: 204,
                 declaredStatuses: [400, 401, 404],
                 empty: true,
@@ -3115,6 +3131,11 @@ export function make(options: ClientOptions) {
         set: client.experimental.config.time.set,
         /** @deprecated Use `client.experimental.config.time.remove`. Removed in the next minor. */
         remove: client.experimental.config.time.remove,
+      },
+      /** @deprecated Use `client.experimental.config.addons`. Removed in the next minor. */
+      addons: {
+        /** @deprecated Use `client.experimental.config.addons.set`. Removed in the next minor. */
+        set: client.experimental.config.addons.set,
       },
       /** @deprecated Use `client.experimental.config.workers`. Removed in the next minor. */
       workers: {

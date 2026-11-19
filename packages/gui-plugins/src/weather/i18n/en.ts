@@ -1,4 +1,9 @@
 export default {
+  "units.title": "Units",
+  "units.description": "How forecasts give temperature and wind.",
+  "units.auto": "This computer's region",
+  "units.fahrenheit": "Fahrenheit, mph",
+  "units.celsius": "Celsius, km/h",
   title: "Weather",
   description: "Where the weather tool gets its forecast. Sources are tried from the top; the first that answers is used.",
   "command.title": "Manage weather sources",

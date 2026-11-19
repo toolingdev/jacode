@@ -1239,7 +1239,7 @@ export const dict = {
   "home.welcome.description":
     "Tres pasos cortos y podrás empezar a chatear. No hay nada que instalar ni escribir en una terminal.",
   "home.welcome.pick.title": "Elige un proveedor",
-  "home.welcome.pick.about": "La empresa cuya IA te responde, como OpenAI, Anthropic o NanoGPT.",
+  "home.welcome.pick.about": "La empresa cuya IA te responde, como OpenAI, Anthropic o Google.",
   "home.welcome.key.title": "Pega su clave",
   "home.welcome.key.about": "Copia la clave de API del sitio web del proveedor o inicia sesión con tu cuenta.",
   "home.welcome.hello.title": "Saluda",
@@ -1458,7 +1458,7 @@ export const dict = {
   "settings.plugins.parts.note":
     'Los interruptores solo desactivan la interfaz de escritorio de un plugin. Agrega "-<id>" a plugins en tu opencode.json global para desactivar su parte de servidor, o "-" y el ID de su plugin de TUI a plugins en cli.json para desactivar su parte de TUI.',
   "settings.about.copyVersionFailed": "No se pudo copiar la versión",
-  "settings.about.description": "JaCode, un fork personal de OpenCode, el agente de programación de código abierto",
+  "settings.about.description": "JaCode, basado en OpenCode, el agente de programación de código abierto",
   "settings.about.notices.title": "Avisos de terceros",
   "settings.about.notices.description": "JaCode incluye el siguiente software de código abierto.",
   "settings.about.notices.license": "Texto de la licencia",
@@ -1503,6 +1503,11 @@ export const dict = {
   "settings.projects.empty.description": "Agrega un proyecto para comenzar",
   "settings.extensions.description":
     "Complementos que le dan a JaCode nuevas capacidades, como herramientas adicionales o formas de iniciar sesión. Puedes activarlos y desactivarlos aquí.",
+  "settings.addons.bundled.title": "Incluido con JaCode",
+  "settings.addons.bible.title": "Pasajes bíblicos",
+  "settings.addons.bible.description": "Cita las Escrituras palabra por palabra de traducciones de dominio público, y esboza sermones y estudios.",
+  "settings.addons.bible.spanish.title": "También en español",
+  "settings.addons.bible.spanish.description": "Da cada pasaje también en español (Reina-Valera 1909), y a los esquemas una línea en español.",
   "settings.extensions.add": "Agregar",
   "settings.extensions.remove": "Quitar",
   "settings.extensions.added": "Agregado por ti",

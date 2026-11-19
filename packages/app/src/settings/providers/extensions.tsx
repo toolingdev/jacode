@@ -20,6 +20,7 @@ import { SettingsList } from "@/settings/list"
 import { createExtensionLoad, ExtensionLoadFailed } from "@/settings/extension-load"
 import type { SettingsView } from "@/settings/surface"
 import { ConsoleName, ConsoleReplaced, createConsoleSources } from "./console-link"
+import { BundledAddons } from "./bundled-addons"
 import { ExtensionSources } from "./extension-sources"
 import "@/settings/settings.css"
 import "@/shell/search-list.css"
@@ -244,6 +245,7 @@ export const SettingsExtensions: Component<{
 
           <Tabs.Content value="plugins">
             <div class="settings-section">
+              <BundledAddons />
               <div class="flex items-center justify-between">
                 <span class="settings-extension-heading text-13-medium">
                   {language.t("settings.extensions.availableAll")}

@@ -1,6 +1,6 @@
 // Fork feature: more cards a visual can show, beside the weather card. The page defines `<usage-card>`,
-// `<quote-card>` (any quote or citation; a Bible passage is one kind) and `<outline-card>` (any outline; a sermon is
-// one kind). Each reads the JSON placed inside it and draws itself in the app's colours. The usage and verse tools
+// `<quote-card>` (any quote or citation) and `<outline-card>` (any outline, such as a talk
+// or lesson). Each reads the JSON placed inside it and draws itself in the app's colours. The usage and verse tools
 // hand a model the block to copy; a model writes other quotes and outlines itself.
 //
 // The scripts run inside the visual's page, so they are kept as text here.
