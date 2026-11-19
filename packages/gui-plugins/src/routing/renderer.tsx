@@ -46,10 +46,11 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
                 {
                   id: "tier",
                   label: ctx.t(`row.tier.${auto.tier}`),
-                  detail:
-                    auto.reason === "sure" && task
-                      ? ctx.t("reason.sure", { percent: percent(task.confidence) })
-                      : ctx.t(`reason.${auto.reason}`),
+                  detail: task && auto.tier !== "image" ? ctx.t("sure", { percent: percent(task.confidence) }) : undefined,
+                },
+                {
+                  id: "reason",
+                  label: ctx.t(`reason.${auto.reason}`, { count: auto.from ?? 1 }),
                 },
               ]
             : []),

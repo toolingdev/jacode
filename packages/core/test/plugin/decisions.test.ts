@@ -6,25 +6,36 @@ import { DecisionsPlugin } from "../../src/plugin/decisions"
 const answer = (name: string, choice: string, confidence: number) =>
   ({ type: "choice", name, choice, confidence, probabilities: [] }) satisfies ChoiceAnswer
 
-const info = (id: string, input: number, output: number, options: { image?: boolean; context?: number } = {}) => ({
-  providerID: "nano",
+const info = (
+  id: string,
+  input: number,
+  output: number,
+  options: { image?: boolean; context?: number; reasons?: boolean; provider?: string; released?: number } = {},
+) => ({
+  providerID: options.provider ?? "nano",
   id,
+  name: id,
   cost: [{ input, output, cache: { read: 0, write: 0 } }],
   capabilities: { tools: true, input: options.image ? ["text", "image"] : ["text"], output: ["text"] },
   limit: { context: options.context ?? 100_000, output: 8_000 },
-  time: { released: 0 },
+  time: { released: options.released ?? 0 },
+  compatibility: options.reasons ? { reasoningField: "reasoning" } : undefined,
+  variants: [],
 })
 
-// SAFETY: order reads only the IDs, price, image input, context and release time of each model.
-const pool = DecisionsPlugin.order([
-  info("ultra", 60, 240),
+// SAFETY: candidates reads only the fields info sets.
+const build = (list: ReturnType<typeof info>[]) => DecisionsPlugin.candidates(list as never)
+
+const pool = build([
+  info("ultra-max", 60, 240, { reasons: true }),
   info("tiny", 0.01, 0.02),
-  info("pro", 2, 4),
+  info("pro", 2, 4, { reasons: true }),
   info("mid", 0.5, 1),
   info("vision", 1, 2, { image: true }),
   info("flash", 0.1, 0.2),
-] as never)
+])
 
+const keys = (list: readonly { key: string }[]) => list.map((item) => item.key)
 const never = () => false
 
 test.each([
@@ -45,74 +56,100 @@ test("an answer is acted on only when the decision model is sure enough", () => 
   expect(DecisionsPlugin.sure(answers, "size", 0.5)?.choice).toBe("large")
 })
 
-test("free models are ordered by context and release, not left in catalog order", () => {
-  // SAFETY: as above.
-  const free = DecisionsPlugin.order([
-    info("big", 0, 0, { context: 1_000_000 }),
-    info("small", 0, 0, { context: 32_000 }),
-  ] as never)
+test("strength rises with price, reasoning and a stronger name, so free models can still be told apart", () => {
+  const free = build([
+    info("lite-chat", 0, 0),
+    info("big-thinking", 0, 0, { reasons: true }),
+    info("plain", 0, 0),
+  ])
+  const strength = Object.fromEntries(free.map((item) => [item.key, item.strength]))
 
-  expect(free.map((candidate) => candidate.key)).toEqual(["nano/small", "nano/big"])
+  expect(strength["nano/big-thinking"]).toBe(1)
+  expect(strength["nano/lite-chat"]).toBe(0)
+  expect(strength["nano/plain"]).toBe(0.5)
 })
 
-test("each kind of task gets a model from the pool, skipping the price extremes, unless one is set for it", () => {
-  const automatic = DecisionsPlugin.slots(pool, undefined)
+test("each kind of task gets a short list from its band of strength, and a set model is its whole list", () => {
+  const lists = DecisionsPlugin.shortlists(pool, undefined, 0)
 
-  expect(automatic.quick?.key).toBe("nano/flash")
-  expect(automatic.everyday?.key).toBe("nano/mid")
-  expect(automatic.hard?.key).toBe("nano/pro")
-  expect(automatic.image?.key).toBe("nano/vision")
-
-  const set = DecisionsPlugin.slots(pool, { hard: "nano/ultra", quick: "other/gone" })
-
-  expect(set.hard?.key).toBe("nano/ultra")
-  // A model Auto may not use, such as one of a provider switched off, is picked for instead.
-  expect(set.quick?.key).toBe("nano/flash")
-  expect(DecisionsPlugin.slots([], undefined).everyday).toBeUndefined()
+  expect(keys(lists.quick)[0]).toBe("nano/tiny")
+  expect(keys(lists.hard)[0]).toBe("nano/ultra-max")
+  expect(keys(lists.image)).toEqual(["nano/vision"])
+  expect(lists.everyday.length).toBeGreaterThan(0)
+  expect(keys(DecisionsPlugin.shortlists(pool, { hard: "nano/mid" }, 0).hard)).toEqual(["nano/mid"])
+  // A model unable to hold the prompt is left out while others can; when none can, all stay.
+  const roomy = build([info("small", 0.1, 0.1), info("roomy", 0.1, 0.1, { context: 400_000 })])
+  expect(keys(DecisionsPlugin.shortlists(roomy, undefined, 150_000).everyday)).toEqual(["nano/roomy"])
+  expect(DecisionsPlugin.shortlists(pool, undefined, 900_000).hard.length).toBeGreaterThan(0)
 })
 
-test("Auto answers with the model for the kind of task the decision model was sure of", () => {
-  const slots = DecisionsPlugin.slots(pool, undefined)
-  const base = { slots, pool, image: false, last: undefined, skipped: false, tight: never }
+test("a list keeps to two models of one provider while other providers have some to offer", () => {
+  const mixed = build([
+    info("a1", 1, 1, { provider: "a" }),
+    info("a2", 1, 1, { provider: "a" }),
+    info("a3", 1, 1, { provider: "a" }),
+    info("b1", 1, 1, { provider: "b" }),
+  ])
+  const everyday = DecisionsPlugin.shortlists(mixed, undefined, 0).everyday
 
-  expect(DecisionsPlugin.choose({ ...base, tier: "hard" })).toMatchObject({ tier: "hard", reason: "sure" })
-  expect(DecisionsPlugin.choose({ ...base, tier: "hard" }).model?.key).toBe("nano/pro")
-  expect(DecisionsPlugin.choose({ ...base, tier: "quick", image: true }).model?.key).toBe("nano/vision")
+  expect(everyday.filter((item) => item.ref.providerID === "a").length).toBeLessThanOrEqual(2)
 })
 
-test("when the decision model is unsure, the chat stays on its last model, or starts on the everyday one", () => {
-  const slots = DecisionsPlugin.slots(pool, undefined)
-  const base = { slots, pool, image: false, tier: undefined, skipped: false, tight: never }
+test("the decision model is asked the difficulty and, per kind of task, which model of its list", () => {
+  const lists = DecisionsPlugin.shortlists(pool, undefined, 0)
 
-  expect(DecisionsPlugin.choose({ ...base, last: "nano/pro" })).toMatchObject({ tier: "hard", reason: "unsure" })
-  expect(DecisionsPlugin.choose({ ...base, last: undefined }).model?.key).toBe("nano/mid")
-  expect(DecisionsPlugin.choose({ ...base, last: "nano/gone", skipped: true })).toMatchObject({
-    tier: "everyday",
-    reason: "skipped",
+  expect(DecisionsPlugin.ask(lists, false).map((question) => question.name)).toContain("task")
+  expect(DecisionsPlugin.ask(lists, true).map((question) => question.name)).toEqual([])
+  expect(DecisionsPlugin.describeModel(pool[0]!)).toContain("per million tokens")
+})
+
+const base = (lists: DecisionsPlugin.Lists) => ({
+  lists,
+  pool,
+  image: false,
+  last: undefined,
+  skipped: false,
+  tight: never,
+  picked: () => undefined,
+})
+
+test("Auto uses the decision model's pick from the list of the difficulty it was sure of", () => {
+  const lists = DecisionsPlugin.shortlists(pool, undefined, 0)
+  const second = lists.hard[1]?.key
+
+  expect(DecisionsPlugin.choose({ ...base(lists), tier: "hard", picked: () => second })).toMatchObject({
+    tier: "hard",
+    reason: "sure",
+    model: { key: second },
   })
+  expect(DecisionsPlugin.choose({ ...base(lists), tier: "hard" })).toMatchObject({ reason: "band", model: lists.hard[0] })
+  expect(DecisionsPlugin.choose({ ...base(lists), tier: "quick", image: true }).model?.key).toBe("nano/vision")
 })
 
-test("with the allowance nearly used, everyday work drops to the quick model but hard work does not", () => {
-  const slots = DecisionsPlugin.slots(pool, undefined)
-  const base = { slots, pool, image: false, last: undefined, skipped: false, tight: () => true }
+test("when the difficulty is unsure, the chat stays on its last model, or starts on the first everyday one", () => {
+  const lists = DecisionsPlugin.shortlists(pool, undefined, 0)
 
-  expect(DecisionsPlugin.choose({ ...base, tier: "everyday" })).toMatchObject({ tier: "quick", reason: "quota" })
-  expect(DecisionsPlugin.choose({ ...base, tier: "hard" }).model?.key).toBe("nano/pro")
+  expect(DecisionsPlugin.choose({ ...base(lists), tier: undefined, last: "nano/pro" })).toMatchObject({
+    reason: "unsure",
+    model: { key: "nano/pro" },
+  })
+  expect(DecisionsPlugin.choose({ ...base(lists), tier: undefined }).model).toEqual(lists.everyday[0])
+  expect(DecisionsPlugin.choose({ ...base(lists), tier: undefined, skipped: true }).reason).toBe("skipped")
 })
 
-test("a single model in scope answers everything without a question", () => {
+test("with the allowance nearly used, everyday work drops to the quick list but hard work does not", () => {
+  const lists = DecisionsPlugin.shortlists(pool, undefined, 0)
+  const tight = { ...base(lists), tight: () => true }
+
+  expect(DecisionsPlugin.choose({ ...tight, tier: "everyday" })).toMatchObject({ tier: "quick", reason: "quota" })
+  expect(DecisionsPlugin.choose({ ...tight, tier: "hard" }).tier).toBe("hard")
+})
+
+test("a single model Auto may use answers everything", () => {
   const one = pool.slice(0, 1)
 
   expect(
-    DecisionsPlugin.choose({
-      slots: DecisionsPlugin.slots(one, undefined),
-      pool: one,
-      image: false,
-      tier: undefined,
-      last: undefined,
-      skipped: false,
-      tight: never,
-    }),
+    DecisionsPlugin.choose({ ...base(DecisionsPlugin.shortlists(one, undefined, 0)), pool: one, tier: undefined }),
   ).toMatchObject({ reason: "only" })
 })
 

@@ -4,12 +4,14 @@ import { Option, Schema } from "effect"
 /** What the server keeps on a prompt's message once the decision model has answered. */
 const Decision = Schema.Struct({
   answers: Schema.Array(Schema.Struct({ name: Schema.String, choice: Schema.String, confidence: Schema.Finite })),
-  // Set for a prompt of an Auto chat: the kind of task, the model Auto used for it, and why.
+  // Set for a prompt of an Auto chat: the kind of task, the model Auto used for it, why, and out of how many.
   auto: Schema.optionalKey(
     Schema.Struct({
       tier: Schema.Literals(["quick", "everyday", "hard", "image"]),
       model: Schema.String,
-      reason: Schema.Literals(["sure", "unsure", "quota", "image", "only", "skipped"]),
+      reason: Schema.Literals(["sure", "band", "set", "unsure", "quota", "only", "skipped"]),
+      // How many models the decision model chose between.
+      from: Schema.optionalKey(Schema.Finite),
     }),
   ),
 })

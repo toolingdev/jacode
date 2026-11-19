@@ -13,10 +13,12 @@ import { Provider } from "../provider.js"
 import { UsageSubscription } from "../usage-subscription.js"
 import type { PluginInternal } from "./internal.js"
 
-// Fork feature: Auto. A decision model reads each prompt of an Auto chat and says what kind of task it is: quick,
-// everyday or hard. Auto answers it with the model set for that kind of task in its scope (every provider, or one),
-// or, when none is set, one it picks from the models it may use by price. A prompt with images goes to a model that
-// reads them. A chat on a model picked by hand is never moved.
+// Fork feature: Auto, in two stages. A decision model reads each prompt of an Auto chat and says how hard it is:
+// quick, everyday or hard. Code then narrows the models Auto may use to the few that fit: able to read the prompt's
+// images and hold it, and in the band of strength that difficulty calls for. The decision model picks the model from
+// that short list. Both answers come from one call: the short list of every band is offered at once, and the band
+// the difficulty names is the one used. A model set for a kind of task in Settings takes the place of its list. A
+// chat on a model picked by hand is never moved.
 //
 // Separately, when plans are on, the decision model also judges whether a prompt is a large task, and the assistant
 // then replies with a plan and waits before starting it. That applies to every chat.
@@ -40,6 +42,10 @@ const MAX_PROMPT_CHARS = 4_000
 // A subscription allowance at or past this share counts as nearly used, so Auto saves it for hard work.
 const QUOTA_TIGHT = 0.85
 
+// The most models the decision model is offered for one kind of task, and how many may share a provider.
+const SHORTLIST = 5
+const PER_PROVIDER = 2
+
 // How long the plan and quota Auto reads are trusted before they are asked for again.
 const PLAN_TTL = 10 * 60_000
 const QUOTA_TTL = 2 * 60_000
@@ -51,20 +57,28 @@ The user's request below was judged to be a large task. Do NOT start it and make
 export const TIERS = ["quick", "everyday", "hard"] as const
 export type Tier = (typeof TIERS)[number]
 
-/** A model Auto may use. */
+export type Band = Tier | "image"
+
+/** A model Auto may use, with what the decision model is told about it. */
 export type Candidate = {
   readonly ref: Model.Ref
   readonly key: string
+  readonly name: string
   readonly images: boolean
   /** Price per million input plus output tokens; 0 when unknown or free. */
   readonly price: number
+  readonly context: number
+  readonly reasons: boolean
+  readonly released: number
+  /** How strong the model is among the ones Auto may use, from 0 (weakest) to 1 (strongest). */
+  readonly strength: number
 }
 
-/** The model Auto uses for each kind of task in one scope. */
-export type Slots = { readonly [K in Tier | "image"]?: Candidate }
+/** The models the decision model may pick from for each kind of task. */
+export type Lists = { readonly [K in Band]: readonly Candidate[] }
 
 /** Why Auto used the model it did, kept on the prompt's message for the app to show. */
-export type Reason = "sure" | "unsure" | "quota" | "image" | "only" | "skipped"
+export type Reason = "sure" | "band" | "set" | "unsure" | "quota" | "only" | "skipped"
 
 type Settings = NonNullable<NonNullable<Info["experimental"]>["decisions"]>
 
@@ -162,16 +176,16 @@ export const Plugin = define({
     })
 
     // The models Auto may use: switched on in its scope, able to call tools, not deprecated, and, for a provider
-    // with a plan, covered by it unless paid models are allowed. Sorted from the cheapest up.
-    const pool = Effect.fn("DecisionsPlugin.pool")(function* (settings: Settings, request: typeof AutoRequest.Type) {
+    // with a plan, covered by it unless paid models are allowed.
+    const autoPool = Effect.fn("DecisionsPlugin.pool")(function* (settings: Settings, request: typeof AutoRequest.Type) {
       const plan = yield* plans()
       // A model set for a kind of task counts as switched on, even when the picker hides it.
       const enabled = new Set([...request.models, ...Object.values(settings.tiers?.[request.scope] ?? {})])
       const catalog = yield* models.available()
 
-      return order(
+      return candidates(
         catalog
-          .filter((info) => info.status !== "deprecated" && info.capabilities.tools)
+          .filter((info) => info.status !== "deprecated" && info.capabilities.tools && !ROUTER.test(info.id))
           .filter((info) => request.scope === "all" || info.providerID === request.scope)
           .filter((info) => enabled.has(`${info.providerID}/${info.id}`))
           .filter(
@@ -209,13 +223,9 @@ export const Plugin = define({
 
         if (!request && !plan) return
         const image = hasImage(event.prompt)
-        const candidates = request ? yield* pool(settings, request) : []
-        const choices = slots(candidates, settings.tiers?.[request?.scope ?? ""])
-        // The kind of task is asked only when there is a choice between models for it.
-        const questions = [
-          ...(request && !image && new Set(TIERS.map((tier) => choices[tier]?.key)).size > 1 ? [taskQuestion] : []),
-          ...(plan ? [sizeQuestion] : []),
-        ]
+        const pool = request ? yield* autoPool(settings, request) : []
+        const lists = shortlists(pool, settings.tiers?.[request?.scope ?? ""], need(event.prompt))
+        const questions = [...(request ? ask(lists, image) : []), ...(plan ? [sizeQuestion] : [])]
 
         const outcome =
           questions.length === 0
@@ -251,10 +261,12 @@ export const Plugin = define({
 
         const chosen = request
           ? choose({
-              slots: choices,
-              pool: candidates,
+              lists,
+              pool,
               image,
               tier: sure(answers, "task", threshold)?.choice,
+              // Every model of a list fits the prompt, so the decision model's pick is taken however sure it is.
+              picked: (band) => answers.find((answer) => answer.name === `model-${band}`)?.choice,
               last: last.get(event.sessionID),
               skipped: outcome.type === "skipped",
               tight: (ref) => (quota.get(ref.providerID) ?? 0) >= QUOTA_TIGHT,
@@ -273,7 +285,9 @@ export const Plugin = define({
               choice: answer.choice,
               confidence: answer.confidence,
             })),
-            auto: chosen?.model ? { tier: chosen.tier, model: chosen.model.key, reason: chosen.reason } : undefined,
+            auto: chosen?.model
+              ? { tier: chosen.tier, model: chosen.model.key, reason: chosen.reason, from: chosen.from }
+              : undefined,
           },
         }
       }),
@@ -326,79 +340,207 @@ export const Plugin = define({
 } satisfies PluginInternal.InternalPlugin)
 
 /**
- * The model Auto answers a prompt with. A prompt with images goes to the image model. Otherwise the kind of task the
- * decision model was sure of picks the model; when it was not sure, the chat stays on the model it used last, or
- * starts on the everyday one. With the provider's allowance nearly used, everyday work drops to the quick model.
+ * The model Auto answers a prompt with. The difficulty the decision model was sure of names a kind of task, and its
+ * pick from that kind's list is used, else the list's first. A prompt with images uses the image list. When the
+ * decision model was not sure of the difficulty, the chat stays on the model it used last, or starts on the first
+ * everyday one. With the provider's allowance nearly used, everyday work drops to the quick list.
  */
 export function choose(input: {
-  readonly slots: Slots
+  readonly lists: Lists
   readonly pool: readonly Candidate[]
   readonly image: boolean
   readonly tier: ChoiceAnswer["choice"] | undefined
+  readonly picked: (band: Band) => ChoiceAnswer["choice"] | undefined
   readonly last: string | undefined
   readonly skipped: boolean
   readonly tight: (ref: Model.Ref) => boolean
-}): { model?: Candidate; tier: Tier | "image"; reason: Reason } {
-  const distinct = new Set(TIERS.map((tier) => input.slots[tier]?.key))
+}): { model?: Candidate; tier: Band; reason: Reason; from: number } {
+  const from = (band: Band, reason: Reason) => {
+    const list = input.lists[band]
+    const answer = list.find((candidate) => candidate.key === input.picked(band))
 
-  if (input.image && input.slots.image) return { model: input.slots.image, tier: "image", reason: "image" }
+    if (list.length === 1) return { model: list[0], tier: band, reason: reason === "sure" ? "set" : reason, from: 1 }
 
-  if (distinct.size <= 1) return { model: input.slots.everyday, tier: "everyday", reason: "only" }
+    return { model: answer ?? list[0], tier: band, reason: answer ? reason : "band", from: list.length }
+  }
+
+  if (input.pool.length <= 1) return { model: input.pool[0], tier: "everyday", reason: "only", from: input.pool.length }
+
+  if (input.image && input.lists.image.length > 0) return from("image", "sure")
   const tier = TIERS.find((item) => item === input.tier)
 
   if (!tier) {
     const previous = input.pool.find((candidate) => candidate.key === input.last)
 
-    return {
-      model: previous ?? input.slots.everyday,
-      tier: TIERS.find((item) => input.slots[item]?.key === previous?.key) ?? "everyday",
-      reason: input.skipped ? "skipped" : "unsure",
-    }
+    if (previous) return { model: previous, tier: band(input.lists, previous), reason: input.skipped ? "skipped" : "unsure", from: 1 }
+
+    return { ...from("everyday", "sure"), reason: input.skipped ? "skipped" : "unsure" }
   }
-  const model = input.slots[tier]
+  const usual = from(tier, "sure")
 
-  if (tier === "everyday" && model && input.tight(model.ref) && input.slots.quick)
-    return { model: input.slots.quick, tier: "quick", reason: "quota" }
+  if (tier === "everyday" && usual.model && input.tight(usual.model.ref) && input.lists.quick.length > 0)
+    return { ...from("quick", "sure"), reason: "quota" }
 
-  return { model, tier, reason: "sure" }
+  return usual
+}
+
+/** The kind of task a model's list puts it in, for a chat staying on its last model. */
+function band(lists: Lists, model: Candidate): Band {
+  return TIERS.find((tier) => lists[tier].some((candidate) => candidate.key === model.key)) ?? "everyday"
+}
+
+/** One question for the difficulty and one per kind of task with a choice to make; none when there is no choice. */
+export function ask(lists: Lists, image: boolean): DecisionQuestion[] {
+  const bands: Band[] = image ? ["image"] : [...TIERS]
+  const picks = bands.flatMap((item) =>
+    lists[item].length > 1
+      ? [
+          {
+            type: "choice" as const,
+            name: `model-${item}`,
+            instructions: `If this request is ${bandWords[item]}, which model should answer it?`,
+            choices: lists[item].map((candidate) => ({ value: candidate.key, description: describeModel(candidate) })),
+          },
+        ]
+      : [],
+  )
+  const distinct = new Set(TIERS.flatMap((tier) => lists[tier].map((candidate) => candidate.key)))
+
+  return [...(!image && distinct.size > 1 ? [taskQuestion] : []), ...picks]
+}
+
+const bandWords: Record<Band, string> = {
+  quick: "a quick, simple one",
+  everyday: "everyday work of moderate difficulty",
+  hard: "hard or many steps",
+  image: "one with images to look at",
+}
+
+/** What the decision model reads about a model to tell it from the others. */
+export function describeModel(candidate: Candidate) {
+  const facts = [
+    candidate.price === 0 ? "free" : `$${candidate.price.toFixed(2)} per million tokens`,
+    `${Math.round(candidate.context / 1000)}K context`,
+    candidate.reasons ? "reasons step by step" : "answers without reasoning",
+    candidate.images ? "reads images" : undefined,
+    candidate.released > 0 ? `released ${new Date(candidate.released).toISOString().slice(0, 7)}` : undefined,
+  ]
+
+  return `${candidate.name}: ${facts.filter((fact) => fact !== undefined).join(", ")}`
 }
 
 /**
- * The model for each kind of task: the one set for it when Auto may use it, else one picked from the pool, sorted
- * cheapest first. Quick, everyday and hard sit at the 20th, 50th and 80th percentiles, so neither the oddest cheap
- * model nor the most expensive one is picked; the image model is the image reader nearest the hard one.
+ * The models the decision model may pick from for each kind of task, from those able to hold the prompt. Quick work
+ * draws on the weaker, cheaper end of the pool, cheapest first; hard work on the strongest; everyday work on the
+ * middle; prompts with images on the strongest image readers. Newer models come first among equals, a list keeps
+ * to a few models and a provider to two of them, so the choice is real and short. A model set for a kind of task
+ * in Settings is its whole list.
  */
-export function slots(pool: readonly Candidate[], set: Partial<Record<Tier | "image", string>> | undefined): Slots {
-  const named = (key: string | undefined) => pool.find((candidate) => candidate.key === key)
-  const at = (share: number) => pool[Math.min(pool.length - 1, Math.floor(share * (pool.length - 1)))]
-  const hard = Math.floor(0.8 * (pool.length - 1))
+export function shortlists(
+  pool: readonly Candidate[],
+  set: Partial<Record<Band, string>> | undefined,
+  context: number,
+): Lists {
+  const fits = pool.filter((candidate) => candidate.context >= context)
+  const usable = fits.length > 0 ? fits : pool
+  const newest = (a: Candidate, b: Candidate) => b.released - a.released
+  const list = (band: Band, keep: (candidate: Candidate) => boolean, sort: (a: Candidate, b: Candidate) => number) => {
+    const named = pool.find((candidate) => candidate.key === set?.[band])
+
+    if (named) return [named]
+
+    // A band a small pool leaves empty takes the models nearest it; only images are a strict need.
+    const kept = usable.filter(keep)
+
+    return few((kept.length > 0 || band === "image" ? kept : usable).toSorted((a, b) => sort(a, b) || newest(a, b)))
+  }
 
   return {
-    quick: named(set?.quick) ?? at(0.2),
-    everyday: named(set?.everyday) ?? at(0.5),
-    hard: named(set?.hard) ?? at(0.8),
-    image:
-      named(set?.image) ??
-      pool.slice(0, hard + 1).findLast((candidate) => candidate.images) ??
-      pool.find((candidate) => candidate.images),
+    quick: list("quick", (item) => item.strength <= 0.4, (a, b) => a.price - b.price),
+    everyday: list(
+      "everyday",
+      (item) => item.strength >= 0.3 && item.strength <= 0.7,
+      (a, b) => Math.abs(a.strength - 0.5) - Math.abs(b.strength - 0.5),
+    ),
+    hard: list("hard", (item) => item.strength >= 0.6, (a, b) => b.strength - a.strength),
+    image: list("image", (item) => item.images, (a, b) => b.strength - a.strength),
   }
 }
 
-/** Catalog models as Auto's candidates, cheapest first; among equally priced ones, the larger context and newer last. */
-export function order(
-  infos: readonly Pick_<Model.Info, "providerID" | "id" | "cost" | "capabilities" | "limit" | "time">[],
-): Candidate[] {
-  return infos
-    .toSorted(
-      (a, b) =>
-        price(a) - price(b) || a.limit.context - b.limit.context || (a.time?.released ?? 0) - (b.time?.released ?? 0),
+// At most SHORTLIST models, and at most PER_PROVIDER of one provider while others are there to choose from.
+function few(sorted: readonly Candidate[]) {
+  const providers = new Set(sorted.map((candidate) => candidate.ref.providerID)).size
+
+  return sorted
+    .filter(
+      (candidate, index) =>
+        providers === 1 ||
+        sorted.slice(0, index).filter((other) => other.ref.providerID === candidate.ref.providerID).length <
+          PER_PROVIDER,
     )
-    .map((info) => ({
-      ref: Model.Ref.make({ providerID: info.providerID, id: info.id }),
-      key: `${info.providerID}/${info.id}`,
-      images: info.capabilities.input.some((item) => item.startsWith("image")),
-      price: price(info),
-    }))
+    .slice(0, SHORTLIST)
+}
+
+// A provider's own automatic model, which picks a model itself; Auto picking it would hand the choice away.
+const ROUTER = /(^|\/)(auto|auto-model|auto-router|router)$/i
+
+// Words in a model's name that say it is a vendor's stronger or lighter model.
+const STRONGER = /\b(pro|max|ultra|opus|large|plus|sonnet|thinking|reasoner)\b/i
+const LIGHTER = /\b(flash|mini|lite|nano|small|haiku|fast|air|tiny|instant)\b/i
+
+/**
+ * Catalog models as Auto's candidates, each with a strength from 0 to 1 among them: mostly its price rank, raised for
+ * a model that reasons or is named as a vendor's stronger one, lowered for one named as lighter, and a little for
+ * being newer. Price alone cannot tell free models apart; the other signals can.
+ */
+export function candidates(
+  infos: readonly Pick_<
+    Model.Info,
+    "providerID" | "id" | "name" | "cost" | "capabilities" | "limit" | "time" | "compatibility" | "variants"
+  >[],
+): Candidate[] {
+  const rank = (values: readonly number[], value: number) => {
+    const below = values.filter((other) => other < value).length
+    const same = values.filter((other) => other === value).length
+
+    return values.length <= 1 ? 0.5 : (below + (same - 1) / 2) / (values.length - 1)
+  }
+  const prices = infos.map(price)
+  const releases = infos.map((info) => info.time?.released ?? 0)
+
+  const raw = infos.map((info) => {
+    const reasons = info.compatibility?.reasoningField !== undefined || info.variants.length > 0
+    const words = `${info.id} ${info.name}`.replaceAll(/[-_/.:]/g, " ")
+    const hint = STRONGER.test(words) ? 0.15 : LIGHTER.test(words) ? -0.15 : 0
+
+    return {
+      info,
+      reasons,
+      score:
+        0.6 * rank(prices, price(info)) +
+        (reasons ? 0.15 : 0) +
+        hint +
+        0.1 * rank(releases, info.time?.released ?? 0),
+    }
+  })
+  const scores = raw.map((item) => item.score)
+
+  return raw.map((item) => ({
+    ref: Model.Ref.make({ providerID: item.info.providerID, id: item.info.id }),
+    key: `${item.info.providerID}/${item.info.id}`,
+    name: item.info.name,
+    images: item.info.capabilities.input.some((input) => input.startsWith("image")),
+    price: price(item.info),
+    context: item.info.limit.context,
+    reasons: item.reasons,
+    released: item.info.time?.released ?? 0,
+    strength: rank(scores, item.score),
+  }))
+}
+
+/** How much context a prompt needs at least: its own text, with room for the answer. */
+function need(prompt: PromptInput.Prompt) {
+  return Math.ceil(prompt.text.length / 3) + 8_000
 }
 
 // Read per field so a later config that sets other experimental options doesn't hide this one.

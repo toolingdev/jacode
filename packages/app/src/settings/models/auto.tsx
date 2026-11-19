@@ -125,12 +125,12 @@ export const SettingsAuto: Component = () => {
       })),
   ]
 
-  // What the flow chart names for a kind of task: the model set for it, by its own name, or that Auto picks by price.
+  // The model set for a kind of task, by its own name, for the flow chart; nothing while Auto picks it per prompt.
   const slotLabel = (slot: Slot) => {
     const key = tiers()?.[slot]
     const item = key && inScope().find((model) => `${model.provider.id}/${model.id}` === key)
 
-    return item ? item.name : language.t("settings.auto.flow.slot.automatic")
+    return item ? item.name : undefined
   }
 
   const setSlot = (slot: Slot, value: string | undefined) => {
@@ -252,8 +252,14 @@ export const SettingsAuto: Component = () => {
 }
 
 // How Auto answers a prompt, drawn as the steps it takes, with the models the chosen scope uses now.
-const AutoFlow: Component<{ decider: string; slot: (slot: Slot) => string }> = (props) => {
+const AutoFlow: Component<{ decider: string; slot: (slot: Slot) => string | undefined }> = (props) => {
   const language = useLanguage()
+
+  const set = () => SLOTS.flatMap((slot) => {
+    const name = props.slot(slot)
+
+    return name ? [{ slot, name }] : []
+  })
 
   return (
     <div
@@ -269,17 +275,12 @@ const AutoFlow: Component<{ decider: string; slot: (slot: Slot) => string }> = (
           {language.t("settings.auto.flow.read.body")}
         </Step>
         <Arrow />
-        <Step title={language.t("settings.auto.flow.pick.title")} wide>
-          <div class="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5">
-            <For each={SLOTS}>
-              {(slot) => (
-                <>
-                  <span class="text-v2-text-text-accent">{language.t(`settings.auto.flow.slot.${slot}`)}</span>
-                  <span class="truncate text-v2-text-text-base">{props.slot(slot)}</span>
-                </>
-              )}
-            </For>
-          </div>
+        <Step title={language.t("settings.auto.flow.filter.title")}>
+          {language.t("settings.auto.flow.filter.body")}
+        </Step>
+        <Arrow />
+        <Step title={language.t("settings.auto.flow.pick.title", { model: props.decider })}>
+          {language.t("settings.auto.flow.pick.body")}
         </Step>
         <Arrow />
         <Step title={language.t("settings.auto.flow.answer.title")}>
@@ -287,6 +288,16 @@ const AutoFlow: Component<{ decider: string; slot: (slot: Slot) => string }> = (
         </Step>
       </div>
       <ul class="flex flex-col gap-1 text-12-regular text-v2-text-text-muted">
+        <For each={set()}>
+          {(item) => (
+            <li>
+              {language.t("settings.auto.flow.note.set", {
+                task: language.t(`settings.auto.flow.slot.${item.slot}`),
+                model: item.name,
+              })}
+            </li>
+          )}
+        </For>
         <li>{language.t("settings.auto.flow.note.unsure")}</li>
         <li>{language.t("settings.auto.flow.note.quota")}</li>
         <li>{language.t("settings.auto.flow.note.manual")}</li>
