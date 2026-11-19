@@ -44,8 +44,12 @@ describe("Flag.resolve", () => {
     })
   })
 
-  test("every registered flag is off in a latest release build", () => {
-    expect(Flag.resolve({ entries: [], channel: "latest" })).toEqual(every({ enabled: false, source: "default" }))
+  // Fork feature: JaCode ships scheduled tasks on in every build.
+  test("every registered flag but the fork's own is off in a latest release build", () => {
+    expect(Flag.resolve({ entries: [], channel: "latest" })).toEqual({
+      ...every({ enabled: false, source: "default" }),
+      schedules: { enabled: true, source: "default" },
+    })
   })
 
   test("config overrides the default and OPENCODE_FLAGS overrides config", () => {
@@ -106,9 +110,10 @@ describe("Flag.resolve", () => {
     expect(
       Flag.resolve({ entries: [global, document({ subagent_depth: 2, todo: false })], channel: "latest" }),
     ).toEqual({ ...every({ enabled: true, source: "config" }), todo: { enabled: false, source: "config" } })
-    expect(Flag.resolve({ entries: [global, document({ all_flags: false })], channel: "latest" })).toEqual(
-      every({ enabled: false, source: "default" }),
-    )
+    expect(Flag.resolve({ entries: [global, document({ all_flags: false })], channel: "latest" })).toEqual({
+      ...every({ enabled: false, source: "default" }),
+      schedules: { enabled: true, source: "default" },
+    })
   })
 })
 

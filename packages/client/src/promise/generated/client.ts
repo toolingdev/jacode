@@ -342,6 +342,9 @@ import type {
   ExperimentalConfigWeatherSetInput,
   ExperimentalConfigWeatherSetOutput,
   ExperimentalConfigWeatherRemoveOutput,
+  ExperimentalConfigTimeSetInput,
+  ExperimentalConfigTimeSetOutput,
+  ExperimentalConfigTimeRemoveOutput,
   ExperimentalConfigPluginAddInput,
   ExperimentalConfigPluginAddOutput,
   ExperimentalConfigPluginRemoveInput,
@@ -1936,6 +1939,31 @@ export function make(options: ClientOptions) {
               requestOptions,
             ),
         },
+        time: {
+          set: (input: ExperimentalConfigTimeSetInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigTimeSetOutput>(
+              {
+                method: "PUT",
+                path: `/api/experimental/config/time`,
+                body: { servers: input["servers"] },
+                successStatus: 204,
+                declaredStatuses: [400, 401, 404],
+                empty: true,
+              },
+              requestOptions,
+            ),
+          remove: (requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigTimeRemoveOutput>(
+              {
+                method: "DELETE",
+                path: `/api/experimental/config/time`,
+                successStatus: 204,
+                declaredStatuses: [400, 401, 404],
+                empty: true,
+              },
+              requestOptions,
+            ),
+        },
         plugin: {
           add: (input: ExperimentalConfigPluginAddInput, requestOptions?: RequestOptions) =>
             request<ExperimentalConfigPluginAddOutput>(
@@ -3063,6 +3091,13 @@ export function make(options: ClientOptions) {
         set: client.experimental.config.weather.set,
         /** @deprecated Use `client.experimental.config.weather.remove`. Removed in the next minor. */
         remove: client.experimental.config.weather.remove,
+      },
+      /** @deprecated Use `client.experimental.config.time`. Removed in the next minor. */
+      time: {
+        /** @deprecated Use `client.experimental.config.time.set`. Removed in the next minor. */
+        set: client.experimental.config.time.set,
+        /** @deprecated Use `client.experimental.config.time.remove`. Removed in the next minor. */
+        remove: client.experimental.config.time.remove,
       },
       /** @deprecated Use `client.experimental.config.plugin`. Removed in the next minor. */
       plugin: {

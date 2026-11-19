@@ -136,12 +136,14 @@ const paths = (registry: Tool.Interface) =>
     )
 
 describe("ScheduleTools", () => {
-  it.effect("are absent unless experimental.schedules is enabled", () =>
+  // Fork feature: JaCode ships scheduled tasks on, so only an explicit false removes them.
+  it.effect("are present by default and absent when experimental.schedules is false", () =>
     Effect.gen(function* () {
-      expect(yield* paths((yield* setup(undefined)).registry)).not.toContain(names[0])
+      // The registry outlives each setup in a test, so the case that adds nothing runs first.
       const off = yield* setup(new ConfigExperimental.Info({ schedules: false }))
       expect(yield* paths(off.registry)).not.toContain(names[0])
       expect(off.commands).toEqual([])
+      expect(yield* paths((yield* setup(undefined)).registry)).toEqual(expect.arrayContaining(names))
       const on = yield* setup(new ConfigExperimental.Info({ schedules: true }))
       expect(yield* paths(on.registry)).toEqual(expect.arrayContaining(names))
       expect(on.commands.map((command) => command.name)).toEqual(["schedule"])

@@ -72,6 +72,7 @@ export const Plugin = {
       )
     const failure = (error: { readonly message: string }) => new ToolFailure({ message: error.message, error })
 
+    // Fork feature: pinned, so the model always sees it can schedule instead of saying it cannot.
     yield* ctx.tool
       .transform((editor) => {
         if (!enabled()) return
@@ -81,7 +82,7 @@ export const Plugin = {
             "Schedule a prompt that wakes this session later: once after a delay, at a time, every interval, on a cron, or gated by an `if` / `until` shell (`{ run }`) or Code Mode (`{ code }`) check. Returns the schedule with its next run (or `done` immediately if `until` already matches).",
           input: Schedule.Request,
           output: View,
-          options: { namespace: "opencode", codemode: true },
+          options: { namespace: "opencode", codemode: true, pinned: true },
           execute: (input, context) =>
             schedules.create(Schedule.toCreateInput(context.sessionID, input)).pipe(
               Effect.map((info) => {
@@ -98,7 +99,7 @@ export const Plugin = {
           description: "List this session's schedules with their status and next run, and the current time.",
           input: Schema.Struct({}),
           output: ListOutput,
-          options: { namespace: "opencode", codemode: true },
+          options: { namespace: "opencode", codemode: true, pinned: true },
           execute: (_, context) =>
             Effect.gen(function* () {
               yield* allowed(context.sessionID)
@@ -115,7 +116,7 @@ export const Plugin = {
           description: "Pause a schedule. It keeps its settings and does not fire until resumed.",
           input: IDInput,
           output: View,
-          options: { namespace: "opencode", codemode: true },
+          options: { namespace: "opencode", codemode: true, pinned: true },
           execute: (input, context) =>
             owned(input.id, context.sessionID).pipe(
               Effect.andThen(schedules.pause(input.id)),
@@ -129,7 +130,7 @@ export const Plugin = {
             "Resume a paused schedule. A one-shot that fell due while paused fires once now; a repeating one resumes at its next slot.",
           input: IDInput,
           output: View,
-          options: { namespace: "opencode", codemode: true },
+          options: { namespace: "opencode", codemode: true, pinned: true },
           execute: (input, context) =>
             owned(input.id, context.sessionID).pipe(
               Effect.andThen(schedules.resume(input.id)),
@@ -142,7 +143,7 @@ export const Plugin = {
           description: "Delete a schedule for good.",
           input: IDInput,
           output: RemoveOutput,
-          options: { namespace: "opencode", codemode: true },
+          options: { namespace: "opencode", codemode: true, pinned: true },
           execute: (input, context) =>
             owned(input.id, context.sessionID).pipe(
               Effect.andThen(schedules.remove(input.id)),

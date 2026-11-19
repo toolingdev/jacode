@@ -2895,6 +2895,15 @@ export interface ConfigApi<E = never> {
     readonly remove: ExperimentalConfigWeatherRemoveOperation<E>
   }
 
+  /** @deprecated Use `client.experimental.config.time`. Removed in the next minor. */
+  readonly time: {
+    /** @deprecated Use `client.experimental.config.time.set`. Removed in the next minor. */
+    readonly set: ExperimentalConfigTimeSetOperation<E>
+
+    /** @deprecated Use `client.experimental.config.time.remove`. Removed in the next minor. */
+    readonly remove: ExperimentalConfigTimeRemoveOperation<E>
+  }
+
   /** @deprecated Use `client.experimental.config.plugin`. Removed in the next minor. */
   readonly plugin: {
     /** @deprecated Use `client.experimental.config.plugin.add`. Removed in the next minor. */
@@ -2997,6 +3006,18 @@ export type ExperimentalConfigWeatherRemoveOperation<E = never> = () => Effect.E
   E
 >
 
+export type ExperimentalConfigTimeSetInput = { readonly servers: ReadonlyArray<string> }
+export type ExperimentalConfigTimeSetOutput = void
+export type ExperimentalConfigTimeSetOperation<E = never> = (
+  input: ExperimentalConfigTimeSetInput,
+) => Effect.Effect<ExperimentalConfigTimeSetOutput, E>
+
+export type ExperimentalConfigTimeRemoveOutput = void
+export type ExperimentalConfigTimeRemoveOperation<E = never> = () => Effect.Effect<
+  ExperimentalConfigTimeRemoveOutput,
+  E
+>
+
 export type ExperimentalConfigPluginAddInput = { readonly package: string }
 export type ExperimentalConfigPluginAddOutput = void
 export type ExperimentalConfigPluginAddOperation<E = never> = (
@@ -3038,6 +3059,10 @@ export interface ExperimentalConfigApi<E = never> {
   readonly weather: {
     readonly set: ExperimentalConfigWeatherSetOperation<E>
     readonly remove: ExperimentalConfigWeatherRemoveOperation<E>
+  }
+  readonly time: {
+    readonly set: ExperimentalConfigTimeSetOperation<E>
+    readonly remove: ExperimentalConfigTimeRemoveOperation<E>
   }
   readonly plugin: {
     readonly add: ExperimentalConfigPluginAddOperation<E>
@@ -3369,6 +3394,21 @@ export type ConfigWeatherRemoveOutput = ExperimentalConfigWeatherRemoveOutput
 
 /** @deprecated Use `ExperimentalConfigWeatherRemoveOperation`. Removed in the next minor. */
 export type ConfigWeatherRemoveOperation<E = never> = ExperimentalConfigWeatherRemoveOperation<E>
+
+/** @deprecated Use `ExperimentalConfigTimeSetInput`. Removed in the next minor. */
+export type ConfigTimeSetInput = ExperimentalConfigTimeSetInput
+
+/** @deprecated Use `ExperimentalConfigTimeSetOutput`. Removed in the next minor. */
+export type ConfigTimeSetOutput = ExperimentalConfigTimeSetOutput
+
+/** @deprecated Use `ExperimentalConfigTimeSetOperation`. Removed in the next minor. */
+export type ConfigTimeSetOperation<E = never> = ExperimentalConfigTimeSetOperation<E>
+
+/** @deprecated Use `ExperimentalConfigTimeRemoveOutput`. Removed in the next minor. */
+export type ConfigTimeRemoveOutput = ExperimentalConfigTimeRemoveOutput
+
+/** @deprecated Use `ExperimentalConfigTimeRemoveOperation`. Removed in the next minor. */
+export type ConfigTimeRemoveOperation<E = never> = ExperimentalConfigTimeRemoveOperation<E>
 
 /** @deprecated Use `ExperimentalConfigPluginAddInput`. Removed in the next minor. */
 export type ConfigPluginAddInput = ExperimentalConfigPluginAddInput

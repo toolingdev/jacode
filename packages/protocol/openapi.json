@@ -16657,6 +16657,104 @@
         "summary": "Reset weather sources"
       }
     },
+    "/api/experimental/config/time": {
+      "put": {
+        "tags": ["config"],
+        "operationId": "experimental.config.time.set",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "LocationNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationNotFoundErrorEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Experimental: may change without compatibility guarantees. Set the time tool's NTP servers in the highest-precedence global configuration file.",
+        "summary": "Save time servers",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfigExperimental.Time"
+              }
+            }
+          },
+          "required": true
+        }
+      },
+      "delete": {
+        "tags": ["config"],
+        "operationId": "experimental.config.time.remove",
+        "parameters": [],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestErrorEncoded"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedErrorEncoded"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "LocationNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocationNotFoundErrorEncoded"
+                }
+              }
+            }
+          }
+        },
+        "description": "Experimental: may change without compatibility guarantees. Remove the time tool's NTP servers from the highest-precedence global configuration file, which returns it to its default servers.",
+        "summary": "Reset time servers"
+      }
+    },
     "/api/experimental/config/plugin/add": {
       "post": {
         "tags": ["config"],
@@ -17860,6 +17958,9 @@
               "weather": {
                 "$ref": "#/components/schemas/ConfigExperimental.Weather"
               },
+              "time": {
+                "$ref": "#/components/schemas/ConfigExperimental.Time"
+              },
               "decisions": {
                 "$ref": "#/components/schemas/ConfigExperimental.Decisions"
               },
@@ -18465,6 +18566,20 @@
             "type": "number"
           }
         },
+        "additionalProperties": false
+      },
+      "ConfigExperimental.Time": {
+        "type": "object",
+        "properties": {
+          "servers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "NTP servers, by host name or address, tried in order; the first that answers gives the time."
+          }
+        },
+        "required": ["servers"],
         "additionalProperties": false
       },
       "ConfigExperimental.Weather": {

@@ -58,6 +58,14 @@ export const Weather = Schema.Struct({
 }).annotate({ identifier: "ConfigExperimental.Weather" })
 export type Weather = typeof Weather.Type
 
+// Fork feature: the NTP servers the time tool asks for the exact time.
+export const Time = Schema.Struct({
+  servers: Schema.Array(Schema.String).annotate({
+    description: "NTP servers, by host name or address, tried in order; the first that answers gives the time.",
+  }),
+}).annotate({ identifier: "ConfigExperimental.Time" })
+export type Time = typeof Time.Type
+
 export class Info extends Schema.Class<Info>("ConfigExperimental.Info")({
   portable_shell_scanner: Schema.Boolean.pipe(optional).annotate({
     description: "Deprecated: the built-in shell permission scanner is now always enabled.",
@@ -99,6 +107,10 @@ export class Info extends Schema.Class<Info>("ConfigExperimental.Info")({
   weather: Weather.pipe(optional).annotate({
     description:
       "Sources for the weather tool. Without this it uses MET Norway, then Open-Meteo. An empty list turns the tool's lookups off.",
+  }),
+  time: Time.pipe(optional).annotate({
+    description:
+      "NTP servers for the time tool. Without this it asks time.cloudflare.com, then time.google.com, then pool.ntp.org.",
   }),
   decisions: Decisions.pipe(optional).annotate({
     description:

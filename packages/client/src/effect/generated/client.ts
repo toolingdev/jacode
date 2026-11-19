@@ -340,6 +340,9 @@ import type {
   ExperimentalConfigWeatherSetInput,
   ExperimentalConfigWeatherSetOutput,
   ExperimentalConfigWeatherRemoveOutput,
+  ExperimentalConfigTimeSetInput,
+  ExperimentalConfigTimeSetOutput,
+  ExperimentalConfigTimeRemoveOutput,
   ExperimentalConfigPluginAddInput,
   ExperimentalConfigPluginAddOutput,
   ExperimentalConfigPluginRemoveInput,
@@ -2081,6 +2084,17 @@ const EndpointExperimentalConfigWeatherRemove = (raw: RawClient["server.config"]
     raw["config.weather.remove"]({}).pipe(Effect.mapError(mapClientError)),
   )
 
+const EndpointExperimentalConfigTimeSet =
+  (raw: RawClient["server.config"]) => (input: ExperimentalConfigTimeSetInput) =>
+    preserveEffect<ExperimentalConfigTimeSetOutput>()(
+      raw["config.time.set"]({ payload: { servers: input["servers"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+const EndpointExperimentalConfigTimeRemove = (raw: RawClient["server.config"]) => () =>
+  preserveEffect<ExperimentalConfigTimeRemoveOutput>()(
+    raw["config.time.remove"]({}).pipe(Effect.mapError(mapClientError)),
+  )
+
 const EndpointExperimentalConfigPluginAdd =
   (raw: RawClient["server.config"]) => (input: ExperimentalConfigPluginAddInput) =>
     preserveEffect<ExperimentalConfigPluginAddOutput>()(
@@ -2114,6 +2128,7 @@ const adaptGroupExperimentalConfig = (raw: RawClient["server.config"]) => ({
     remove: EndpointExperimentalConfigDecisionsRemove(raw),
   },
   weather: { set: EndpointExperimentalConfigWeatherSet(raw), remove: EndpointExperimentalConfigWeatherRemove(raw) },
+  time: { set: EndpointExperimentalConfigTimeSet(raw), remove: EndpointExperimentalConfigTimeRemove(raw) },
   plugin: { add: EndpointExperimentalConfigPluginAdd(raw), remove: EndpointExperimentalConfigPluginRemove(raw) },
   skill: { add: EndpointExperimentalConfigSkillAdd(raw), remove: EndpointExperimentalConfigSkillRemove(raw) },
 })
@@ -2288,6 +2303,13 @@ const adaptClient = (raw: RawClient) => {
         set: client.experimental.config.weather.set,
         /** @deprecated Use `client.experimental.config.weather.remove`. Removed in the next minor. */
         remove: client.experimental.config.weather.remove,
+      },
+      /** @deprecated Use `client.experimental.config.time`. Removed in the next minor. */
+      time: {
+        /** @deprecated Use `client.experimental.config.time.set`. Removed in the next minor. */
+        set: client.experimental.config.time.set,
+        /** @deprecated Use `client.experimental.config.time.remove`. Removed in the next minor. */
+        remove: client.experimental.config.time.remove,
       },
       /** @deprecated Use `client.experimental.config.plugin`. Removed in the next minor. */
       plugin: {

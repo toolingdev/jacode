@@ -397,6 +397,8 @@ export type ConfigExperimentalWeatherSource = {
   disabled?: boolean
 }
 
+export type ConfigExperimentalTime = { servers: Array<string> }
+
 export type ConfigExperimentalDecisions = {
   enabled?: boolean
   model?: string
@@ -2652,6 +2654,7 @@ export type ConfigEntry =
           image_generate?: boolean | { model?: string | { providerID: string; model: string; variant?: string } }
           visuals?: boolean
           weather?: ConfigExperimentalWeather
+          time?: ConfigExperimentalTime
           decisions?: ConfigExperimentalDecisions
           subagent_depth?: number
           location_idle_timeout?: string | false
@@ -5075,6 +5078,12 @@ export type ExperimentalConfigWeatherSetOutput = void
 
 export type ExperimentalConfigWeatherRemoveOutput = void
 
+export type ExperimentalConfigTimeSetInput = { readonly servers: ReadonlyArray<string> }
+
+export type ExperimentalConfigTimeSetOutput = void
+
+export type ExperimentalConfigTimeRemoveOutput = void
+
 export type ExperimentalConfigPluginAddInput = { readonly package: string }
 
 export type ExperimentalConfigPluginAddOutput = void
@@ -5306,6 +5315,15 @@ export type ConfigWeatherSetOutput = ExperimentalConfigWeatherSetOutput
 
 /** @deprecated Use `ExperimentalConfigWeatherRemoveOutput`. Removed in the next minor. */
 export type ConfigWeatherRemoveOutput = ExperimentalConfigWeatherRemoveOutput
+
+/** @deprecated Use `ExperimentalConfigTimeSetInput`. Removed in the next minor. */
+export type ConfigTimeSetInput = ExperimentalConfigTimeSetInput
+
+/** @deprecated Use `ExperimentalConfigTimeSetOutput`. Removed in the next minor. */
+export type ConfigTimeSetOutput = ExperimentalConfigTimeSetOutput
+
+/** @deprecated Use `ExperimentalConfigTimeRemoveOutput`. Removed in the next minor. */
+export type ConfigTimeRemoveOutput = ExperimentalConfigTimeRemoveOutput
 
 /** @deprecated Use `ExperimentalConfigPluginAddInput`. Removed in the next minor. */
 export type ConfigPluginAddInput = ExperimentalConfigPluginAddInput

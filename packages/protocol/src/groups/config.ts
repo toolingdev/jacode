@@ -153,6 +153,31 @@ export const ConfigGroup = HttpApiGroup.make("server.config")
     ),
   )
   .add(
+    HttpApiEndpoint.put("config.time.set", "/api/experimental/config/time", {
+      payload: ConfigExperimental.Time,
+      success: HttpApiSchema.NoContent,
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.time.set",
+        summary: "Save time servers",
+        description:
+          "Experimental: may change without compatibility guarantees. Set the time tool's NTP servers in the highest-precedence global configuration file.",
+      }),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.delete("config.time.remove", "/api/experimental/config/time", {
+      success: HttpApiSchema.NoContent,
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.time.remove",
+        summary: "Reset time servers",
+        description:
+          "Experimental: may change without compatibility guarantees. Remove the time tool's NTP servers from the highest-precedence global configuration file, which returns it to its default servers.",
+      }),
+    ),
+  )
+  .add(
     HttpApiEndpoint.post("config.plugin.add", "/api/experimental/config/plugin/add", {
       payload: Schema.Struct({ package: Schema.String.check(Schema.isMinLength(1)) }),
       success: HttpApiSchema.NoContent,

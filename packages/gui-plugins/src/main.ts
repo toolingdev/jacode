@@ -20,6 +20,7 @@ import mcpServers from "./mcp-servers"
 import routing from "./routing"
 import visual from "./visual"
 import weather from "./weather"
+import time from "./time"
 import workers from "./workers"
 import subscriptionUsage from "./subscription-usage"
 
@@ -46,6 +47,7 @@ export const builtins = compose({
   routing,
   visual,
   weather,
+  time,
   workers: { ...workers, mainEntry: () => import("./workers/main") },
   "subscription-usage": subscriptionUsage,
 })

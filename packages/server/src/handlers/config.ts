@@ -129,6 +129,24 @@ export const ConfigHandler = HttpApiBuilder.group(Api, "server.config", (handler
       }),
     )
     .handle(
+      "config.time.set",
+      Effect.fn(function* (ctx) {
+        const config = yield* Config.Service
+        if (!config.time) return yield* Effect.die(new Error("Config updates are unavailable"))
+        yield* config.time(ctx.payload).pipe(Effect.orDie)
+        return HttpApiSchema.NoContent.make()
+      }),
+    )
+    .handle(
+      "config.time.remove",
+      Effect.fn(function* () {
+        const config = yield* Config.Service
+        if (!config.time) return yield* Effect.die(new Error("Config updates are unavailable"))
+        yield* config.time(undefined).pipe(Effect.orDie)
+        return HttpApiSchema.NoContent.make()
+      }),
+    )
+    .handle(
       "config.plugin.add",
       Effect.fn(function* (ctx) {
         const config = yield* Config.Service
