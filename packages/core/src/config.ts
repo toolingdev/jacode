@@ -19,6 +19,7 @@ import { Location } from "./location.js"
 import { AbsolutePath } from "./schema.js"
 import { ConfigVariable } from "./config/variable.js"
 import { ConfigNormalize } from "./config/normalize.js"
+import { ConfigSecrets } from "./config/secrets.js"
 import { ConfigDiscovery } from "./config/discovery.js"
 import { ConfigWatch } from "./config/watch.js"
 import { ConfigIntegration } from "./config/integration.js"
@@ -73,6 +74,13 @@ export interface Interface {
    * unrelated JSONC content. Removing a provider another document defines leaves that definition in place.
    */
   readonly provider?: (id: string, config: ConfigProvider.Info | undefined) => Effect.Effect<void, FSUtil.Error>
+  /**
+   * Fork feature: a provider's entry as the global config file writes it, with `{env:...}` references kept and any
+   * secret written out in full hidden, and that file's path.
+   */
+  readonly providerEntry?: (id: string) => Effect.Effect<{ readonly path: string; readonly entry: unknown }>
+  /** Fork feature: replaces a provider's entry as edited in the app; hidden secrets keep the value the file has. */
+  readonly providerEdit?: (id: string, entry: ConfigProvider.Info) => Effect.Effect<void, FSUtil.Error>
   /**
    * Fork feature: sets, or removes with `undefined`, the decision layer's settings in the highest-precedence global
    * config document, preserving unrelated JSONC content.
@@ -576,6 +584,36 @@ export const layer = (options?: Options) =>
         })
       })
 
+      const globalFile = Effect.fnUntraced(function* () {
+        const directory = initial.global ?? AbsolutePath.make(globalService.config)
+        const candidates = ConfigDiscovery.names.map((name) => path.join(directory, name))
+
+        return (yield* Effect.filter(candidates, fs.isFile)).at(-1) ?? path.join(directory, "opencode.jsonc")
+      })
+
+      const rawProvider = (text: string, id: string) => {
+        const document: unknown = parse(text, [], { allowTrailingComma: true })
+        const providers = isRecord(document) && isRecord(document.providers) ? document.providers : {}
+
+        return providers[id]
+      }
+
+      const providerEntry = Effect.fn("Config.providerEntry")(function* (id: string) {
+        const file = yield* globalFile()
+        const text = (yield* fs.readFileStringSafe(file).pipe(Effect.orElseSucceed(() => undefined))) ?? "{}"
+
+        return { path: file, entry: ConfigSecrets.hide(rawProvider(text, id)) }
+      })
+
+      const providerEdit = Effect.fn("Config.providerEdit")(function* (id: string, entry: ConfigProvider.Info) {
+        yield* editGlobal("config.providerEdit", (text) => {
+          const restored = ConfigSecrets.restore(entry, rawProvider(text, id))
+          const cleared = withoutEntry(text, ["provider", id])
+
+          return applyEdits(cleared, modify(cleared, ["providers", id], restored, formatting))
+        })
+      })
+
       const decisions = Effect.fn("Config.decisions")(function* (settings: ConfigExperimental.Decisions | undefined) {
         yield* editGlobal("config.decisions", (text) =>
           applyEdits(text, modify(text, ["experimental", "decisions"], settings, formatting)),
@@ -637,6 +675,8 @@ export const layer = (options?: Options) =>
         weather,
         time,
         addons,
+        providerEntry,
+        providerEdit,
         workers,
         listed,
         integration: Effect.fn("Config.integration")(function* (integrationID, document) {

@@ -10,11 +10,10 @@ import { showToast } from "@/shell/notifications/toast"
 import { popularProviders, useProviders } from "@/providers/catalog/providers"
 import { consoleProviderGroup } from "@/providers/catalog/console"
 import { useIntegrations } from "@/providers/catalog/integrations"
-import { createEffect, createMemo, createSignal, on, onCleanup, untrack, type Component, For, type JSX, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, on, untrack, type Component, For, type JSX, Show } from "solid-js"
 import { useLanguage } from "@/runtime/i18n/language"
 import { useServerSDK } from "@/runtime/server/client"
-import { usePlatform } from "@/runtime/platform/platform"
-import { createExtensionLoad } from "@/settings/extension-load"
+import { DialogProviderConfig } from "./provider-config"
 import { formatServerError } from "@/runtime/server/errors"
 import { CONSOLE_INTEGRATION } from "@/providers/connect/dialog-machine"
 import { DialogConnectProvider, useProviderConnectController } from "@/providers/connect/dialog"
@@ -58,7 +57,6 @@ export const SettingsProviders: Component<{
   const dialog = useDialog()
   const language = useLanguage()
   const serverSdk = useServerSDK()
-  const platform = usePlatform()
   const providers = useProviders(() => props.directory)
   const integrations = useIntegrations(() => props.directory)
   const providerConnect = useProviderConnectController()
@@ -297,27 +295,6 @@ export const SettingsProviders: Component<{
     return currentSource !== "env" && currentSource !== "config"
   }
 
-  // Fork feature: the config file that sets a provider up, so a "Config" row says where it comes from and opens it.
-  const configs = createExtensionLoad({
-    key: () => serverSdk.scope,
-    task: (_, signal) => serverSdk.api.config.get(undefined, { signal }),
-  })
-
-  onCleanup(serverSdk.event.on("config.updated", () => configs.invalidate()))
-
-  const configFile = (id: string) => {
-    const view = configs.view()
-
-    if (view.status !== "ready") return
-
-    return view.value.findLast(
-      (entry) =>
-        entry.type === "document" &&
-        entry.path !== undefined &&
-        entry.info.providers?.[id] !== undefined,
-    )?.path
-  }
-
   const canManageAccounts = (item: ProviderItem) => providerAccounts(integration(item)).length > 0
 
   const note = (id: string) => PROVIDER_NOTES.find((item) => item.match(id))?.key
@@ -510,34 +487,27 @@ export const SettingsProviders: Component<{
                                 when={canDisconnect(item)}
                                 fallback={
                                   <Show
-                                    when={source(item) === "config" && configFile(item.id)}
+                                    when={source(item) === "config"}
                                     fallback={
                                       <span class="settings-provider-env-hint">
                                         {language.t("settings.providers.connected.environmentDescription")}
                                       </span>
                                     }
                                   >
-                                    {(file) => (
-                                      <div class="flex min-w-0 items-center gap-1">
-                                        <span class="truncate text-12-regular text-v2-text-text-muted" title={file()}>
-                                          {language.t("settings.providers.connected.configFile", {
-                                            file: file().split("/").pop() ?? file(),
-                                          })}
-                                        </span>
-                                        <Show when={platform.openPath}>
-                                          <Button
-                                            size="normal"
-                                            variant="ghost-muted"
-                                            onClick={() => void platform.openPath?.(file())}
-                                          >
-                                            {language.t("settings.providers.connected.openConfig")}
-                                          </Button>
-                                        </Show>
-                                        <Button size="normal" variant="ghost-muted" onClick={() => connect(item.id)}>
-                                          {language.t("settings.providers.connected.connectKey")}
-                                        </Button>
-                                      </div>
-                                    )}
+                                    <div class="flex min-w-0 items-center gap-1">
+                                      <Button
+                                        size="normal"
+                                        variant="ghost-muted"
+                                        onClick={() =>
+                                          void dialog.show(() => <DialogProviderConfig id={item.id} name={item.name} />)
+                                        }
+                                      >
+                                        {language.t("settings.providers.connected.showConfig")}
+                                      </Button>
+                                      <Button size="normal" variant="ghost-muted" onClick={() => connect(item.id)}>
+                                        {language.t("settings.providers.connected.connectKey")}
+                                      </Button>
+                                    </div>
                                   </Show>
                                 }
                               >

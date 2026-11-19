@@ -1,5 +1,6 @@
 import { Config } from "@opencode/schema/config"
 import { ConfigCustomProvider } from "@opencode/schema/config/custom-provider"
+import { ConfigProvider } from "@opencode/schema/config/provider"
 import { ConfigExperimental } from "@opencode/schema/config/experimental"
 import { ConfigShell } from "@opencode/schema/config/shell"
 import { Mcp } from "@opencode/schema/mcp"
@@ -71,6 +72,33 @@ export const ConfigGroup = HttpApiGroup.make("server.config")
         summary: "Delete saved MCP server",
         description:
           "Experimental: may change without compatibility guarantees. Remove an MCP server from the highest-precedence global configuration document. A server another document defines stays configured.",
+      }),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.get("config.providers.get", "/api/experimental/config/providers/:provider", {
+      params: { provider: Schema.String },
+      success: Schema.Struct({ path: Schema.String, entry: Schema.Unknown }),
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.providers.get",
+        summary: "Read provider config",
+        description:
+          "Experimental: may change without compatibility guarantees. A provider's entry under `providers` as the highest-precedence global configuration file writes it, with references such as `{env:NAME}` kept and secrets written out in full hidden, and that file's path.",
+      }),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.put("config.providers.set", "/api/experimental/config/providers/:provider", {
+      params: { provider: Schema.String },
+      payload: ConfigProvider.Info,
+      success: HttpApiSchema.NoContent,
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.providers.set",
+        summary: "Save provider config",
+        description:
+          "Experimental: may change without compatibility guarantees. Replace a provider's whole entry under `providers` in the highest-precedence global configuration file, as written, so a provider set up there can be edited from the app.",
       }),
     ),
   )

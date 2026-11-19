@@ -2868,6 +2868,15 @@ export interface ConfigApi<E = never> {
     readonly remove: ExperimentalConfigMcpRemoveOperation<E>
   }
 
+  /** @deprecated Use `client.experimental.config.providers`. Removed in the next minor. */
+  readonly providers: {
+    /** @deprecated Use `client.experimental.config.providers.get`. Removed in the next minor. */
+    readonly get: ExperimentalConfigProvidersGetOperation<E>
+
+    /** @deprecated Use `client.experimental.config.providers.set`. Removed in the next minor. */
+    readonly set: ExperimentalConfigProvidersSetOperation<E>
+  }
+
   /** @deprecated Use `client.experimental.config.provider`. Removed in the next minor. */
   readonly provider: {
     /** @deprecated Use `client.experimental.config.provider.set`. Removed in the next minor. */
@@ -2955,6 +2964,142 @@ export type ExperimentalConfigMcpRemoveOutput = void
 export type ExperimentalConfigMcpRemoveOperation<E = never> = (
   input: ExperimentalConfigMcpRemoveInput,
 ) => Effect.Effect<ExperimentalConfigMcpRemoveOutput, E>
+
+export type ExperimentalConfigProvidersGetInput = { readonly provider: string }
+export type ExperimentalConfigProvidersGetOutput = { readonly path: string; readonly entry: unknown }
+export type ExperimentalConfigProvidersGetOperation<E = never> = (
+  input: ExperimentalConfigProvidersGetInput,
+) => Effect.Effect<ExperimentalConfigProvidersGetOutput, E>
+
+export type ExperimentalConfigProvidersSetInput = {
+  readonly provider: string
+  readonly payload: {
+    readonly canonical?: Provider.ID | undefined
+    readonly name?: string | undefined
+    readonly env?: ReadonlyArray<string> | undefined
+    readonly package?: string | undefined
+    readonly compatibility?:
+      | {
+          readonly reasoningField?: Model.ReasoningField | undefined
+          readonly requireReasoning?: boolean | undefined
+          readonly maxTokensField?: Model.MaxTokensField | undefined
+          readonly requireFinishReason?: boolean | undefined
+          readonly requireAssistantAfterTool?: boolean | undefined
+          readonly supportsPromptCacheKey?: boolean | undefined
+          readonly streamUsage?: boolean | undefined
+          readonly cacheFormat?: ("anthropic" | "alibaba") | undefined
+          readonly mediaInput?: Model.MediaInput | undefined
+        }
+      | undefined
+    readonly settings?:
+      | ({
+          readonly timeout?: number | false | undefined
+          readonly headerTimeout?: number | false | undefined
+          readonly chunkTimeout?: number | false | undefined
+          readonly compaction?: Provider.Compaction | undefined
+          readonly cache?: Provider.Cache | undefined
+          readonly transport?: Provider.Transport | undefined
+          readonly encoding?: Provider.Encoding | undefined
+          readonly tls?: Provider.Tls | undefined
+        } & { readonly [x: string]: Schema.Json | undefined })
+      | undefined
+    readonly headers?: { readonly [x: string]: string } | undefined
+    readonly body?: { readonly [x: string]: Schema.Json } | undefined
+    readonly models?:
+      | {
+          readonly [x: string]: {
+            readonly modelID?: string | undefined
+            readonly type?: Model.Type | undefined
+            readonly family?: string | undefined
+            readonly name?: string | undefined
+            readonly releaseDate?: string | undefined
+            readonly compatibility?: Model.Compatibility | undefined
+            readonly package?: string | undefined
+            readonly settings?:
+              | ({
+                  readonly compaction?: Provider.Compaction | undefined
+                  readonly cache?: Provider.Cache | undefined
+                  readonly encoding?: Provider.Encoding | undefined
+                } & { readonly [x: string]: Schema.Json | undefined })
+              | undefined
+            readonly headers?: { readonly [x: string]: string } | undefined
+            readonly body?: { readonly [x: string]: Schema.Json } | undefined
+            readonly capabilities?:
+              | {
+                  readonly tools?: boolean | undefined
+                  readonly freeform?: ReadonlyArray<"text" | "regex" | "lark"> | undefined
+                  readonly input?: ReadonlyArray<string> | undefined
+                  readonly output?: ReadonlyArray<string> | undefined
+                  readonly temperature?: boolean | undefined
+                  readonly reasoning?:
+                    | (
+                        | { readonly supported: false }
+                        | {
+                            readonly supported: true
+                            readonly toggle?: boolean | undefined
+                            readonly effort?: ReadonlyArray<string> | undefined
+                            readonly budget?:
+                              | { readonly min?: number | undefined; readonly max?: number | undefined }
+                              | undefined
+                          }
+                      )
+                    | undefined
+                }
+              | undefined
+            readonly variants?:
+              | ReadonlyArray<{
+                  readonly id: string
+                  readonly settings?:
+                    | ({
+                        readonly compaction?: Provider.Compaction | undefined
+                        readonly encoding?: Provider.Encoding | undefined
+                      } & { readonly [x: string]: Schema.Json | undefined })
+                    | undefined
+                  readonly headers?: { readonly [x: string]: string } | undefined
+                  readonly body?: { readonly [x: string]: Schema.Json } | undefined
+                }>
+              | undefined
+            readonly cost?:
+              | {
+                  readonly tier?: { readonly type: "context"; readonly size: number } | undefined
+                  readonly input: Money.USDPerMillionTokens
+                  readonly output: Money.USDPerMillionTokens
+                  readonly cache?:
+                    | {
+                        readonly read?: Money.USDPerMillionTokens | undefined
+                        readonly write?: Money.USDPerMillionTokens | undefined
+                      }
+                    | undefined
+                }
+              | ReadonlyArray<{
+                  readonly tier?: { readonly type: "context"; readonly size: number } | undefined
+                  readonly input: Money.USDPerMillionTokens
+                  readonly output: Money.USDPerMillionTokens
+                  readonly cache?:
+                    | {
+                        readonly read?: Money.USDPerMillionTokens | undefined
+                        readonly write?: Money.USDPerMillionTokens | undefined
+                      }
+                    | undefined
+                }>
+              | undefined
+            readonly disabled?: boolean | undefined
+            readonly limit?:
+              | {
+                  readonly context?: number | undefined
+                  readonly input?: number | undefined
+                  readonly output?: number | undefined
+                }
+              | undefined
+          }
+        }
+      | undefined
+  }
+}
+export type ExperimentalConfigProvidersSetOutput = void
+export type ExperimentalConfigProvidersSetOperation<E = never> = (
+  input: ExperimentalConfigProvidersSetInput,
+) => Effect.Effect<ExperimentalConfigProvidersSetOutput, E>
 
 export type ExperimentalConfigProviderSetInput = {
   readonly provider: string
@@ -3088,6 +3233,10 @@ export interface ExperimentalConfigApi<E = never> {
   readonly mcp: {
     readonly set: ExperimentalConfigMcpSetOperation<E>
     readonly remove: ExperimentalConfigMcpRemoveOperation<E>
+  }
+  readonly providers: {
+    readonly get: ExperimentalConfigProvidersGetOperation<E>
+    readonly set: ExperimentalConfigProvidersSetOperation<E>
   }
   readonly provider: {
     readonly set: ExperimentalConfigProviderSetOperation<E>
@@ -3389,6 +3538,24 @@ export type ConfigMcpRemoveOutput = ExperimentalConfigMcpRemoveOutput
 
 /** @deprecated Use `ExperimentalConfigMcpRemoveOperation`. Removed in the next minor. */
 export type ConfigMcpRemoveOperation<E = never> = ExperimentalConfigMcpRemoveOperation<E>
+
+/** @deprecated Use `ExperimentalConfigProvidersGetInput`. Removed in the next minor. */
+export type ConfigProvidersGetInput = ExperimentalConfigProvidersGetInput
+
+/** @deprecated Use `ExperimentalConfigProvidersGetOutput`. Removed in the next minor. */
+export type ConfigProvidersGetOutput = ExperimentalConfigProvidersGetOutput
+
+/** @deprecated Use `ExperimentalConfigProvidersGetOperation`. Removed in the next minor. */
+export type ConfigProvidersGetOperation<E = never> = ExperimentalConfigProvidersGetOperation<E>
+
+/** @deprecated Use `ExperimentalConfigProvidersSetInput`. Removed in the next minor. */
+export type ConfigProvidersSetInput = ExperimentalConfigProvidersSetInput
+
+/** @deprecated Use `ExperimentalConfigProvidersSetOutput`. Removed in the next minor. */
+export type ConfigProvidersSetOutput = ExperimentalConfigProvidersSetOutput
+
+/** @deprecated Use `ExperimentalConfigProvidersSetOperation`. Removed in the next minor. */
+export type ConfigProvidersSetOperation<E = never> = ExperimentalConfigProvidersSetOperation<E>
 
 /** @deprecated Use `ExperimentalConfigProviderSetInput`. Removed in the next minor. */
 export type ConfigProviderSetInput = ExperimentalConfigProviderSetInput

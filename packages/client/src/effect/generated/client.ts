@@ -330,6 +330,10 @@ import type {
   ExperimentalConfigMcpSetOutput,
   ExperimentalConfigMcpRemoveInput,
   ExperimentalConfigMcpRemoveOutput,
+  ExperimentalConfigProvidersGetInput,
+  ExperimentalConfigProvidersGetOutput,
+  ExperimentalConfigProvidersSetInput,
+  ExperimentalConfigProvidersSetOutput,
   ExperimentalConfigProviderSetInput,
   ExperimentalConfigProviderSetOutput,
   ExperimentalConfigProviderRemoveInput,
@@ -2035,6 +2039,22 @@ const EndpointExperimentalConfigMcpRemove =
       raw["config.mcp.remove"]({ params: { server: input["server"] } }).pipe(Effect.mapError(mapClientError)),
     )
 
+const EndpointExperimentalConfigProvidersGet =
+  (raw: RawClient["server.config"]) => (input: ExperimentalConfigProvidersGetInput) =>
+    preserveEffect<ExperimentalConfigProvidersGetOutput>()(
+      raw["config.providers.get"]({ params: { provider: input["provider"] } }).pipe(Effect.mapError(mapClientError)),
+    )
+
+type ExperimentalConfigProvidersSetRequest = Parameters<RawClient["server.config"]["config.providers.set"]>[0]
+const EndpointExperimentalConfigProvidersSet =
+  (raw: RawClient["server.config"]) => (input: ExperimentalConfigProvidersSetInput) =>
+    preserveEffect<ExperimentalConfigProvidersSetOutput>()(
+      raw["config.providers.set"]({
+        params: { provider: input["provider"] },
+        payload: input["payload"],
+      } as ExperimentalConfigProvidersSetRequest).pipe(Effect.mapError(mapClientError)),
+    )
+
 const EndpointExperimentalConfigProviderSet =
   (raw: RawClient["server.config"]) => (input: ExperimentalConfigProviderSetInput) =>
     preserveEffect<ExperimentalConfigProviderSetOutput>()(
@@ -2141,6 +2161,7 @@ const EndpointExperimentalConfigSkillRemove =
 const adaptGroupExperimentalConfig = (raw: RawClient["server.config"]) => ({
   update: EndpointExperimentalConfigUpdate(raw),
   mcp: { set: EndpointExperimentalConfigMcpSet(raw), remove: EndpointExperimentalConfigMcpRemove(raw) },
+  providers: { get: EndpointExperimentalConfigProvidersGet(raw), set: EndpointExperimentalConfigProvidersSet(raw) },
   provider: { set: EndpointExperimentalConfigProviderSet(raw), remove: EndpointExperimentalConfigProviderRemove(raw) },
   decisions: {
     set: EndpointExperimentalConfigDecisionsSet(raw),
@@ -2303,6 +2324,13 @@ const adaptClient = (raw: RawClient) => {
         set: client.experimental.config.mcp.set,
         /** @deprecated Use `client.experimental.config.mcp.remove`. Removed in the next minor. */
         remove: client.experimental.config.mcp.remove,
+      },
+      /** @deprecated Use `client.experimental.config.providers`. Removed in the next minor. */
+      providers: {
+        /** @deprecated Use `client.experimental.config.providers.get`. Removed in the next minor. */
+        get: client.experimental.config.providers.get,
+        /** @deprecated Use `client.experimental.config.providers.set`. Removed in the next minor. */
+        set: client.experimental.config.providers.set,
       },
       /** @deprecated Use `client.experimental.config.provider`. Removed in the next minor. */
       provider: {

@@ -332,6 +332,10 @@ import type {
   ExperimentalConfigMcpSetOutput,
   ExperimentalConfigMcpRemoveInput,
   ExperimentalConfigMcpRemoveOutput,
+  ExperimentalConfigProvidersGetInput,
+  ExperimentalConfigProvidersGetOutput,
+  ExperimentalConfigProvidersSetInput,
+  ExperimentalConfigProvidersSetOutput,
   ExperimentalConfigProviderSetInput,
   ExperimentalConfigProviderSetOutput,
   ExperimentalConfigProviderRemoveInput,
@@ -1854,6 +1858,31 @@ export function make(options: ClientOptions) {
               requestOptions,
             ),
         },
+        providers: {
+          get: (input: ExperimentalConfigProvidersGetInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigProvidersGetOutput>(
+              {
+                method: "GET",
+                path: `/api/experimental/config/providers/${encodeURIComponent(input.provider)}`,
+                successStatus: 200,
+                declaredStatuses: [400, 401, 404],
+                empty: false,
+              },
+              requestOptions,
+            ),
+          set: (input: ExperimentalConfigProvidersSetInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigProvidersSetOutput>(
+              {
+                method: "PUT",
+                path: `/api/experimental/config/providers/${encodeURIComponent(input.provider)}`,
+                body: input["payload"],
+                successStatus: 204,
+                declaredStatuses: [400, 401, 404],
+                empty: true,
+              },
+              requestOptions,
+            ),
+        },
         provider: {
           set: (input: ExperimentalConfigProviderSetInput, requestOptions?: RequestOptions) =>
             request<ExperimentalConfigProviderSetOutput>(
@@ -3103,6 +3132,13 @@ export function make(options: ClientOptions) {
         set: client.experimental.config.mcp.set,
         /** @deprecated Use `client.experimental.config.mcp.remove`. Removed in the next minor. */
         remove: client.experimental.config.mcp.remove,
+      },
+      /** @deprecated Use `client.experimental.config.providers`. Removed in the next minor. */
+      providers: {
+        /** @deprecated Use `client.experimental.config.providers.get`. Removed in the next minor. */
+        get: client.experimental.config.providers.get,
+        /** @deprecated Use `client.experimental.config.providers.set`. Removed in the next minor. */
+        set: client.experimental.config.providers.set,
       },
       /** @deprecated Use `client.experimental.config.provider`. Removed in the next minor. */
       provider: {
