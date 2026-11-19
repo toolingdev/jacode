@@ -178,6 +178,19 @@ export const ConfigGroup = HttpApiGroup.make("server.config")
     ),
   )
   .add(
+    HttpApiEndpoint.put("config.workers.set", "/api/experimental/config/workers", {
+      payload: ConfigExperimental.Workers,
+      success: HttpApiSchema.NoContent,
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.workers.set",
+        summary: "Save workers",
+        description:
+          "Experimental: may change without compatibility guarantees. Set the workers this computer's chats may schedule tasks on, in the highest-precedence global configuration file.",
+      }),
+    ),
+  )
+  .add(
     HttpApiEndpoint.post("config.plugin.add", "/api/experimental/config/plugin/add", {
       payload: Schema.Struct({ package: Schema.String.check(Schema.isMinLength(1)) }),
       success: HttpApiSchema.NoContent,

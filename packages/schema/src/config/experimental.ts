@@ -66,6 +66,20 @@ export const Time = Schema.Struct({
 }).annotate({ identifier: "ConfigExperimental.Time" })
 export type Time = typeof Time.Type
 
+// Fork feature: the workers this computer's chats may hand scheduled tasks to. The app keeps the list in step with the
+// workers it is connected to, so a task can run there while this computer sleeps.
+export const Worker = Schema.Struct({
+  name: Schema.String,
+  url: Schema.String,
+  password: Schema.String.pipe(optional),
+}).annotate({ identifier: "ConfigExperimental.Worker" })
+export type Worker = typeof Worker.Type
+
+export const Workers = Schema.Struct({
+  list: Schema.Array(Worker).annotate({ description: "Workers by name, with the address their server answers on." }),
+}).annotate({ identifier: "ConfigExperimental.Workers" })
+export type Workers = typeof Workers.Type
+
 export class Info extends Schema.Class<Info>("ConfigExperimental.Info")({
   portable_shell_scanner: Schema.Boolean.pipe(optional).annotate({
     description: "Deprecated: the built-in shell permission scanner is now always enabled.",
@@ -111,6 +125,10 @@ export class Info extends Schema.Class<Info>("ConfigExperimental.Info")({
   time: Time.pipe(optional).annotate({
     description:
       "NTP servers for the time tool. Without this it asks time.cloudflare.com, then time.google.com, then pool.ntp.org.",
+  }),
+  workers: Workers.pipe(optional).annotate({
+    description:
+      "Workers this computer's chats may schedule tasks on, kept in step by the desktop app. Without this there are none.",
   }),
   decisions: Decisions.pipe(optional).annotate({
     description:

@@ -399,6 +399,8 @@ export type ConfigExperimentalWeatherSource = {
 
 export type ConfigExperimentalTime = { servers: Array<string> }
 
+export type ConfigExperimentalWorker = { name: string; url: string; password?: string }
+
 export type ConfigExperimentalDecisions = {
   enabled?: boolean
   model?: string
@@ -1046,6 +1048,8 @@ export type ConfigModelCapabilities = {
 }
 
 export type ConfigExperimentalWeather = { sources: Array<ConfigExperimentalWeatherSource> }
+
+export type ConfigExperimentalWorkers = { list: Array<ConfigExperimentalWorker> }
 
 export type SessionMessageLocationSwitched = {
   id: SessionMessageID
@@ -2655,6 +2659,7 @@ export type ConfigEntry =
           visuals?: boolean
           weather?: ConfigExperimentalWeather
           time?: ConfigExperimentalTime
+          workers?: ConfigExperimentalWorkers
           decisions?: ConfigExperimentalDecisions
           subagent_depth?: number
           location_idle_timeout?: string | false
@@ -5084,6 +5089,12 @@ export type ExperimentalConfigTimeSetOutput = void
 
 export type ExperimentalConfigTimeRemoveOutput = void
 
+export type ExperimentalConfigWorkersSetInput = {
+  readonly list: ReadonlyArray<{ readonly name: string; readonly url: string; readonly password?: string }>
+}
+
+export type ExperimentalConfigWorkersSetOutput = void
+
 export type ExperimentalConfigPluginAddInput = { readonly package: string }
 
 export type ExperimentalConfigPluginAddOutput = void
@@ -5324,6 +5335,12 @@ export type ConfigTimeSetOutput = ExperimentalConfigTimeSetOutput
 
 /** @deprecated Use `ExperimentalConfigTimeRemoveOutput`. Removed in the next minor. */
 export type ConfigTimeRemoveOutput = ExperimentalConfigTimeRemoveOutput
+
+/** @deprecated Use `ExperimentalConfigWorkersSetInput`. Removed in the next minor. */
+export type ConfigWorkersSetInput = ExperimentalConfigWorkersSetInput
+
+/** @deprecated Use `ExperimentalConfigWorkersSetOutput`. Removed in the next minor. */
+export type ConfigWorkersSetOutput = ExperimentalConfigWorkersSetOutput
 
 /** @deprecated Use `ExperimentalConfigPluginAddInput`. Removed in the next minor. */
 export type ConfigPluginAddInput = ExperimentalConfigPluginAddInput

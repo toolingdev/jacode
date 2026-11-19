@@ -82,6 +82,8 @@ export interface Interface {
   readonly weather?: (settings: ConfigExperimental.Weather | undefined) => Effect.Effect<void, FSUtil.Error>
   /** Fork feature: saves the time tool's NTP servers in the global config, or removes them to use the defaults. */
   readonly time?: (settings: ConfigExperimental.Time | undefined) => Effect.Effect<void, FSUtil.Error>
+  /** Fork feature: saves the workers chats may schedule tasks on, or removes them. */
+  readonly workers?: (settings: ConfigExperimental.Workers | undefined) => Effect.Effect<void, FSUtil.Error>
   /**
    * Fork feature: adds or removes one entry of the `plugins` or `skills` list in the highest-precedence global config
    * document, preserving unrelated JSONC content. Adding an entry already listed and removing one that is not change
@@ -590,6 +592,12 @@ export const layer = (options?: Options) =>
         )
       })
 
+      const workers = Effect.fn("Config.workers")(function* (settings: ConfigExperimental.Workers | undefined) {
+        yield* editGlobal("config.workers", (text) =>
+          applyEdits(text, modify(text, ["experimental", "workers"], settings, formatting)),
+        )
+      })
+
       const listed = Effect.fn("Config.listed")(function* (key: "plugins" | "skills", entry: string, present: boolean) {
         yield* editGlobal("config.listed", (text) => {
           const document: unknown = parse(text, [], { allowTrailingComma: true })
@@ -620,6 +628,7 @@ export const layer = (options?: Options) =>
         decisions,
         weather,
         time,
+        workers,
         listed,
         integration: Effect.fn("Config.integration")(function* (integrationID, document) {
           if (isDeepStrictEqual(integrations.get(integrationID), document)) return

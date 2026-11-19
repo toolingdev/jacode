@@ -345,6 +345,8 @@ import type {
   ExperimentalConfigTimeSetInput,
   ExperimentalConfigTimeSetOutput,
   ExperimentalConfigTimeRemoveOutput,
+  ExperimentalConfigWorkersSetInput,
+  ExperimentalConfigWorkersSetOutput,
   ExperimentalConfigPluginAddInput,
   ExperimentalConfigPluginAddOutput,
   ExperimentalConfigPluginRemoveInput,
@@ -1964,6 +1966,20 @@ export function make(options: ClientOptions) {
               requestOptions,
             ),
         },
+        workers: {
+          set: (input: ExperimentalConfigWorkersSetInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigWorkersSetOutput>(
+              {
+                method: "PUT",
+                path: `/api/experimental/config/workers`,
+                body: { list: input["list"] },
+                successStatus: 204,
+                declaredStatuses: [400, 401, 404],
+                empty: true,
+              },
+              requestOptions,
+            ),
+        },
         plugin: {
           add: (input: ExperimentalConfigPluginAddInput, requestOptions?: RequestOptions) =>
             request<ExperimentalConfigPluginAddOutput>(
@@ -3098,6 +3114,11 @@ export function make(options: ClientOptions) {
         set: client.experimental.config.time.set,
         /** @deprecated Use `client.experimental.config.time.remove`. Removed in the next minor. */
         remove: client.experimental.config.time.remove,
+      },
+      /** @deprecated Use `client.experimental.config.workers`. Removed in the next minor. */
+      workers: {
+        /** @deprecated Use `client.experimental.config.workers.set`. Removed in the next minor. */
+        set: client.experimental.config.workers.set,
       },
       /** @deprecated Use `client.experimental.config.plugin`. Removed in the next minor. */
       plugin: {

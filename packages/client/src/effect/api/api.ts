@@ -2904,6 +2904,12 @@ export interface ConfigApi<E = never> {
     readonly remove: ExperimentalConfigTimeRemoveOperation<E>
   }
 
+  /** @deprecated Use `client.experimental.config.workers`. Removed in the next minor. */
+  readonly workers: {
+    /** @deprecated Use `client.experimental.config.workers.set`. Removed in the next minor. */
+    readonly set: ExperimentalConfigWorkersSetOperation<E>
+  }
+
   /** @deprecated Use `client.experimental.config.plugin`. Removed in the next minor. */
   readonly plugin: {
     /** @deprecated Use `client.experimental.config.plugin.add`. Removed in the next minor. */
@@ -3018,6 +3024,14 @@ export type ExperimentalConfigTimeRemoveOperation<E = never> = () => Effect.Effe
   E
 >
 
+export type ExperimentalConfigWorkersSetInput = {
+  readonly list: ReadonlyArray<{ readonly name: string; readonly url: string; readonly password?: string | undefined }>
+}
+export type ExperimentalConfigWorkersSetOutput = void
+export type ExperimentalConfigWorkersSetOperation<E = never> = (
+  input: ExperimentalConfigWorkersSetInput,
+) => Effect.Effect<ExperimentalConfigWorkersSetOutput, E>
+
 export type ExperimentalConfigPluginAddInput = { readonly package: string }
 export type ExperimentalConfigPluginAddOutput = void
 export type ExperimentalConfigPluginAddOperation<E = never> = (
@@ -3064,6 +3078,7 @@ export interface ExperimentalConfigApi<E = never> {
     readonly set: ExperimentalConfigTimeSetOperation<E>
     readonly remove: ExperimentalConfigTimeRemoveOperation<E>
   }
+  readonly workers: { readonly set: ExperimentalConfigWorkersSetOperation<E> }
   readonly plugin: {
     readonly add: ExperimentalConfigPluginAddOperation<E>
     readonly remove: ExperimentalConfigPluginRemoveOperation<E>
@@ -3409,6 +3424,15 @@ export type ConfigTimeRemoveOutput = ExperimentalConfigTimeRemoveOutput
 
 /** @deprecated Use `ExperimentalConfigTimeRemoveOperation`. Removed in the next minor. */
 export type ConfigTimeRemoveOperation<E = never> = ExperimentalConfigTimeRemoveOperation<E>
+
+/** @deprecated Use `ExperimentalConfigWorkersSetInput`. Removed in the next minor. */
+export type ConfigWorkersSetInput = ExperimentalConfigWorkersSetInput
+
+/** @deprecated Use `ExperimentalConfigWorkersSetOutput`. Removed in the next minor. */
+export type ConfigWorkersSetOutput = ExperimentalConfigWorkersSetOutput
+
+/** @deprecated Use `ExperimentalConfigWorkersSetOperation`. Removed in the next minor. */
+export type ConfigWorkersSetOperation<E = never> = ExperimentalConfigWorkersSetOperation<E>
 
 /** @deprecated Use `ExperimentalConfigPluginAddInput`. Removed in the next minor. */
 export type ConfigPluginAddInput = ExperimentalConfigPluginAddInput

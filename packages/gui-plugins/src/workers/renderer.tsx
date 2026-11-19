@@ -89,6 +89,24 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
   ctx.add(MenuItem, (): MenuItem => ({ menu: "server.add", id: "setup", title: ctx.t("add"), order: 0, run: open }))
 
+  // Fork feature: this computer's own server learns which workers it may hand scheduled tasks to, so a chat here can
+  // schedule a task on a worker that keeps running while this computer sleeps. Workers on this computer (Docker, a
+  // tunnel) sleep with it, so only those reached over the network count.
+  createKeyed(
+    () => {
+      const refs = ctx.servers.list().flatMap((id) => ctx.servers.get(id) ?? [])
+      const own = refs.find((ref) => ref.builtin)
+
+      const list = refs
+        .filter((ref) => !ref.builtin && !ref.local && URL.canParse(ref.url))
+        .map((ref) => ({ name: ref.name, url: ref.url, password: ref.password }))
+
+      return own?.connected ? { own, list } : undefined
+    },
+    (value) => void value.own.client.experimental.config.workers.set({ list: value.list }).catch(() => undefined),
+    { equals: (a, b) => a.own.id === b.own.id && JSON.stringify(a.list) === JSON.stringify(b.list) },
+  )
+
   // Fork feature: the worker's screen, as a side tab of a chat that runs on that worker. A button in the chat's
   // header opens or hides it; it is not on Home, which lists every computer at once.
   const Screen = lazy(() => import("./screen"))
