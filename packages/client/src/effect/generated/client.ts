@@ -330,6 +330,8 @@ import type {
   ExperimentalConfigMcpSetOutput,
   ExperimentalConfigMcpRemoveInput,
   ExperimentalConfigMcpRemoveOutput,
+  ExperimentalConfigProvidersSwitchInput,
+  ExperimentalConfigProvidersSwitchOutput,
   ExperimentalConfigProvidersGetInput,
   ExperimentalConfigProvidersGetOutput,
   ExperimentalConfigProvidersSetInput,
@@ -2039,6 +2041,15 @@ const EndpointExperimentalConfigMcpRemove =
       raw["config.mcp.remove"]({ params: { server: input["server"] } }).pipe(Effect.mapError(mapClientError)),
     )
 
+const EndpointExperimentalConfigProvidersSwitch =
+  (raw: RawClient["server.config"]) => (input: ExperimentalConfigProvidersSwitchInput) =>
+    preserveEffect<ExperimentalConfigProvidersSwitchOutput>()(
+      raw["config.providers.switch"]({
+        params: { provider: input["provider"] },
+        payload: { enabled: input["enabled"] },
+      }).pipe(Effect.mapError(mapClientError)),
+    )
+
 const EndpointExperimentalConfigProvidersGet =
   (raw: RawClient["server.config"]) => (input: ExperimentalConfigProvidersGetInput) =>
     preserveEffect<ExperimentalConfigProvidersGetOutput>()(
@@ -2161,7 +2172,11 @@ const EndpointExperimentalConfigSkillRemove =
 const adaptGroupExperimentalConfig = (raw: RawClient["server.config"]) => ({
   update: EndpointExperimentalConfigUpdate(raw),
   mcp: { set: EndpointExperimentalConfigMcpSet(raw), remove: EndpointExperimentalConfigMcpRemove(raw) },
-  providers: { get: EndpointExperimentalConfigProvidersGet(raw), set: EndpointExperimentalConfigProvidersSet(raw) },
+  providers: {
+    switch: EndpointExperimentalConfigProvidersSwitch(raw),
+    get: EndpointExperimentalConfigProvidersGet(raw),
+    set: EndpointExperimentalConfigProvidersSet(raw),
+  },
   provider: { set: EndpointExperimentalConfigProviderSet(raw), remove: EndpointExperimentalConfigProviderRemove(raw) },
   decisions: {
     set: EndpointExperimentalConfigDecisionsSet(raw),
@@ -2327,6 +2342,8 @@ const adaptClient = (raw: RawClient) => {
       },
       /** @deprecated Use `client.experimental.config.providers`. Removed in the next minor. */
       providers: {
+        /** @deprecated Use `client.experimental.config.providers.switch`. Removed in the next minor. */
+        switch: client.experimental.config.providers.switch,
         /** @deprecated Use `client.experimental.config.providers.get`. Removed in the next minor. */
         get: client.experimental.config.providers.get,
         /** @deprecated Use `client.experimental.config.providers.set`. Removed in the next minor. */

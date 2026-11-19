@@ -2870,6 +2870,9 @@ export interface ConfigApi<E = never> {
 
   /** @deprecated Use `client.experimental.config.providers`. Removed in the next minor. */
   readonly providers: {
+    /** @deprecated Use `client.experimental.config.providers.switch`. Removed in the next minor. */
+    readonly switch: ExperimentalConfigProvidersSwitchOperation<E>
+
     /** @deprecated Use `client.experimental.config.providers.get`. Removed in the next minor. */
     readonly get: ExperimentalConfigProvidersGetOperation<E>
 
@@ -2964,6 +2967,12 @@ export type ExperimentalConfigMcpRemoveOutput = void
 export type ExperimentalConfigMcpRemoveOperation<E = never> = (
   input: ExperimentalConfigMcpRemoveInput,
 ) => Effect.Effect<ExperimentalConfigMcpRemoveOutput, E>
+
+export type ExperimentalConfigProvidersSwitchInput = { readonly provider: string; readonly enabled: boolean }
+export type ExperimentalConfigProvidersSwitchOutput = void
+export type ExperimentalConfigProvidersSwitchOperation<E = never> = (
+  input: ExperimentalConfigProvidersSwitchInput,
+) => Effect.Effect<ExperimentalConfigProvidersSwitchOutput, E>
 
 export type ExperimentalConfigProvidersGetInput = { readonly provider: string }
 export type ExperimentalConfigProvidersGetOutput = { readonly path: string; readonly entry: unknown }
@@ -3235,6 +3244,7 @@ export interface ExperimentalConfigApi<E = never> {
     readonly remove: ExperimentalConfigMcpRemoveOperation<E>
   }
   readonly providers: {
+    readonly switch: ExperimentalConfigProvidersSwitchOperation<E>
     readonly get: ExperimentalConfigProvidersGetOperation<E>
     readonly set: ExperimentalConfigProvidersSetOperation<E>
   }
@@ -3538,6 +3548,15 @@ export type ConfigMcpRemoveOutput = ExperimentalConfigMcpRemoveOutput
 
 /** @deprecated Use `ExperimentalConfigMcpRemoveOperation`. Removed in the next minor. */
 export type ConfigMcpRemoveOperation<E = never> = ExperimentalConfigMcpRemoveOperation<E>
+
+/** @deprecated Use `ExperimentalConfigProvidersSwitchInput`. Removed in the next minor. */
+export type ConfigProvidersSwitchInput = ExperimentalConfigProvidersSwitchInput
+
+/** @deprecated Use `ExperimentalConfigProvidersSwitchOutput`. Removed in the next minor. */
+export type ConfigProvidersSwitchOutput = ExperimentalConfigProvidersSwitchOutput
+
+/** @deprecated Use `ExperimentalConfigProvidersSwitchOperation`. Removed in the next minor. */
+export type ConfigProvidersSwitchOperation<E = never> = ExperimentalConfigProvidersSwitchOperation<E>
 
 /** @deprecated Use `ExperimentalConfigProvidersGetInput`. Removed in the next minor. */
 export type ConfigProvidersGetInput = ExperimentalConfigProvidersGetInput

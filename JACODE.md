@@ -113,6 +113,9 @@ Settings › Providers lists every connected provider once, under Connected prov
   against the provider schema; Save writes them back and they apply at once. References such as `{env:NAME}` stay as
   written, and a key written out in full shows as dots and keeps its value when you save.
 - A provider's menu connects it with a key, edits a custom one, disconnects its key, or removes a custom provider.
+- **Switch a provider off** with the switch on its row, for example to pause one plan while trying another. It keeps
+  its key and settings and moves to "Switched off", where the same switch brings it back. Off is stored as a
+  `provider.use` deny entry in `policies`.
 
 **Usage.** The chat header shows how much of a plan is used, and its menu lists each allowance and the last 30 days by
 model. Ask "how much have I used?" and the `usage` tool answers with a card.

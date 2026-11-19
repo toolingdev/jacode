@@ -332,6 +332,8 @@ import type {
   ExperimentalConfigMcpSetOutput,
   ExperimentalConfigMcpRemoveInput,
   ExperimentalConfigMcpRemoveOutput,
+  ExperimentalConfigProvidersSwitchInput,
+  ExperimentalConfigProvidersSwitchOutput,
   ExperimentalConfigProvidersGetInput,
   ExperimentalConfigProvidersGetOutput,
   ExperimentalConfigProvidersSetInput,
@@ -1859,6 +1861,18 @@ export function make(options: ClientOptions) {
             ),
         },
         providers: {
+          switch: (input: ExperimentalConfigProvidersSwitchInput, requestOptions?: RequestOptions) =>
+            request<ExperimentalConfigProvidersSwitchOutput>(
+              {
+                method: "PUT",
+                path: `/api/experimental/config/providers/${encodeURIComponent(input.provider)}/enabled`,
+                body: { enabled: input["enabled"] },
+                successStatus: 204,
+                declaredStatuses: [400, 401, 404],
+                empty: true,
+              },
+              requestOptions,
+            ),
           get: (input: ExperimentalConfigProvidersGetInput, requestOptions?: RequestOptions) =>
             request<ExperimentalConfigProvidersGetOutput>(
               {
@@ -3135,6 +3149,8 @@ export function make(options: ClientOptions) {
       },
       /** @deprecated Use `client.experimental.config.providers`. Removed in the next minor. */
       providers: {
+        /** @deprecated Use `client.experimental.config.providers.switch`. Removed in the next minor. */
+        switch: client.experimental.config.providers.switch,
         /** @deprecated Use `client.experimental.config.providers.get`. Removed in the next minor. */
         get: client.experimental.config.providers.get,
         /** @deprecated Use `client.experimental.config.providers.set`. Removed in the next minor. */

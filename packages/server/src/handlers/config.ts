@@ -47,6 +47,15 @@ export const ConfigHandler = HttpApiBuilder.group(Api, "server.config", (handler
       }),
     )
     .handle(
+      "config.providers.switch",
+      Effect.fn(function* (ctx) {
+        const config = yield* Config.Service
+        if (!config.providerSwitch) return yield* Effect.die(new Error("Config updates are unavailable"))
+        yield* config.providerSwitch(ctx.params.provider, ctx.payload.enabled).pipe(Effect.orDie)
+        return HttpApiSchema.NoContent.make()
+      }),
+    )
+    .handle(
       "config.providers.get",
       Effect.fn(function* (ctx) {
         const config = yield* Config.Service

@@ -770,6 +770,10 @@ export const dict = {
   "settings.providers.connected.more": "Más para {{provider}}",
   "settings.providers.connected.edit": "Editar",
   "settings.providers.connected.remove": "Quitar proveedor",
+  "settings.providers.section.off": "Desactivados",
+  "settings.providers.off.description": "No se usa. Su clave y su configuración se conservan; actívalo para volver a usarlo.",
+  "settings.providers.off.turnOff": "Desactivar {{provider}}",
+  "settings.providers.off.turnOn": "Activar {{provider}}",
   "settings.providers.connected.environmentDescription": "Conectado desde tus variables de entorno",
 
   "dialog.server.add.passwordPlaceholder": "contraseña",

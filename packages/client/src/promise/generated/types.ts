@@ -5052,6 +5052,10 @@ export type ExperimentalConfigMcpRemoveInput = { readonly server: string }
 
 export type ExperimentalConfigMcpRemoveOutput = void
 
+export type ExperimentalConfigProvidersSwitchInput = { readonly provider: string; readonly enabled: boolean }
+
+export type ExperimentalConfigProvidersSwitchOutput = void
+
 export type ExperimentalConfigProvidersGetInput = { readonly provider: string }
 
 export type ExperimentalConfigProvidersGetOutput = { path: string; entry: any }
@@ -5440,6 +5444,12 @@ export type ConfigMcpRemoveInput = ExperimentalConfigMcpRemoveInput
 
 /** @deprecated Use `ExperimentalConfigMcpRemoveOutput`. Removed in the next minor. */
 export type ConfigMcpRemoveOutput = ExperimentalConfigMcpRemoveOutput
+
+/** @deprecated Use `ExperimentalConfigProvidersSwitchInput`. Removed in the next minor. */
+export type ConfigProvidersSwitchInput = ExperimentalConfigProvidersSwitchInput
+
+/** @deprecated Use `ExperimentalConfigProvidersSwitchOutput`. Removed in the next minor. */
+export type ConfigProvidersSwitchOutput = ExperimentalConfigProvidersSwitchOutput
 
 /** @deprecated Use `ExperimentalConfigProvidersGetInput`. Removed in the next minor. */
 export type ConfigProvidersGetInput = ExperimentalConfigProvidersGetInput

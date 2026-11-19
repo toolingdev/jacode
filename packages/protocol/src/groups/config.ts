@@ -76,6 +76,20 @@ export const ConfigGroup = HttpApiGroup.make("server.config")
     ),
   )
   .add(
+    HttpApiEndpoint.put("config.providers.switch", "/api/experimental/config/providers/:provider/enabled", {
+      params: { provider: Schema.String },
+      payload: Schema.Struct({ enabled: Schema.Boolean }),
+      success: HttpApiSchema.NoContent,
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "experimental.config.providers.switch",
+        summary: "Switch provider",
+        description:
+          "Experimental: may change without compatibility guarantees. Switch a provider off, or back on, as a `provider.use` deny policy in the highest-precedence global configuration file. Its key and settings stay.",
+      }),
+    ),
+  )
+  .add(
     HttpApiEndpoint.get("config.providers.get", "/api/experimental/config/providers/:provider", {
       params: { provider: Schema.String },
       success: Schema.Struct({ path: Schema.String, entry: Schema.Unknown }),

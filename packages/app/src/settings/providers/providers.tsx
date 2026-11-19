@@ -5,6 +5,7 @@ import { useDialog } from "@opencode/ui/context/dialog"
 import { Icon } from "@opencode/ui/icon"
 import { IconButton } from "@opencode/ui/icon-button"
 import { Menu } from "@opencode/ui/menu"
+import { Switch } from "@opencode/ui/switch"
 import { Option, Schema } from "effect"
 import { OpenCodeLogo } from "@/providers/opencode-logo"
 import { showToast } from "@/shell/notifications/toast"
@@ -306,7 +307,9 @@ export const SettingsProviders: Component<{
   const globalConfig = useGlobalConfig()
 
   const configured = (id: string) => {
-    const entry = globalConfig.documents()?.findLast((document) => document.providers?.[id] !== undefined)?.providers?.[id]
+    const entry = globalConfig.documents()?.findLast((document) => document.providers?.[id] !== undefined)?.providers?.[
+      id
+    ]
 
     if (!entry) return
 
@@ -316,6 +319,51 @@ export const SettingsProviders: Component<{
   // Edit and Remove of a custom provider run in the Custom providers section, which owns that form.
   const customAction = (action: "edit" | "remove", id: string) =>
     window.dispatchEvent(new CustomEvent(CUSTOM_PROVIDER_ACTION, { detail: { action, id } }))
+
+  // Fork feature: a provider switched off is denied by a `provider.use` policy in the global config. It keeps its key
+  // and settings, and is listed apart so it can be switched back on.
+  const switchedOff = createMemo(() =>
+    Array.from(
+      new Set(
+        (globalConfig.documents() ?? []).flatMap((document) =>
+          (document.policies ?? []).flatMap((policy) =>
+            policy.action === "provider.use" && policy.effect === "deny" && policy.resource !== "*"
+              ? [policy.resource]
+              : [],
+          ),
+        ),
+      ),
+    ),
+  )
+
+  // A switched-off provider is gone from the catalog, so its name comes from the config that defines it, if any.
+  const offName = (id: string) =>
+    globalConfig.documents()?.findLast((document) => document.providers?.[id]?.name !== undefined)?.providers?.[id]
+      ?.name ??
+    providers.all().get(id)?.name ??
+    id
+
+  const [switching, setSwitching] = createSignal<string>()
+
+  const ProviderSwitch: Component<{ id: string; name: string; on: boolean }> = (switchProps) => (
+    <div class="shrink-0 ps-2" data-action="settings-provider-switch">
+      <Switch
+        checked={switchProps.on}
+        disabled={switching() === switchProps.id}
+        hideLabel
+        onChange={(enabled) => {
+          setSwitching(switchProps.id)
+          void globalConfig
+            .save(() => serverSdk.api.experimental.config.providers.switch({ provider: switchProps.id, enabled }))
+            .finally(() => setSwitching(undefined))
+        }}
+      >
+        {language.t(switchProps.on ? "settings.providers.off.turnOff" : "settings.providers.off.turnOn", {
+          provider: switchProps.name,
+        })}
+      </Switch>
+    </div>
+  )
 
   const ConfiguredActions: Component<{ item: ProviderItem }> = (actionProps) => {
     const item = () => actionProps.item
@@ -348,7 +396,9 @@ export const SettingsProviders: Component<{
                 </Menu.Item>
               </Show>
               <Show when={canDisconnect(item())}>
-                <Menu.Item onSelect={() => disconnect(item(), item().name)}>{language.t("common.disconnect")}</Menu.Item>
+                <Menu.Item onSelect={() => disconnect(item(), item().name)}>
+                  {language.t("common.disconnect")}
+                </Menu.Item>
               </Show>
               <Show when={configured(item().id)?.url}>
                 <Menu.Separator />
@@ -556,22 +606,23 @@ export const SettingsProviders: Component<{
                           <Show
                             when={!configured(item.id) && canManageAccounts(item)}
                             fallback={
-                              <Show
-                                when={!configured(item.id)}
-                                fallback={<ConfiguredActions item={item} />}
-                              >
-                              <Show
-                                when={canDisconnect(item)}
-                                fallback={
-                                  <span class="settings-provider-env-hint">
-                                    {language.t("settings.providers.connected.environmentDescription")}
-                                  </span>
-                                }
-                              >
-                                <Button size="normal" variant="ghost-muted" onClick={() => disconnect(item, item.name)}>
-                                  {language.t("common.disconnect")}
-                                </Button>
-                              </Show>
+                              <Show when={!configured(item.id)} fallback={<ConfiguredActions item={item} />}>
+                                <Show
+                                  when={canDisconnect(item)}
+                                  fallback={
+                                    <span class="settings-provider-env-hint">
+                                      {language.t("settings.providers.connected.environmentDescription")}
+                                    </span>
+                                  }
+                                >
+                                  <Button
+                                    size="normal"
+                                    variant="ghost-muted"
+                                    onClick={() => disconnect(item, item.name)}
+                                  >
+                                    {language.t("common.disconnect")}
+                                  </Button>
+                                </Show>
                               </Show>
                             }
                           >
@@ -590,6 +641,7 @@ export const SettingsProviders: Component<{
                             </Show>
                             <AccountMenu provider={item} />
                           </Show>
+                          <ProviderSwitch id={item.id} name={item.name} on />
                         </div>
                       }
                     >
@@ -676,6 +728,29 @@ export const SettingsProviders: Component<{
             </Show>
           </SettingsList>
         </div>
+
+        <Show when={switchedOff().length > 0}>
+          <div class="settings-section" data-component="switched-off-providers-section">
+            <h3 class="settings-section-title">{language.t("settings.providers.section.off")}</h3>
+            <SettingsList variant="catalog">
+              <For each={switchedOff()}>
+                {(id) => (
+                  <div class="settings-provider-row group">
+                    <div class="settings-provider-lead">
+                      <div class="flex min-w-0 flex-col">
+                        <span class="settings-provider-name truncate text-v2-text-text-muted">{offName(id)}</span>
+                        <span class="truncate text-12-regular text-v2-text-text-faint">
+                          {language.t("settings.providers.off.description")}
+                        </span>
+                      </div>
+                    </div>
+                    <ProviderSwitch id={id} name={offName(id)} on={false} />
+                  </div>
+                )}
+              </For>
+            </SettingsList>
+          </div>
+        </Show>
 
         <div class="settings-section">
           <h3 class="settings-section-title">{language.t("settings.providers.section.popular")}</h3>

@@ -79,6 +79,11 @@ export interface Interface {
    * secret written out in full hidden, and that file's path.
    */
   readonly providerEntry?: (id: string) => Effect.Effect<{ readonly path: string; readonly entry: unknown }>
+  /**
+   * Fork feature: switches a provider off or back on, as a `provider.use` deny policy in the global config file. Off
+   * keeps its key and settings; the provider just goes unused until switched on.
+   */
+  readonly providerSwitch?: (id: string, enabled: boolean) => Effect.Effect<void, FSUtil.Error>
   /** Fork feature: replaces a provider's entry as edited in the app; hidden secrets keep the value the file has. */
   readonly providerEdit?: (id: string, entry: ConfigProvider.Info) => Effect.Effect<void, FSUtil.Error>
   /**
@@ -605,6 +610,20 @@ export const layer = (options?: Options) =>
         return { path: file, entry: ConfigSecrets.hide(rawProvider(text, id)) }
       })
 
+      const providerSwitch = Effect.fn("Config.providerSwitch")(function* (id: string, enabled: boolean) {
+        yield* editGlobal("config.providerSwitch", (text) => {
+          const document: unknown = parse(text, [], { allowTrailingComma: true })
+          const current = isRecord(document) && Array.isArray(document.policies) ? document.policies : []
+          const kept = current.filter(
+            (item) =>
+              !(isRecord(item) && item.action === "provider.use" && item.resource === id && item.effect === "deny"),
+          )
+          const next = enabled ? kept : [...kept, { action: "provider.use", resource: id, effect: "deny" }]
+
+          return applyEdits(text, modify(text, ["policies"], next.length > 0 ? next : undefined, formatting))
+        })
+      })
+
       const providerEdit = Effect.fn("Config.providerEdit")(function* (id: string, entry: ConfigProvider.Info) {
         yield* editGlobal("config.providerEdit", (text) => {
           const restored = ConfigSecrets.restore(entry, rawProvider(text, id))
@@ -677,6 +696,7 @@ export const layer = (options?: Options) =>
         addons,
         providerEntry,
         providerEdit,
+        providerSwitch,
         workers,
         listed,
         integration: Effect.fn("Config.integration")(function* (integrationID, document) {
