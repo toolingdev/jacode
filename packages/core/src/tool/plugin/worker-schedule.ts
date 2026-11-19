@@ -5,7 +5,7 @@ import type { Context } from "@opencode/plugin/effect/plugin"
 import type { Document, Entry } from "@opencode/schema/config"
 import type { ConfigExperimental } from "@opencode/schema/config/experimental"
 import { Schedule } from "@opencode/schema/schedule"
-import { Effect, Schema } from "effect"
+import { Effect, Schema, SchemaGetter } from "effect"
 import { Config } from "../../config.js"
 
 // Fork feature: a chat on this computer hands a scheduled task to a worker, so it runs there even while this computer
@@ -99,13 +99,19 @@ const StatusOutput = Schema.Struct({
 
 const ListOutput = Schema.Struct({ workers: Schema.Array(Schema.Struct({ name: Schema.String, url: Schema.String })) })
 
-// The parts of a schedule the worker sends back that these tools report.
+// The parts of a schedule the worker sends back that these tools report; its times arrive as Unix milliseconds.
+const Millis = Schema.Finite.pipe(
+  Schema.decodeTo(Schema.String, {
+    decode: SchemaGetter.transform((ms) => new Date(ms).toISOString()),
+    encode: SchemaGetter.transform((iso) => Date.parse(iso)),
+  }),
+)
 const RemoteSchedule = Schema.Struct({
   id: Schema.String,
   status: Schema.String,
   runCount: Schema.Finite,
-  nextDueAt: Schema.optionalKey(Schema.String),
-  lastFiredAt: Schema.optionalKey(Schema.String),
+  nextDueAt: Schema.optionalKey(Millis),
+  lastFiredAt: Schema.optionalKey(Millis),
   lastOutcome: Schema.optionalKey(Schema.String),
 })
 
