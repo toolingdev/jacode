@@ -1,3 +1,13 @@
+> **JaCode** is a desktop assistant built on OpenCode. It keeps everything below and adds:
+>
+> - **Auto, a model for each prompt.** A fast decision model judges how hard each prompt is, narrows your models to the few that fit, and picks one. A flow chart in Settings shows how.
+> - **Workers that stay on.** Add a home server, VPS or Docker container in a guided setup, run chats there, or hand a scheduled task to one from any chat. Results come back to the chat that asked, even if your computer was off.
+> - **Every provider in one place.** Connect, add OpenAI-compatible ones by address, view and edit a provider's config in the app without exposing its keys, and see plan usage and credits across providers.
+> - **Answers as cards and charts.** Live charts, tables, weather, usage, quote and outline cards drawn right in the chat.
+> - **Chats without a folder**, exact time from internet clocks, add-ons you switch on when you want them, and an app in English and Spanish.
+>
+> What each feature does, where to find it, and how to build the app: [JACODE.md](JACODE.md).
+
 <p align="center">
   <a href="https://opencode.ai">
     <picture>
