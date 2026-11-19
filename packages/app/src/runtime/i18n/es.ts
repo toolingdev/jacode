@@ -758,6 +758,9 @@ export const dict = {
   "common.time.minutesAgo.short": "hace {{count}} min",
   "common.time.hoursAgo.short": "hace {{count}} h",
   "common.time.daysAgo.short": "hace {{count}} d",
+  "settings.providers.connected.configFile": "Definido en {{file}}",
+  "settings.providers.connected.openConfig": "Abrir archivo",
+  "settings.providers.connected.connectKey": "Conectar con clave",
   "settings.providers.connected.environmentDescription": "Conectado desde tus variables de entorno",
 
   "dialog.server.add.passwordPlaceholder": "contraseña",
