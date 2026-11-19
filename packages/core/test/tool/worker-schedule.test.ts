@@ -26,3 +26,25 @@ test("the newest answer's text is read from a worker chat's messages", () => {
   expect(WorkerScheduleTools.latestAnswer({ data: [] })).toBeUndefined()
   expect(WorkerScheduleTools.latestAnswer("nonsense")).toBeUndefined()
 })
+
+test("a worker chat's finished runs are each prompt with its answer, once the run went idle", () => {
+  const messages = {
+    data: [
+      { id: "u1", type: "user", time: { created: 1 } },
+      { id: "a1", type: "assistant", time: { created: 2 }, content: [{ type: "text", text: "first answer" }] },
+      { id: "i1", type: "idle", time: { created: 3 } },
+      { id: "u2", type: "user", time: { created: 4 } },
+      { id: "a2", type: "assistant", time: { created: 5 }, content: [{ type: "text", text: "still going" }] },
+    ],
+  }
+
+  expect(WorkerScheduleTools.finishedRuns(messages)).toEqual([{ id: "u1", text: "first answer", at: 3 }])
+  expect(WorkerScheduleTools.finishedRuns({ data: "nope" })).toEqual([])
+})
+
+test("a chat's linked worker tasks come from its metadata, and none when it has none", () => {
+  expect(WorkerScheduleTools.linkedTasks(undefined)).toEqual([])
+  expect(WorkerScheduleTools.linkedTasks({ workerTasks: [{ worker: "w", sessionID: "s" }] })).toEqual([
+    { worker: "w", sessionID: "s" },
+  ])
+})

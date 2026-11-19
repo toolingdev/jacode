@@ -77,6 +77,8 @@ const light = {
   "v2-state-bg-info": ref("v2-blue-200"),
   "v2-state-fg-info": ref("v2-blue-800"),
   "v2-state-border-info": ref("v2-blue-300"),
+  // Fork feature: news a remote worker brought back, such as the unread dot of its chat.
+  "v2-state-fg-remote": ref("v2-cyan-800"),
   ...lightAgentTokens,
   ...V2_AVATAR_LIGHT,
   "v2-elevation-raised":
@@ -147,6 +149,8 @@ const dark = {
   "v2-state-bg-info": ref("v2-blue-1200"),
   "v2-state-fg-info": ref("v2-blue-500"),
   "v2-state-border-info": ref("v2-blue-900"),
+  // Fork feature: news a remote worker brought back, such as the unread dot of its chat.
+  "v2-state-fg-remote": ref("v2-cyan-500"),
   ...darkAgentTokens,
   ...V2_AVATAR_DARK,
   "v2-elevation-raised":

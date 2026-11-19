@@ -34,6 +34,14 @@ export function useSessionTabAvatarState(
     () => needsAttention() || (serverCtx()?.notification.session.unread(sessionId(), snapshot?.()) ?? false),
   )
 
+  // Fork feature: unread because a worker brought back a task's result, which shows in its own color.
+  const remote = createMemo(
+    () =>
+      unread() &&
+      !needsAttention() &&
+      (serverCtx()?.data.session.get(sessionId())?.metadata ?? snapshot?.()?.metadata)?.workerResult === true,
+  )
+
   const loading = createMemo(() => {
     const data = serverCtx()?.data
 
@@ -44,7 +52,7 @@ export function useSessionTabAvatarState(
     return running(data, sessionId(), !!root?.())
   })
 
-  return { unread, loading, attention: needsAttention }
+  return { unread, loading, attention: needsAttention, remote }
 }
 
 // The pending permission and form request that waits on the user anywhere in the session (or its family, for roots).

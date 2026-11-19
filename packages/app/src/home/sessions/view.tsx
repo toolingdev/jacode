@@ -363,7 +363,12 @@ function HomeSessionIndicators(props: {
       render={(state) => (
         <>
           {/* A busy session shows its activity ring instead of the unread dot. */}
-          <HomeSessionLeading record={props.record} open={state.open()} unread={state.unread() && !state.loading()} />
+          <HomeSessionLeading
+            record={props.record}
+            open={state.open()}
+            unread={state.unread() && !state.loading()}
+            remote={state.remote()}
+          />
           <Show when={state.loading()}>
             <ActivityRing class="order-last ms-auto" />
           </Show>
@@ -373,7 +378,7 @@ function HomeSessionIndicators(props: {
   )
 }
 
-function HomeSessionLeading(props: { record: HomeSessionRecord; open: boolean; unread: boolean }) {
+function HomeSessionLeading(props: { record: HomeSessionRecord; open: boolean; unread: boolean; remote: boolean }) {
   return (
     <div class="relative shrink-0">
       <Show when={props.open}>
@@ -390,6 +395,7 @@ function HomeSessionLeading(props: { record: HomeSessionRecord; open: boolean; u
         project={props.record.project}
         directory={props.record.session.location.directory}
         unread={props.unread}
+        remote={props.remote}
       />
     </div>
   )

@@ -150,10 +150,14 @@ export function TabNavItem(
     if (!props.unread) return
 
     // As in the inbox, an unread run that ended in failure gets the danger dot instead of the accent one.
-    return props.session.outcome === "failed" ? "failed" : "unread"
+    if (props.session.outcome === "failed") return "failed"
+
+    // Fork feature: news a worker brought back gets a dot of its own color.
+    return props.session.metadata?.workerResult === true ? "remote" : "unread"
   }
 
-  const dotted = () => status() === "attention" || status() === "unread" || status() === "failed"
+  const dotted = () =>
+    status() === "attention" || status() === "unread" || status() === "failed" || status() === "remote"
 
   const project = createMemo(() => {
     const session = props.session
@@ -590,6 +594,7 @@ export function TabNavItem(
           <span data-mark="attention" data-slot="tab-status-dot" />
           <span data-mark="unread" data-slot="tab-status-dot" />
           <span data-mark="failed" data-slot="tab-status-dot" />
+          <span data-mark="remote" data-slot="tab-status-dot" />
         </span>
         <Show when={actions}>
           <IconButton

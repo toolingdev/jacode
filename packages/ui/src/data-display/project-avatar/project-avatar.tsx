@@ -167,6 +167,8 @@ export interface ProjectAvatarProps extends ComponentProps<"div"> {
   src?: string
   variant?: ProjectAvatarStyle
   unread?: boolean
+  /** Colors the unread dot for news of a kind of its own: `remote` is a result brought back from another computer. */
+  unreadTone?: "remote"
   /** Seeds the generated default avatar shown when there is no image; see getProjectAvatarGenerated. */
   generated?: string
   /** Text stacked over the avatar, hidden until the caller's CSS reveals `[data-slot="project-avatar-label"]`. */
@@ -179,6 +181,7 @@ export function ProjectAvatar(props: ProjectAvatarProps) {
     "src",
     "variant",
     "unread",
+    "unreadTone",
     "generated",
     "label",
     "class",
@@ -228,7 +231,7 @@ export function ProjectAvatar(props: ProjectAvatarProps) {
         </Show>
       </div>
       <Show when={split.unread}>
-        <span data-slot="project-avatar-unread-dot" aria-hidden="true" />
+        <span data-slot="project-avatar-unread-dot" data-tone={split.unreadTone} aria-hidden="true" />
       </Show>
     </div>
   )

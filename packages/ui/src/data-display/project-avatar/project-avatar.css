@@ -133,6 +133,10 @@
   mask-image: radial-gradient(circle 4.5px at 100% 0, transparent 4px, black 5px);
 }
 
+[data-slot="project-avatar-unread-dot"][data-tone="remote"] {
+  background: var(--v2-state-fg-remote);
+}
+
 [data-slot="project-avatar-unread-dot"] {
   position: absolute;
   z-index: 3;

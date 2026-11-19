@@ -691,7 +691,12 @@ export function HomeSessionStatusController(props: {
   server: ServerConnection.Key
   record: HomeSessionRecord
   isOpenTab: (record: HomeSessionRecord) => boolean
-  render: (state: { unread: Accessor<boolean>; loading: Accessor<boolean>; open: Accessor<boolean> }) => JSX.Element
+  render: (state: {
+    unread: Accessor<boolean>
+    remote: Accessor<boolean>
+    loading: Accessor<boolean>
+    open: Accessor<boolean>
+  }) => JSX.Element
 }) {
   const avatar = useSessionTabAvatarState(
     () => props.server,
@@ -703,6 +708,7 @@ export function HomeSessionStatusController(props: {
 
   return props.render({
     unread: avatar.unread,
+    remote: avatar.remote,
     loading: avatar.loading,
     open: () => props.isOpenTab(props.record),
   })

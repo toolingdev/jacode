@@ -13,6 +13,8 @@ export function SessionTabAvatarView(props: {
   project?: LocalProject
   directory: string
   unread: boolean
+  /** The unread dot means a worker brought back a result. */
+  remote?: boolean
   label?: string
 }) {
   return (
@@ -23,6 +25,7 @@ export function SessionTabAvatarView(props: {
       generated={getProjectAvatarGenerated(props.project ?? { worktree: props.directory })}
       label={props.label}
       unread={props.unread}
+      unreadTone={props.remote ? "remote" : undefined}
     />
   )
 }

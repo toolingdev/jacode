@@ -647,6 +647,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                                     project={currentProject()}
                                     directory={value().location.directory}
                                     unread={currentStatus.unread() && !currentStatus.loading()}
+                                    remote={currentStatus.remote()}
                                   />
                                 )}
                               </Show>
