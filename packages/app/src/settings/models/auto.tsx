@@ -147,7 +147,7 @@ export const SettingsAuto: Component = () => {
         <h3 class="text-13-medium text-v2-text-text-base">{language.t("settings.models.auto.title")}</h3>
         <span class="text-12-regular text-v2-text-text-muted">{language.t("settings.auto.about")}</span>
       </div>
-      <AutoFlow decider={decider()?.value === UNSET ? "Jev" : (decider()?.label ?? "Jev")} slot={slotLabel} />
+      <AutoFlow slot={slotLabel} />
       <SettingsList>
         <SettingsRow
           title={language.t("settings.auto.decider.title")}
@@ -252,7 +252,7 @@ export const SettingsAuto: Component = () => {
 }
 
 // How Auto answers a prompt, drawn as the steps it takes, with the models the chosen scope uses now.
-const AutoFlow: Component<{ decider: string; slot: (slot: Slot) => string | undefined }> = (props) => {
+const AutoFlow: Component<{ slot: (slot: Slot) => string | undefined }> = (props) => {
   const language = useLanguage()
 
   const set = () => SLOTS.flatMap((slot) => {
@@ -271,7 +271,7 @@ const AutoFlow: Component<{ decider: string; slot: (slot: Slot) => string | unde
           {language.t("settings.auto.flow.prompt.body")}
         </Step>
         <Arrow />
-        <Step title={language.t("settings.auto.flow.read.title", { model: props.decider })}>
+        <Step title={language.t("settings.auto.flow.read.title")}>
           {language.t("settings.auto.flow.read.body")}
         </Step>
         <Arrow />
@@ -279,7 +279,7 @@ const AutoFlow: Component<{ decider: string; slot: (slot: Slot) => string | unde
           {language.t("settings.auto.flow.filter.body")}
         </Step>
         <Arrow />
-        <Step title={language.t("settings.auto.flow.pick.title", { model: props.decider })}>
+        <Step title={language.t("settings.auto.flow.pick.title")}>
           {language.t("settings.auto.flow.pick.body")}
         </Step>
         <Arrow />
