@@ -6,6 +6,8 @@ export default {
   add: "Add server",
   reset: "Reset to defaults",
   remove: "Remove {{server}}",
+  up: "Move {{server}} up",
+  down: "Move {{server}} down",
   placeholder: "time.example.com",
   unavailable: "No computer is connected",
   failed: "Could not save the time servers",

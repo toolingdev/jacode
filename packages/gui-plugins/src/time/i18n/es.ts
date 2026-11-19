@@ -6,6 +6,8 @@ export default {
   add: "Agregar servidor",
   reset: "Restablecer",
   remove: "Quitar {{server}}",
+  up: "Subir {{server}}",
+  down: "Bajar {{server}}",
   placeholder: "hora.ejemplo.com",
   unavailable: "No hay ningún equipo conectado",
   failed: "No se pudieron guardar los servidores de hora",

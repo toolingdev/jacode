@@ -114,13 +114,34 @@ export default function TimeServersSection() {
           {(host, index) => (
             <ui.SettingsRow id={`time-server-${index()}`} title={`${index() + 1}. ${host}`}>
               <Show when={list().length > 1}>
-                <ui.IconButton
-                  icon="close"
-                  label={ctx.t("remove", { server: host })}
-                  variant="ghost"
-                  size="small"
-                  onClick={() => save(list().filter((other) => other !== host))}
-                />
+                <div class="flex items-center gap-1">
+                  <ui.IconButton
+                    icon="arrow-up"
+                    label={ctx.t("up", { server: host })}
+                    variant="ghost"
+                    size="small"
+                    disabled={index() === 0}
+                    onClick={() => save(move(list(), index(), -1))}
+                  />
+                  {/* The icon set has no down arrow; the up arrow turned over stands in for it. */}
+                  <span class="flex rotate-180">
+                    <ui.IconButton
+                      icon="arrow-up"
+                      label={ctx.t("down", { server: host })}
+                      variant="ghost"
+                      size="small"
+                      disabled={index() === list().length - 1}
+                      onClick={() => save(move(list(), index(), 1))}
+                    />
+                  </span>
+                  <ui.IconButton
+                    icon="close"
+                    label={ctx.t("remove", { server: host })}
+                    variant="ghost"
+                    size="small"
+                    onClick={() => save(list().filter((other) => other !== host))}
+                  />
+                </div>
               </Show>
             </ui.SettingsRow>
           )}
@@ -128,4 +149,18 @@ export default function TimeServersSection() {
       </Show>
     </ui.SettingsSection>
   )
+}
+
+/** The list with the server at `index` swapped with its neighbour one step up (-1) or down (1). */
+function move(list: readonly string[], index: number, step: -1 | 1) {
+  const next = [...list]
+  const target = index + step
+  const current = next[index]
+  const other = next[target]
+
+  if (current === undefined || other === undefined) return next
+  next[index] = other
+  next[target] = current
+
+  return next
 }
