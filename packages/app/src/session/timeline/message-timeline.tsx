@@ -41,6 +41,7 @@ import { SessionHeaderSpacer } from "@/session/header/session-header"
 import { SessionHeaderGap } from "@/session/header/drag-area"
 import { SessionWorkingIndicator } from "@/session/header/session-working-indicator"
 import { SessionMascot } from "@/mascot/session"
+import { mascotActivity, useMascotSaying } from "@/mascot/saying"
 
 type BlockingTask = { type: "shell"; partID: string; id?: string; label?: string; started: number }
 
@@ -467,6 +468,24 @@ function MessageTimelineView(
     })
   })
 
+  // Fork feature: the companion says something in character about what the model is doing, in place of "Working".
+  const saying = useMascotSaying(() => {
+    const active = projection.activeMessageID()
+
+    if (!active) return undefined
+
+    return mascotActivity(projection.assistantMessagesByParent().get(active)?.at(-1)?.content ?? [])
+  })
+
+  // Waits keep their plain words, so the user sees what to act on; only Working becomes the companion's line.
+  const statusLabel = () => {
+    const status = nextStatus() ?? "working"
+
+    if (status === "working") return saying() ?? language.t("session.timeline.status.working")
+
+    return language.t(`session.timeline.status.${status}`)
+  }
+
   // A thought the model is writing stands in for Working, as its row says Thinking. A wait still shows, so the user
   // sees what to act on.
   const liveThought = createMemo(() => {
@@ -528,7 +547,7 @@ function MessageTimelineView(
             <SessionMascot working={live() && showWorking()} sessionID={parentID() ? undefined : sessionID()} />
             <Show when={live() && showWorking()}>
               <div data-component="session-working" role="status">
-                <TextShimmer text={language.t("session.timeline.working")} active />
+                <TextShimmer text={saying() ?? language.t("session.timeline.working")} active />
               </div>
             </Show>
             {hint(live)}
@@ -541,7 +560,7 @@ function MessageTimelineView(
           class={turnPadding()}
           spacing={laneSpacing()}
           inRow={inRow}
-          label={live() && working() ? language.t(`session.timeline.status.${nextStatus() ?? "working"}`) : undefined}
+          label={live() && working() ? statusLabel() : undefined}
           collapsed={live() && liveThought() && !working() && !backgroundHintPresence.present()}
         >
           <SessionMascot working={live() && working()} sessionID={parentID() ? undefined : sessionID()} />
