@@ -13,7 +13,7 @@ JaCode in Applications and choose Open, or run `xattr -dr com.apple.quarantine /
 - `JaCode-2026.11.20-mac-arm64.zip`: the desktop app for Apple silicon Macs. Unzip and move JaCode to Applications.
 - `opencode-linux-x64` and `opencode-linux-arm64`: the worker software for Linux computers, the same version as the
   app. The app does not download these yet; copy the one for your worker's processor into
-  `~/Library/Application Support/OpenCodeFork/desktop/worker/0.0.0-dev-202611200615/` on the Mac before adding a
+  `~/Library/Application Support/OpenCodeFork/desktop/worker/0.0.0-dev-202611201646/` on the Mac before adding a
   worker, or set the worker up from this repository with `script/fork-worker-setup.ts`.
 
 ### What JaCode adds
@@ -31,6 +31,9 @@ See [JACODE.md](JACODE.md) for the full guide. In short:
   switch a provider off without removing it.
 - **Add-ons** included with the app, such as Bible passages and weather units, all opt-in.
 - **Cards and charts** for weather, usage, quotes and outlines, and the exact time from network time servers.
+- **Ways in**: choose how a phone or another computer reaches this one (Tailscale, Tailscale Funnel, OpenTunnel, the
+  same network, or an address of your own), put them in order, and see which work. Pairing picks the way the QR code
+  uses, and a phone needs only its camera and browser.
 
 ### Brought in from upstream OpenCode
 
