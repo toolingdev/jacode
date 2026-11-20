@@ -69,6 +69,10 @@
     --v2-state-fg-info: var(--v2-blue-800);
     --v2-state-border-info: var(--v2-blue-300);
     --v2-state-fg-remote: var(--v2-cyan-800);
+    --v2-switch-track-on: #c4efe7;
+    --v2-switch-thumb: #ffffff;
+    --v2-switch-figure-off: #7c8496;
+    --v2-switch-figure-on: #0e9a85;
 
     --v2-agent-plan-solid: var(--v2-pink-800);
     --v2-agent-plan-border: rgba(200, 61, 139, 0.2);
@@ -208,6 +212,10 @@
       --v2-state-fg-info: var(--v2-blue-500);
       --v2-state-border-info: var(--v2-blue-900);
       --v2-state-fg-remote: var(--v2-cyan-500);
+      --v2-switch-track-on: #0f3a36;
+      --v2-switch-thumb: #0f1320;
+      --v2-switch-figure-off: #8a93a8;
+      --v2-switch-figure-on: #2ee6c8;
 
       --v2-agent-plan-solid: var(--v2-pink-400);
       --v2-agent-plan-border: rgba(250, 188, 216, 0.5);
@@ -330,6 +338,10 @@
     --v2-state-fg-info: var(--v2-blue-800);
     --v2-state-border-info: var(--v2-blue-300);
     --v2-state-fg-remote: var(--v2-cyan-800);
+    --v2-switch-track-on: #c4efe7;
+    --v2-switch-thumb: #ffffff;
+    --v2-switch-figure-off: #7c8496;
+    --v2-switch-figure-on: #0e9a85;
 
     --v2-agent-plan-solid: var(--v2-pink-800);
     --v2-agent-plan-border: rgba(200, 61, 139, 0.2);
@@ -460,6 +472,10 @@
     --v2-state-fg-info: var(--v2-blue-500);
     --v2-state-border-info: var(--v2-blue-900);
     --v2-state-fg-remote: var(--v2-cyan-500);
+    --v2-switch-track-on: #0f3a36;
+    --v2-switch-thumb: #0f1320;
+    --v2-switch-figure-off: #8a93a8;
+    --v2-switch-figure-on: #2ee6c8;
 
     --v2-agent-plan-solid: var(--v2-pink-400);
     --v2-agent-plan-border: rgba(247, 153, 198, 0.2);
