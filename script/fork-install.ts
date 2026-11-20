@@ -81,6 +81,10 @@ if (await exists(installed))
 
 await $`ditto ${path.join(built, bundle)} ${installed}`
 
+// The Dock and Finder cache an app's icon by its path; re-register the bundle so a changed icon shows.
+await $`touch ${installed}`
+await $`/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f ${installed}`
+
 console.log(`Installed ${installed} from ${(await $`git describe --always --dirty`.text()).trim()}`)
 
 if (process.argv.includes("--open")) await $`open ${installed}`
