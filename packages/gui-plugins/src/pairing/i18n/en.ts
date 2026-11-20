@@ -8,7 +8,7 @@ export default {
   "pair.open": "Pair device",
   "pair.unavailable": "Pairing is unavailable right now.",
   "dialog.description": "Scan the code with your phone's camera or JaCode on another device, or copy a link.",
-  "dialog.links": "Every working way in, in order",
+  "dialog.links": "Which way in the code and link use",
   "remote.title": "Remote access",
   "remote.description":
     "Paired devices reach JaCode on this computer over the internet. Turning it off disconnects them until you pair them again.",

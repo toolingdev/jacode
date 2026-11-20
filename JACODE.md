@@ -119,8 +119,9 @@ needs no app, only its browser. Under **Ways in** you choose how those devices g
 - **Your own address**: an address you run yourself, such as a WireGuard address or a reverse proxy.
 
 Each way shows whether it works now, at which address, or why not. The background service checks every address once a
-minute. The Pair dialog hands out every working address in your order: its QR code opens the first in a phone's
-camera, and each other address has its own link to copy. The Remote access switch pauses every way at once; turning it
+minute. The Pair dialog lists every working address in your order. The QR code and Copy link use the first; pick another
+in the list, such as OpenTunnel for a phone without Tailscale, and the code switches to it. A phone's camera opens
+the code in the browser. The Remote access switch pauses every way at once; turning it
 on again brings back what you chose. Nothing is reachable while JaCode's background service is stopped, and turning
 Tailscale off removes JaCode's serve setting again. From a terminal: `opencode service get access-status`, and
 `opencode service set access '<json>'`.

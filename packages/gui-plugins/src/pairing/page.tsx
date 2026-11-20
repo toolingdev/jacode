@@ -391,7 +391,17 @@ function DialogPairing(props: {
 
   // The QR code carries the remote address as `opencode pair --remote` prints it, {"code","urls"} JSON, which the
   // app's scanner reads. Keyed by its content, so the countdown and a refresh in flight never draw it again.
-  const payload = createMemo(() => ready()?.qr)
+  // Fork feature: the way in the QR code and the copy button use. The first working way until the user picks
+  // another; kept by address, so a refreshed code stays on the same way.
+  const [picked, setPicked] = createSignal<string>()
+
+  const chosen = createMemo(() => {
+    const links = ready()?.links ?? []
+
+    return links.find((link) => link.address === picked()) ?? links[0]
+  })
+
+  const payload = createMemo(() => chosen()?.url ?? ready()?.qr)
 
   const qr = createMemo(() => {
     const value = payload()
@@ -438,37 +448,38 @@ function DialogPairing(props: {
                       variant="neutral"
                       icon={copyView().icon}
                       disabled={copyView().disabled}
-                      onClick={() => dispatchCopy({ type: "copy.requested", url: current().url })}
+                      onClick={() => dispatchCopy({ type: "copy.requested", url: chosen()?.url ?? current().url })}
                     >
                       {ctx.t(copyView().label)}
                     </Button>
                   </div>
                 </div>
-                {/* Fork feature: every working way in, in order; a device that cannot use the first tries the next. */}
+                {/* Fork feature: every working way in, in order. Picking one switches the QR code and the copy button
+                    to it, for a device that cannot use the first. */}
                 <Show when={current().links.length > 1}>
-                  <ol class="flex flex-col gap-1" aria-label={ctx.t("dialog.links")}>
+                  <div class="flex flex-col gap-1" role="radiogroup" aria-label={ctx.t("dialog.links")}>
                     <For each={current().links}>
                       {(link, index) => (
-                        <li class="flex min-w-0 items-center gap-2">
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={chosen()?.address === link.address}
+                          class="flex min-w-0 cursor-pointer items-center gap-2 rounded-md border border-transparent px-2 py-1.5 text-start hover:bg-v2-background-bg-layer-01 aria-checked:border-v2-border-border-strong aria-checked:bg-v2-background-bg-layer-01"
+                          onClick={() => {
+                            dispatchCopy({ type: "reset" })
+                            setPicked(link.address)
+                          }}
+                        >
                           <span class="shrink-0 text-12-medium text-v2-text-text-base">
                             {`${index() + 1}. ${ctx.t(`method.${addressMethod(link.address)}`)}`}
                           </span>
                           <span class="min-w-0 flex-1 truncate text-12-regular text-v2-text-text-muted">
                             {link.address}
                           </span>
-                          <Button
-                            variant="ghost"
-                            size="small"
-                            class="shrink-0"
-                            disabled={copyView().disabled}
-                            onClick={() => dispatchCopy({ type: "copy.requested", url: link.url })}
-                          >
-                            {ctx.t("copyLink")}
-                          </Button>
-                        </li>
+                        </button>
                       )}
                     </For>
-                  </ol>
+                  </div>
                 </Show>
               </>
             )}
