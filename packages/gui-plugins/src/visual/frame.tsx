@@ -61,6 +61,25 @@ export function createThemeColors() {
   }
 }
 
+/** Where the server that serves the app in a browser keeps the host page for visuals (see the CLI's WebUi). */
+const FRAME_HOST = "/visual-frame.html"
+
+/**
+ * Whether visuals load through the server's host page: true when the app runs in a browser from a JaCode server.
+ * A visual shown as `srcdoc` takes on the app's CSP, which a server-served app sets to forbid inline scripts, so every
+ * card stayed blank there. The desktop app and dev servers have no host page and keep `srcdoc`. Asked once per owner.
+ */
+export function createFrameHost() {
+  const protocol = location.protocol
+
+  if (protocol !== "http:" && protocol !== "https:") return Promise.resolve(false)
+
+  return fetch(FRAME_HOST, { method: "HEAD", cache: "no-store" }).then(
+    (response) => response.ok && response.headers.get("x-visual-frame") === "1",
+    () => false,
+  )
+}
+
 /**
  * One visual: an HTML fragment shown as a page in a sandboxed frame with an origin of its own. It reaches nothing
  * of the app and nothing on the network. Charts work because the app carries Chart.js and hands it to a fragment
@@ -78,10 +97,12 @@ export function VisualFrame(props: {
   fixed?: number
   /** The theme's colours, from a `createThemeColors` reader. */
   colors: VisualColors
+  /** Whether to load through the server's host page, from a `createFrameHost` check. */
+  host: Promise<boolean>
 }) {
   const [height, setHeight] = createSignal(160)
   const dark = document.documentElement.dataset.colorScheme !== "light"
-
+  const [hosted] = createResource(() => props.host)
 
   // The chart library is large, so it loads only for a visual that asks for it; the others show at once.
   // The source is a word, not a boolean: a resource never loads for a false source, and a visual without a chart
@@ -101,7 +122,7 @@ export function VisualFrame(props: {
   const page = createMemo(() => {
     const loaded = library()
 
-    if (loaded === undefined) return undefined
+    if (loaded === undefined || hosted() === undefined) return undefined
 
     return visualDocument({
       fragment: loaded ? withChart(props.fragment, loaded) : props.fragment,
@@ -121,6 +142,10 @@ export function VisualFrame(props: {
     // Only this visual's own frame sizes it; the page inside is untrusted, so the number is bounded.
     if (!frame || event.source !== frame.contentWindow) return
 
+    // The host page is ready for the visual: it has an origin of its own, so the message goes to any origin.
+    if (event.data?.type === "visual-frame-ready")
+      return frame.contentWindow?.postMessage({ visualDocument: page() }, "*")
+
     if (event.data?.type !== "visual-height" || event.data.id !== props.id) return
     setHeight(visualHeight(Number(event.data.height) || 0))
   }
@@ -131,7 +156,8 @@ export function VisualFrame(props: {
   const size = () => `${props.fixed ?? height()}px`
 
   return (
-    <Show when={page()} fallback={<div style={{ height: size() }} />}>
+    // Keyed, so a hosted visual whose page changes gets a fresh host page to write it into.
+    <Show when={page()} keyed fallback={<div style={{ height: size() }} />}>
       {(source) => (
         <iframe
           ref={frame}
@@ -143,7 +169,8 @@ export function VisualFrame(props: {
           // Scripts only: no same-origin access, no forms, popups or navigation of the app.
           sandbox="allow-scripts"
           referrerPolicy="no-referrer"
-          srcdoc={source()}
+          src={hosted() ? FRAME_HOST : undefined}
+          srcdoc={hosted() ? undefined : source}
         />
       )}
     </Show>

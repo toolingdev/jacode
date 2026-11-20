@@ -1,6 +1,6 @@
 import { usePlugin } from "@opencode/plugin/gui"
 import { createSignal, For, onCleanup, type JSX } from "solid-js"
-import { createThemeColors, VisualFrame } from "./frame"
+import { createFrameHost, createThemeColors, VisualFrame } from "./frame"
 import type definition from "./index"
 import {
   CARD_STYLES,
@@ -21,6 +21,7 @@ export default function VisualsPage() {
   const ui = ctx.ui
   const looks = ctx.stores.looks
   const colors = createThemeColors()
+  const host = createFrameHost()
 
   // The Random tiles show what they mean by stepping through the looks.
   const [step, setStep] = createSignal(0)
@@ -51,6 +52,7 @@ export default function VisualsPage() {
       weather={style()}
       chart="clean"
       colors={colors()}
+      host={host}
       fixed={256}
     />
   )
@@ -63,6 +65,7 @@ export default function VisualsPage() {
       weather="clean"
       chart={style()}
       colors={colors()}
+      host={host}
       fixed={160}
     />
   )
@@ -76,6 +79,7 @@ export default function VisualsPage() {
       chart="clean"
       card={style()}
       colors={colors()}
+      host={host}
       fixed={190}
     />
   )

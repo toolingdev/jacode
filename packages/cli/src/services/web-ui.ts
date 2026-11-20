@@ -26,6 +26,7 @@ export const handler = Effect.fn("cli.web-ui.handler")(function* (options?: {
         return yield* api.pipe(
           Effect.catchIf(isRouteNotFound, () => Effect.succeed(HttpServerResponse.empty({ status: 404 }))),
         )
+      if (url.pathname === VISUAL_FRAME_PATH) return yield* Effect.succeed(visualFrame(request))
       return yield* assets.pipe(Effect.flatMap((loaded) => serveUI(request, url, loaded.files, loaded.brotli)))
     })
 })
@@ -65,6 +66,39 @@ function serveUI(
       ? HttpServerResponse.empty({ status: 200, headers })
       : HttpServerResponse.raw(file, { headers, contentType: headers["content-type"] }),
   )
+}
+
+// Fork feature: the host page for a reply's visual (a card or chart). A visual is a page with inline scripts; shown
+// as `srcdoc` it inherits this app's CSP, which forbids them, so in a browser every card stayed blank. This page
+// carries its own CSP instead: inline scripts and styles, data and blob images, nothing else, no network. The app frames
+// it sandboxed without same-origin access and posts it the visual's document, which it writes over itself.
+const VISUAL_FRAME_PATH = "/visual-frame.html"
+
+const VISUAL_FRAME = `<!doctype html><meta charset="utf-8"><script>
+addEventListener("message", (event) => {
+  if (event.source !== parent || !event.data || typeof event.data.visualDocument !== "string") return
+  document.open()
+  document.write(event.data.visualDocument)
+  document.close()
+}, { once: true })
+parent.postMessage({ type: "visual-frame-ready" }, "*")
+</script>`
+
+function visualFrame(request: HttpServerRequest.HttpServerRequest) {
+  const headers = {
+    "content-type": "text/html; charset=utf-8",
+    "cache-control": "no-cache",
+    "content-security-policy":
+      "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:",
+    "x-content-type-options": "nosniff",
+    // The app checks for this header, so a server without the page (or a dev server answering every path with the
+    // app) keeps the srcdoc frame.
+    "x-visual-frame": "1",
+  }
+
+  if (request.method === "HEAD") return HttpServerResponse.empty({ status: 200, headers })
+
+  return HttpServerResponse.text(VISUAL_FRAME, { headers, contentType: headers["content-type"] })
 }
 
 function acceptsBrotli(header: string | undefined) {

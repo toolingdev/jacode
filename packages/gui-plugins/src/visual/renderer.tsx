@@ -2,7 +2,7 @@ import { CodeBlock, Command, SettingsPage, type Plugin } from "@opencode/plugin/
 import { onIdle } from "@opencode/plugin/gui/builtin"
 import { lazy, onCleanup, Suspense } from "solid-js"
 import { CARD_LABEL_KEYS } from "./cards"
-import { createThemeColors, VisualFrame } from "./frame"
+import { createFrameHost, createThemeColors, VisualFrame } from "./frame"
 import type definition from "./index"
 import { CARD_STYLES, CHART_STYLES, resolveLook, WEATHER_CARD_STYLES } from "./styles"
 
@@ -15,6 +15,7 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
   // Numbers the visuals, so each frame's messages are told apart.
   let next = 0
   const colors = createThemeColors()
+  const host = createFrameHost()
 
   ctx.add(CodeBlock, {
     languages: ["visual"],
@@ -31,6 +32,7 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
           chart={resolveLook(ctx.stores.looks.value.chart, CHART_STYLES, roll)}
           card={resolveLook(ctx.stores.looks.value.card ?? "clean", CARD_STYLES, roll)}
           colors={colors()}
+          host={host}
           labels={Object.fromEntries(CARD_LABEL_KEYS.map((key) => [key, ctx.t(`card.${key}`)]))}
         />
       )
