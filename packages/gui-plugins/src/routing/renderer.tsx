@@ -1,5 +1,5 @@
 import { ComposerPill, type ComposerPillProps, type Plugin } from "@opencode/plugin/gui"
-import { lastDecision, shortModel } from "./decision"
+import { lastDecision, shortModel, switchedTo } from "./decision"
 import type definition from "./index"
 
 /**
@@ -24,7 +24,8 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
     id: "routing",
     order: 20,
     show: (input) => {
-      const decision = lastDecision(input.session.server.data.session.message.list(input.session.id))
+      const messages = input.session.server.data.session.message.list(input.session.id)
+      const decision = lastDecision(messages)
       const size = decision?.answers.find((answer) => answer.name === "size")
       const auto = decision?.auto
       const large = size?.choice === "large"
@@ -34,15 +35,20 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
 
       const task = decision?.answers.find((answer) => answer.name === "task")
       const percent = (confidence: number) => Math.round(confidence * 100)
+      const switched = auto ? switchedTo(messages, auto.model) : undefined
+      const answered = switched ?? auto?.model
 
       return {
         icon: "branch",
         title: ctx.t("title"),
-        label: auto ? ctx.t("used", { model: modelName(input, auto.model) }) : ctx.t("plan"),
+        label: answered ? ctx.t("used", { model: modelName(input, answered) }) : ctx.t("plan"),
         rows: [
           ...(auto
             ? [
-                { id: "model", label: ctx.t("row.model", { model: modelName(input, auto.model) }) },
+                { id: "model", label: ctx.t("row.model", { model: modelName(input, answered ?? auto.model) }) },
+                ...(switched
+                  ? [{ id: "switched", label: ctx.t("row.switched", { model: modelName(input, auto.model) }) }]
+                  : []),
                 {
                   id: "tier",
                   label: ctx.t(`row.tier.${auto.tier}`),

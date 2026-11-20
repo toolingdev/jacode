@@ -46,6 +46,9 @@ const QUOTA_TIGHT = 0.85
 const SHORTLIST = 5
 const PER_PROVIDER = 2
 
+// How many other models Auto hands one prompt to when the one it picked fails.
+const MAX_SWITCHES = 3
+
 // How long the plan and quota Auto reads are trusted before they are asked for again.
 const PLAN_TTL = 10 * 60_000
 const QUOTA_TTL = 2 * 60_000
@@ -82,7 +85,12 @@ export type Reason = "sure" | "band" | "set" | "unsure" | "quota" | "only" | "sk
 
 type Settings = NonNullable<NonNullable<Info["experimental"]>["decisions"]>
 
-type Pick = { readonly model?: Model.Ref; readonly plan: boolean }
+type Pick = {
+  readonly model?: Model.Ref
+  readonly plan: boolean
+  /** What Auto chose from, so a failing model can hand the prompt to the next one. */
+  readonly auto?: { readonly band: Band; readonly image: boolean; readonly lists: Lists; readonly pool: readonly Candidate[]; readonly tried: ReadonlySet<string> }
+}
 
 // What the app sends with a prompt of an Auto chat: the scope, and the models switched on in it.
 const AutoRequest = Schema.Struct({ scope: Schema.String, models: Schema.Array(Schema.String) })
@@ -274,7 +282,11 @@ export const Plugin = define({
           : undefined
 
         if (chosen?.model) last.set(event.sessionID, chosen.model.key)
-        picks.set(event.sessionID, { model: chosen?.model?.ref, plan: size?.choice === "large" })
+        picks.set(event.sessionID, {
+          model: chosen?.model?.ref,
+          plan: size?.choice === "large",
+          auto: chosen?.model ? { band: chosen.tier, image, lists, pool, tried: new Set([chosen.model.key]) } : undefined,
+        })
 
         // Kept on the message, so the app and the raw messages show what was decided and how surely.
         event.metadata = {
@@ -324,6 +336,26 @@ export const Plugin = define({
 
         // Only an Auto chat has a pick; it moves to it whatever model it was on, across providers too.
         if (model) event.model = model
+      }),
+    )
+
+    // A model Auto picked that fails with an error another model would not hit moves the prompt to the next model that
+    // fits, at once. The runner reloads the history and resolves the model again before the retry, so the new pick
+    // answers from where the failed step left off.
+    yield* ctx.session.hook("retry", (event) =>
+      Effect.sync(() => {
+        const pick = picks.get(event.sessionID)
+        const failed = `${event.model.providerID}/${event.model.id}`
+        const kind = switchable(event.error)
+
+        if (!pick?.auto || !kind || !pick.model || `${pick.model.providerID}/${pick.model.id}` !== failed) return
+        if (pick.auto.tried.size > MAX_SWITCHES) return
+        const next = fallback({ ...pick.auto, avoid: kind === "provider" ? event.model.providerID : undefined })
+
+        if (!next) return
+        picks.set(event.sessionID, { ...pick, model: next.ref, auto: { ...pick.auto, tried: new Set([...pick.auto.tried, next.key]) } })
+        last.set(event.sessionID, next.key)
+        event.decision = { retry: true, delay: 0 }
       }),
     )
 
@@ -382,6 +414,59 @@ export function choose(input: {
     return { ...from("quick", "sure"), reason: "quota" }
 
   return usual
+}
+
+/**
+ * Whether another model could get past an error: "provider" when the whole provider refused (its key, allowance or
+ * limit), "model" when only this model failed. Undefined for errors any model would hit, such as a blocked prompt
+ * or no network.
+ */
+export function switchable(error: { readonly type: string; readonly message: string }): "provider" | "model" | undefined {
+  if (PROVIDER_ERRORS.has(error.type)) return "provider"
+  if (MODEL_ERRORS.has(error.type)) return "model"
+  // An invalid request is the prompt's fault unless it says the model is the problem.
+  if (error.type === "provider.invalid-request" && /model|not (found|supported|available)|unavailable/i.test(error.message))
+    return "model"
+  return undefined
+}
+
+const PROVIDER_ERRORS = new Set([
+  "provider.auth",
+  "provider.quota",
+  "provider.free-limit",
+  "provider.chatgpt-limit",
+  "provider.chatgpt-workspace-limit",
+])
+const MODEL_ERRORS = new Set([
+  "provider.rate-limit",
+  "provider.internal",
+  "provider.timeout",
+  "provider.unknown",
+  "provider.invalid-output",
+  "provider.unsupported-operation",
+])
+
+/**
+ * The next model for a prompt whose model failed: the rest of the kind of task's list, then the other lists, then
+ * the rest of the pool, skipping models tried already, and the failed provider when it refused as a whole. A prompt
+ * with images only goes to models that read them.
+ */
+export function fallback(input: {
+  readonly band: Band
+  readonly image: boolean
+  readonly lists: Lists
+  readonly pool: readonly Candidate[]
+  readonly tried: ReadonlySet<string>
+  readonly avoid?: string
+}): Candidate | undefined {
+  const bands: Band[] = [input.band, ...TIERS.filter((tier) => tier !== input.band)]
+
+  return [...bands.flatMap((band) => input.lists[band]), ...input.pool].find(
+    (candidate) =>
+      !input.tried.has(candidate.key) &&
+      (!input.image || candidate.images) &&
+      candidate.ref.providerID !== input.avoid,
+  )
 }
 
 /** The kind of task a model's list puts it in, for a chat staying on its last model. */

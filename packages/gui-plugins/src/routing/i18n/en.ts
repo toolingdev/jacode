@@ -3,6 +3,7 @@ export default {
   used: "Auto → {{model}}",
   plan: "Plan first",
   "row.model": "Answered by {{model}}",
+  "row.switched": "Moved here after {{model}} failed",
   "row.tier.quick": "Quick task",
   "row.tier.everyday": "Everyday task",
   "row.tier.hard": "Hard task",

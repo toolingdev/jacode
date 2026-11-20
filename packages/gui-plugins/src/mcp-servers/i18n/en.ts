@@ -57,4 +57,10 @@ export default {
   "error.startup.invalid": "Enter a whole number of seconds.",
   "error.url.invalid": "Enter an http or https URL.",
   "error.headers.invalid": "Each line needs Name: value.",
+  "chat.title": "Connected tools in this chat",
+  "chat.label": "Tools",
+  "chat.label.off": "Tools · {{count}} off",
+  "chat.description": "Switch a connected tool off to keep this chat from using it. Other chats are not changed.",
+  "chat.failed": "Could not change this chat's tools",
+  "chat.manage": "Manage connected tools",
 }

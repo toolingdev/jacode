@@ -33,6 +33,27 @@ export function lastDecision(
   )
 }
 
+/**
+ * The model that answered the latest decided prompt when it is not the one Auto picked: Auto moved the prompt to
+ * another model after the first failed. Undefined while nothing answered yet or the pick answered.
+ */
+export function switchedTo(
+  messages: readonly {
+    readonly type: string
+    readonly metadata?: SessionMessageUser["metadata"]
+    readonly model?: { readonly providerID: string; readonly id: string }
+  }[],
+  picked: string,
+): string | undefined {
+  const prompt = messages.findLastIndex((message) => message.type === "user" && message.metadata?.decisions !== undefined)
+  const answer = messages.slice(prompt + 1).findLast((message) => message.type === "assistant" && message.model)?.model
+
+  if (prompt === -1 || !answer) return undefined
+  const key = `${answer.providerID}/${answer.id}`
+
+  return key === picked ? undefined : key
+}
+
 /** A model as the pill names it while the catalog loads: the model's own ID without its provider and vendor. */
 export function shortModel(key: string) {
   return key.slice(key.lastIndexOf("/") + 1)

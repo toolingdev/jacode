@@ -59,4 +59,10 @@ export default {
   "error.startup.invalid": "Ingresa un número entero de segundos.",
   "error.url.invalid": "Ingresa una URL http o https.",
   "error.headers.invalid": "Cada línea necesita Nombre: valor.",
+  "chat.title": "Herramientas conectadas en este chat",
+  "chat.label": "Herramientas",
+  "chat.label.off": "Herramientas · {{count}} apagadas",
+  "chat.description": "Apaga una herramienta conectada para que este chat no la use. Los demás chats no cambian.",
+  "chat.failed": "No se pudieron cambiar las herramientas de este chat",
+  "chat.manage": "Administrar herramientas conectadas",
 }

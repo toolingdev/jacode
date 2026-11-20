@@ -3,6 +3,7 @@ export default {
   used: "Automático → {{model}}",
   plan: "Primero un plan",
   "row.model": "Respondió {{model}}",
+  "row.switched": "Pasó aquí después de que falló {{model}}",
   "row.tier.quick": "Tarea rápida",
   "row.tier.everyday": "Tarea de todos los días",
   "row.tier.hard": "Tarea difícil",

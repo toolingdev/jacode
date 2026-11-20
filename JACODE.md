@@ -54,6 +54,11 @@ How Auto picks, in two stages:
    release date. Both answers come from a single call to the decision model.
 4. **That model answers.** The chip above the composer says which model answered and why.
 
+When the model Auto picked fails (rate limit, outage, timeout, a key or allowance the provider refuses, or a model
+that no longer exists), Auto moves the prompt at once to the next model that fits: the rest of that kind of task's
+list, then the other lists. A provider that refused as a whole is skipped. Up to three other models are tried; the
+pill above the composer then says which model answered and which one failed.
+
 When the decision model is unsure how hard a prompt is, the chat stays on the model it used last, or starts on an
 everyday one. When a subscription's allowance is nearly used, everyday work drops to the quick list. When the
 decision model cannot be reached, Auto picks without it and the chat says so once.
@@ -125,6 +130,13 @@ the code in the browser. The Remote access switch pauses every way at once; turn
 on again brings back what you chose. Nothing is reachable while JaCode's background service is stopped, and turning
 Tailscale off removes JaCode's serve setting again. From a terminal: `opencode service get access-status`, and
 `opencode service set access '<json>'`.
+
+## Connected tools in a chat
+
+The **Tools** pill above the composer lists the connected tools (MCP servers) with a switch each. Switch one off and
+this chat stops using it; other chats keep it. The pill says how many are off. The choice is kept with the chat as a
+deny rule in its permissions, so it lasts across restarts. Adding, editing and removing tools stays in Settings ›
+Connected tools.
 
 ## Providers
 

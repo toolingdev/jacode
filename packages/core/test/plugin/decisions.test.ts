@@ -179,3 +179,40 @@ test.each([
 ])("a failed decision names why the layer was skipped", (error, reason) => {
   expect(DecisionsPlugin.skipReason(error)).toBe(reason)
 })
+
+test("a failed pick moves to the rest of its list, then the other lists, skipping what was tried", () => {
+  const lists = DecisionsPlugin.shortlists(pool, undefined, 0)
+  const first = lists.hard[0]!
+  const next = DecisionsPlugin.fallback({ band: "hard", image: false, lists, pool, tried: new Set([first.key]) })
+
+  expect(next?.key).toBe(lists.hard[1]?.key)
+  expect(
+    DecisionsPlugin.fallback({ band: "hard", image: false, lists, pool, tried: new Set(keys(pool)) }),
+  ).toBeUndefined()
+})
+
+test("a prompt with images only moves to models that read them, and a refusing provider is left", () => {
+  const mixed = build([
+    info("a", 1, 2, { image: true }),
+    info("b", 1, 2, { image: true, provider: "other" }),
+    info("c", 1, 2),
+  ])
+  const lists = DecisionsPlugin.shortlists(mixed, undefined, 0)
+
+  expect(
+    DecisionsPlugin.fallback({ band: "image", image: true, lists, pool: mixed, tried: new Set(["nano/a"]) })?.key,
+  ).toBe("other/b")
+  expect(
+    DecisionsPlugin.fallback({ band: "everyday", image: false, lists, pool: mixed, tried: new Set(["nano/c"]), avoid: "nano" })
+      ?.key,
+  ).toBe("other/b")
+})
+
+test("only errors another model could get past move the prompt", () => {
+  expect(DecisionsPlugin.switchable({ type: "provider.rate-limit", message: "" })).toBe("model")
+  expect(DecisionsPlugin.switchable({ type: "provider.quota", message: "" })).toBe("provider")
+  expect(DecisionsPlugin.switchable({ type: "provider.invalid-request", message: "model_not_found" })).toBe("model")
+  expect(DecisionsPlugin.switchable({ type: "provider.invalid-request", message: "messages too long" })).toBeUndefined()
+  expect(DecisionsPlugin.switchable({ type: "provider.content-filter", message: "" })).toBeUndefined()
+  expect(DecisionsPlugin.switchable({ type: "provider.transport", message: "" })).toBeUndefined()
+})
