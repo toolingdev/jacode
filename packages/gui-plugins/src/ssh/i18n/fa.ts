@@ -30,4 +30,5 @@ export default {
   "stage.connecting": "در حال اتصال از طریق SSH…",
   "stage.authentication": "احراز هویت الزامی است",
   "menu.delete": "حذف",
+  "error.unavailable": "SSH در دسترس نیست",
 }

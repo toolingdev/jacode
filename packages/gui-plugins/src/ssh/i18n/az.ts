@@ -34,4 +34,5 @@ export default {
   "stage.connecting": "SSH üzərindən qoşulur…",
   "stage.authentication": "Doğrulama tələb olunur",
   "menu.delete": "Sil",
+  "error.unavailable": "SSH əlçatan deyil",
 }

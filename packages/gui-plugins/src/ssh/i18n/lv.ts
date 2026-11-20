@@ -33,4 +33,5 @@ export default {
   "stage.connecting": "Savienojuma izveide, izmantojot SSH…",
   "stage.authentication": "Nepieciešama autentifikācija",
   "menu.delete": "Dzēst",
+  "error.unavailable": "SSH nav pieejams",
 }

@@ -34,4 +34,5 @@ export default {
   "stage.connecting": "Verbinding maken via SSH…",
   "stage.authentication": "Authenticatie vereist",
   "menu.delete": "Verwijderen",
+  "error.unavailable": "SSH is niet beschikbaar",
 }

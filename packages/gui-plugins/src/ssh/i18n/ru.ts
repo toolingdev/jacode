@@ -33,4 +33,5 @@ export default {
   "stage.connecting": "Подключение по SSH…",
   "stage.authentication": "Требуется аутентификация",
   "menu.delete": "Удалить",
+  "error.unavailable": "SSH недоступен",
 }

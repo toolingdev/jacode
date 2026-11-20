@@ -34,4 +34,5 @@ export default {
   "stage.connecting": "Po lidhet me SSH…",
   "stage.authentication": "Kërkohet vërtetimi",
   "menu.delete": "Fshi",
+  "error.unavailable": "SSH nuk është i disponueshëm",
 }

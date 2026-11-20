@@ -32,4 +32,5 @@ export default {
   "stage.connecting": "সংযোগ করা হচ্ছে SSH…",
   "stage.authentication": "প্রমাণীকরণ প্রয়োজন",
   "menu.delete": "মুছে দিন",
+  "error.unavailable": "SSH উপলব্ধ নয়",
 }

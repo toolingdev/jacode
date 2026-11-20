@@ -34,4 +34,5 @@ export default {
   "stage.connecting": "Пайвастшавӣ тавассути SSH…",
   "stage.authentication": "Аутентификатсия талаб карда мешавад",
   "menu.delete": "Нобуд кунед",
+  "error.unavailable": "SSH дастрас нест",
 }

@@ -88,7 +88,7 @@
 
   &:not([data-readonly]) [data-slot="switch-input"]:focus-visible ~ [data-slot="switch-control"] {
     outline: 2px solid var(--v2-border-border-focus);
-    outline-offset: 1px;
+    outline-offset: 2px;
   }
 
   &:hover:not([data-disabled], [data-readonly]) [data-slot="switch-control"] {
@@ -149,5 +149,16 @@
 
   [data-slot="switch-error"] {
     color: var(--text-error);
+  }
+}
+
+@media (forced-colors: active) {
+  [data-component="switch"]:not([data-appearance="standard"]) [data-slot="switch-control"] {
+    border: 1px solid ButtonText;
+    padding: 1px;
+  }
+
+  [data-component="switch"]:not([data-appearance="standard"]) [data-slot="switch-thumb"] {
+    border: 1px solid ButtonText;
   }
 }

@@ -33,4 +33,5 @@ export default {
   "stage.connecting": "Menghubungkan melalui SSH…",
   "stage.authentication": "Diperlukan autentikasi",
   "menu.delete": "Hapus",
+  "error.unavailable": "SSH tidak tersedia",
 }

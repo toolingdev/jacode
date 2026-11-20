@@ -28,4 +28,5 @@ export default {
   "stage.connecting": "በSSH በመገናኘት ላይ...",
   "stage.authentication": "ማረጋገጫ ያስፈልጋል",
   "menu.delete": "ሰርዝ",
+  "error.unavailable": "SSH አይገኝም",
 }

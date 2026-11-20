@@ -32,4 +32,5 @@ export default {
   "stage.connecting": "Jungiamasi per SSH…",
   "stage.authentication": "Reikalingas autentifikavimas",
   "menu.delete": "Ištrinti",
+  "error.unavailable": "SSH nepasiekiamas",
 }

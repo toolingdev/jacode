@@ -27,4 +27,5 @@ export default {
   "stage.connecting": "正在透過 SSH 連線…",
   "stage.authentication": "需要驗證",
   "menu.delete": "刪除",
+  "error.unavailable": "SSH 無法使用",
 }

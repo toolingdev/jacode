@@ -36,4 +36,5 @@ export default {
   "stage.connecting": "Σύνδεση μέσω SSH…",
   "stage.authentication": "Απαιτείται έλεγχος ταυτότητας",
   "menu.delete": "Διαγραφή",
+  "error.unavailable": "Το SSH δεν είναι διαθέσιμο",
 }

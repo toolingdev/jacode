@@ -33,4 +33,5 @@ export default {
   "stage.connecting": "Pripájanie cez SSH…",
   "stage.authentication": "Vyžaduje sa autentifikácia",
   "menu.delete": "Odstrániť",
+  "error.unavailable": "SSH nie je dostupné",
 }

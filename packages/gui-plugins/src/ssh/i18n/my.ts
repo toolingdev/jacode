@@ -32,4 +32,5 @@ export default {
   "stage.connecting": "SSH ဖြင့် ချိတ်ဆက်နေသည်…",
   "stage.authentication": "အမှုအရာအတည်ပြုခြင်း လိုအပ်ပါသည်",
   "menu.delete": "ဖျက်ပါ",
+  "error.unavailable": "SSH မရရှိနိုင်ပါ",
 }

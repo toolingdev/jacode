@@ -34,4 +34,5 @@ export default {
   "stage.connecting": "Csatlakozás SSH-n keresztül…",
   "stage.authentication": "Hitelesítés szükséges",
   "menu.delete": "Törlés",
+  "error.unavailable": "Az SSH nem érhető el",
 }

@@ -18,6 +18,8 @@ const setup: Plugin.MainSetup = async (ctx) => {
   const runPromise = Effect.runPromiseWith(context)
   const runFork = Effect.runForkWith(context)
 
+  if (build.packaged && !enabled) runFork(Effect.logInfo("auto updater disabled, app-update.yml is missing"))
+
   // The update main staged for the next start; stored before in the updater's settings file.
   const ready = builtin.storage.store("ready", {
     schema: Schema.NullOr(Schema.Struct({ version: Schema.String })),
@@ -25,7 +27,7 @@ const setup: Plugin.MainSetup = async (ctx) => {
     from: { settings: "ready", file: "opencode.updater" },
   })
 
-  // electron-updater loads only in packaged builds, after the first window is up.
+  // electron-updater loads only in packaged builds with a feed, after the first window is up.
   const platform = enabled
     ? await import("./platform").then((module) => runPromise(module.make(build.channel)))
     : undefined

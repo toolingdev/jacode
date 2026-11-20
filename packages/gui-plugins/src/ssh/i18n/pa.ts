@@ -31,4 +31,5 @@ export default {
   "stage.connecting": "SSH تے جڑنا...",
   "stage.authentication": "توثیق درکار اے۔",
   "menu.delete": "مکاؤ",
+  "error.unavailable": "SSH دستیاب نئیں",
 }

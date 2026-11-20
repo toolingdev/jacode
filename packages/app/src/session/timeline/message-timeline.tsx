@@ -35,6 +35,7 @@ import {
   SessionAncestorTrail,
   SessionHeaderLayout,
   SessionLocation,
+  SessionHeaderFade,
   SessionTitleHeader,
 } from "../session-identity-header"
 import { SessionHeaderSpacer } from "@/session/header/session-header"
@@ -42,8 +43,8 @@ import { SessionHeaderGap } from "@/session/header/drag-area"
 import { SessionWorkingIndicator } from "@/session/header/session-working-indicator"
 import { SessionMascot } from "@/mascot/session"
 import { mascotActivity, useMascotSaying } from "@/mascot/saying"
+import type { BlockingTask } from "@/session/requests/background"
 
-type BlockingTask = { type: "shell"; partID: string; id?: string; label?: string; started: number }
 
 type SessionBackground = {
   blocking: Accessor<BlockingTask[]>
@@ -85,6 +86,7 @@ type MessageTimelineProps = {
   actions?: SessionUserActions
   scroll: { overflow: boolean; jump: boolean }
   onResumeScroll: (behavior?: ScrollBehavior) => void
+  focusComposer?: () => void
   setScrollRef: (el: HTMLDivElement | undefined) => void
   onScheduleScrollState: (el: HTMLDivElement) => void
   follow: TimelineFollow
@@ -92,6 +94,7 @@ type MessageTimelineProps = {
   onHistoryScroll: () => void
   centered: boolean
   reserveReviewToggle: boolean
+  reviewToggle?: JSX.Element
   onContentResize: () => void
   bottomInset?: number
   setVisibleRef?: (el: HTMLDivElement | undefined) => void
@@ -158,6 +161,8 @@ function MessageTimelineView(
   const sessionID = props.data.sessionID
   const sessionStatus = props.data.status
   const parentID = props.data.parentID
+
+  let titleButton: HTMLButtonElement | undefined
   const parentTitle = props.data.parentTitle
   const childTitle = props.data.childTitle
   const projection = props.data.projection
@@ -196,6 +201,15 @@ function MessageTimelineView(
   const showHeader = createMemo(() => !props.hideHeader && (props.data.showHeader() || workspaceSession()))
   const messageByID = projection.messageByID
 
+  const laneSpacing = createMemo(() => {
+    if (!props.next) return
+    const active = projection.activeMessageID()
+
+    if (!active) return
+
+    return laneGap(projection.rows(), active, messageByID())
+  })
+
   const virtualized = createTimelineVirtualizer({
     active: () => props.active !== false,
     sessionKey: () => `${server.key}/${props.data.sessionID()}`,
@@ -207,9 +221,12 @@ function MessageTimelineView(
     follow: props.follow,
     scroll: () => props.scroll,
     onResumeScroll: props.onResumeScroll,
+    focusComposer: props.focusComposer,
     setScrollRef: props.setScrollRef,
     onContentResize: props.onContentResize,
     bottomInset: () => props.bottomInset ?? 0,
+    // The status line's gap above it (--timeline-gap-* in timeline-next.css) past the old lane's 16px.
+    tailExtra: () => ({ s: 0, m: 4, l: 16 })[laneSpacing() ?? "s"],
     setVisibleRef: props.setVisibleRef,
     onScheduleScrollState: props.onScheduleScrollState,
     onUserScroll: props.onUserScroll,
@@ -495,15 +512,6 @@ function MessageTimelineView(
     return projection.rows().some((row) => Predicate.isTagged(row, "Thinking") && row.userMessageID === active)
   })
 
-  const laneSpacing = createMemo(() => {
-    if (!props.next) return
-    const active = projection.activeMessageID()
-
-    if (!active) return
-
-    return laneGap(projection.rows(), active, messageByID())
-  })
-
   const working = () => {
     if (!props.next) return showWorking()
     const status = nextStatus()
@@ -594,9 +602,15 @@ function MessageTimelineView(
           }}
         </Show>
       )}
+      headerInset={
+        <Show when={!props.hideHeader}>
+          <div data-slot="session-header-inset" aria-hidden="true" class="h-16" />
+          <SessionHeaderFade />
+        </Show>
+      }
       header={
         <Show when={!props.hideHeader}>
-          <SessionTitleHeader>
+          <SessionTitleHeader separateFade>
             <SessionHeaderLayout
               title={title().editing ? title().draft : childTitle()}
               location={
@@ -650,6 +664,7 @@ function MessageTimelineView(
                         }}
                       />
                       <SessionHeaderSpacer visible={props.reserveReviewToggle} />
+                      {props.reviewToggle}
                     </>
                   )}
                 </Show>
@@ -673,13 +688,17 @@ function MessageTimelineView(
                 <Show
                   when={title().editing}
                   fallback={
-                    <h1
-                      data-slot="session-title-child"
-                      class="truncate text-[13px] font-[530] leading-4 tracking-[-0.04px] text-v2-text-text-base w-fit rounded-[6px] px-1 py-1.5 hover:bg-v2-overlay-simple-overlay-hover"
-                      classList={{ "max-w-[45%] shrink-0": !!parentID() }}
-                      onClick={props.title.edit}
-                    >
-                      {childTitle()}
+                    <h1 class="session-title-rename w-fit text-[13px] font-[530] leading-4 tracking-[-0.04px] text-v2-text-text-base">
+                      <button
+                        ref={titleButton}
+                        type="button"
+                        dir="auto"
+                        data-slot="session-title-child"
+                        class="truncate hover:bg-v2-overlay-simple-overlay-hover"
+                        onClick={props.title.edit}
+                      >
+                        {childTitle()}
+                      </button>
                     </h1>
                   }
                 >
@@ -710,6 +729,7 @@ function MessageTimelineView(
                       if (event.key === "Escape") {
                         event.preventDefault()
                         props.title.cancel()
+                        titleButton?.focus({ preventScroll: true })
                       }
                     }}
                     onBlur={props.title.submit}

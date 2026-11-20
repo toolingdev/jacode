@@ -32,4 +32,5 @@ export default {
   "stage.connecting": "កំពុងតភ្ជាប់តាម SSH…",
   "stage.authentication": "ត្រូវការការផ្ទៀងផ្ទាត់",
   "menu.delete": "លុប",
+  "error.unavailable": "SSH មិនអាចប្រើបាន",
 }

@@ -32,4 +32,5 @@ export default {
   "stage.connecting": "Samband yvir SSH...",
   "stage.authentication": "Staðfesting krevst",
   "menu.delete": "Strika",
+  "error.unavailable": "SSH er ikki tøkt",
 }

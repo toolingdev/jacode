@@ -34,4 +34,5 @@ export default {
   "stage.connecting": "SSHで接続中…",
   "stage.authentication": "認証が必要です",
   "menu.delete": "削除",
+  "error.unavailable": "SSHを利用できません",
 }

@@ -30,4 +30,5 @@ export default {
   "stage.connecting": "ກໍາລັງເຊື່ອມຕໍ່ຜ່ານ SSH...",
   "stage.authentication": "ຕ້ອງການການຢືນຢັນຕົວຕົນ",
   "menu.delete": "ລຶບ",
+  "error.unavailable": "SSH ບໍ່ສາມາດໃຊ້ໄດ້",
 }

@@ -32,4 +32,5 @@ export default {
   "stage.connecting": "SSH-e birikmek…",
   "stage.authentication": "Hakyky tassyklamak zerur",
   "menu.delete": "Poz",
+  "error.unavailable": "SSH elýeterli däl",
 }

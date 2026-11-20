@@ -35,4 +35,5 @@ export default {
   "stage.connecting": "Se conectează prin SSH…",
   "stage.authentication": "Este necesară autentificare",
   "menu.delete": "Șterge",
+  "error.unavailable": "SSH nu este disponibil",
 }

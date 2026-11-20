@@ -34,4 +34,5 @@ export default {
   "stage.connecting": "SSH މެދުވެރިކޮށް ގުޅެމުން...",
   "stage.authentication": "އޮތެންޓިކޭޝަން ބޭނުންވެއެވެ",
   "menu.delete": "ފުހެލުން",
+  "error.unavailable": "SSH ނުލިބެއެވެ",
 }

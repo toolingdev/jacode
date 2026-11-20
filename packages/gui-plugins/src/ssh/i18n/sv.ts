@@ -34,4 +34,5 @@ export default {
   "stage.connecting": "Ansluter över SSH...",
   "stage.authentication": "Autentisering krävs",
   "menu.delete": "Radera",
+  "error.unavailable": "SSH är inte tillgängligt",
 }

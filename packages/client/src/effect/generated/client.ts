@@ -119,6 +119,10 @@ import type {
   ExperimentalGenerateTextOutput,
   ExperimentalGenerateImageInput,
   ExperimentalGenerateImageOutput,
+  ExperimentalGenerateVideoCreateInput,
+  ExperimentalGenerateVideoCreateOutput,
+  ExperimentalGenerateVideoGetInput,
+  ExperimentalGenerateVideoGetOutput,
   ExperimentalGenerateDecisionsInput,
   ExperimentalGenerateDecisionsOutput,
   ExperimentalVoiceModelsOutput,
@@ -245,18 +249,18 @@ import type {
   ExperimentalPersistentPtyRemoveOutput,
   ExperimentalPersistentPtyConnectTokenInput,
   ExperimentalPersistentPtyConnectTokenOutput,
-  ExperimentalScheduleCreateInput,
-  ExperimentalScheduleCreateOutput,
-  ExperimentalScheduleListInput,
-  ExperimentalScheduleListOutput,
-  ExperimentalScheduleGetInput,
-  ExperimentalScheduleGetOutput,
-  ExperimentalSchedulePauseInput,
-  ExperimentalSchedulePauseOutput,
-  ExperimentalScheduleResumeInput,
-  ExperimentalScheduleResumeOutput,
-  ExperimentalScheduleDeleteInput,
-  ExperimentalScheduleDeleteOutput,
+  ExperimentalAutomationCreateInput,
+  ExperimentalAutomationCreateOutput,
+  ExperimentalAutomationListInput,
+  ExperimentalAutomationListOutput,
+  ExperimentalAutomationGetInput,
+  ExperimentalAutomationGetOutput,
+  ExperimentalAutomationPauseInput,
+  ExperimentalAutomationPauseOutput,
+  ExperimentalAutomationResumeInput,
+  ExperimentalAutomationResumeOutput,
+  ExperimentalAutomationDeleteInput,
+  ExperimentalAutomationDeleteOutput,
   ExperimentalArtifactsProvidersInput,
   ExperimentalArtifactsProvidersOutput,
   ExperimentalArtifactsListInput,
@@ -271,6 +275,8 @@ import type {
   ExperimentalArtifactsDeleteOutput,
   ExperimentalJobListInput,
   ExperimentalJobListOutput,
+  ExperimentalJobCancelInput,
+  ExperimentalJobCancelOutput,
   ShellListInput,
   ShellListOutput,
   ShellCreateInput,
@@ -993,6 +999,36 @@ const EndpointExperimentalGenerateImage =
       ),
     )
 
+const EndpointExperimentalGenerateVideoCreate =
+  (raw: RawClient["server.generate"]) => (input: ExperimentalGenerateVideoCreateInput) =>
+    preserveEffect<ExperimentalGenerateVideoCreateOutput>()(
+      raw["generate.video.create"]({
+        payload: {
+          model: input["model"],
+          prompt: input["prompt"],
+          start: input["start"],
+          end: input["end"],
+          references: input["references"],
+          duration: input["duration"],
+          aspect: input["aspect"],
+          resolution: input["resolution"],
+          sound: input["sound"],
+        },
+      }).pipe(
+        Effect.mapError(mapClientError),
+        Effect.map((value) => value.data),
+      ),
+    )
+
+const EndpointExperimentalGenerateVideoGet =
+  (raw: RawClient["server.generate"]) => (input: ExperimentalGenerateVideoGetInput) =>
+    preserveEffect<ExperimentalGenerateVideoGetOutput>()(
+      raw["generate.video.get"]({ params: { id: input["id"] } }).pipe(
+        Effect.mapError(mapClientError),
+        Effect.map((value) => value.data),
+      ),
+    )
+
 const EndpointExperimentalGenerateDecisions =
   (raw: RawClient["server.generate"]) => (input: ExperimentalGenerateDecisionsInput) =>
     preserveEffect<ExperimentalGenerateDecisionsOutput>()(
@@ -1007,6 +1043,7 @@ const EndpointExperimentalGenerateDecisions =
 const adaptGroupExperimentalGenerate = (raw: RawClient["server.generate"]) => ({
   text: EndpointExperimentalGenerateText(raw),
   image: EndpointExperimentalGenerateImage(raw),
+  video: { create: EndpointExperimentalGenerateVideoCreate(raw), get: EndpointExperimentalGenerateVideoGet(raw) },
   decisions: EndpointExperimentalGenerateDecisions(raw),
 })
 
@@ -1633,18 +1670,17 @@ const EndpointExperimentalPersistentPtyConnectToken =
       ),
     )
 
-const EndpointExperimentalScheduleCreate =
-  (raw: RawClient["server.experimental"]) => (input: ExperimentalScheduleCreateInput) =>
-    preserveEffect<ExperimentalScheduleCreateOutput>()(
-      raw["schedule.create"]({
+const EndpointExperimentalAutomationCreate =
+  (raw: RawClient["server.experimental"]) => (input: ExperimentalAutomationCreateInput) =>
+    preserveEffect<ExperimentalAutomationCreateOutput>()(
+      raw["automation.create"]({
         payload: {
           sessionID: input["sessionID"],
+          directory: input["directory"],
           name: input["name"],
-          when: input["when"],
-          if: input["if"],
-          until: input["until"],
-          ends: input["ends"],
-          prompt: input["prompt"],
+          trigger: input["trigger"],
+          action: input["action"],
+          expires: input["expires"],
         },
       }).pipe(
         Effect.mapError(mapClientError),
@@ -1652,46 +1688,48 @@ const EndpointExperimentalScheduleCreate =
       ),
     )
 
-const EndpointExperimentalScheduleList =
-  (raw: RawClient["server.experimental"]) => (input: ExperimentalScheduleListInput) =>
-    preserveEffect<ExperimentalScheduleListOutput>()(
-      raw["schedule.list"]({ query: { sessionID: input["sessionID"] } }).pipe(
+const EndpointExperimentalAutomationList =
+  (raw: RawClient["server.experimental"]) => (input?: ExperimentalAutomationListInput) =>
+    preserveEffect<ExperimentalAutomationListOutput>()(
+      raw["automation.list"]({ query: { sessionID: input?.["sessionID"], directory: input?.["directory"] } }).pipe(
         Effect.mapError(mapClientError),
         Effect.map((value) => value.data),
       ),
     )
 
-const EndpointExperimentalScheduleGet =
-  (raw: RawClient["server.experimental"]) => (input: ExperimentalScheduleGetInput) =>
-    preserveEffect<ExperimentalScheduleGetOutput>()(
-      raw["schedule.get"]({ params: { scheduleID: input["scheduleID"] } }).pipe(
+const EndpointExperimentalAutomationGet =
+  (raw: RawClient["server.experimental"]) => (input: ExperimentalAutomationGetInput) =>
+    preserveEffect<ExperimentalAutomationGetOutput>()(
+      raw["automation.get"]({ params: { automationID: input["automationID"] } }).pipe(
         Effect.mapError(mapClientError),
         Effect.map((value) => value.data),
       ),
     )
 
-const EndpointExperimentalSchedulePause =
-  (raw: RawClient["server.experimental"]) => (input: ExperimentalSchedulePauseInput) =>
-    preserveEffect<ExperimentalSchedulePauseOutput>()(
-      raw["schedule.pause"]({ params: { scheduleID: input["scheduleID"] } }).pipe(
+const EndpointExperimentalAutomationPause =
+  (raw: RawClient["server.experimental"]) => (input: ExperimentalAutomationPauseInput) =>
+    preserveEffect<ExperimentalAutomationPauseOutput>()(
+      raw["automation.pause"]({ params: { automationID: input["automationID"] } }).pipe(
         Effect.mapError(mapClientError),
         Effect.map((value) => value.data),
       ),
     )
 
-const EndpointExperimentalScheduleResume =
-  (raw: RawClient["server.experimental"]) => (input: ExperimentalScheduleResumeInput) =>
-    preserveEffect<ExperimentalScheduleResumeOutput>()(
-      raw["schedule.resume"]({ params: { scheduleID: input["scheduleID"] } }).pipe(
+const EndpointExperimentalAutomationResume =
+  (raw: RawClient["server.experimental"]) => (input: ExperimentalAutomationResumeInput) =>
+    preserveEffect<ExperimentalAutomationResumeOutput>()(
+      raw["automation.resume"]({ params: { automationID: input["automationID"] } }).pipe(
         Effect.mapError(mapClientError),
         Effect.map((value) => value.data),
       ),
     )
 
-const EndpointExperimentalScheduleDelete =
-  (raw: RawClient["server.experimental"]) => (input: ExperimentalScheduleDeleteInput) =>
-    preserveEffect<ExperimentalScheduleDeleteOutput>()(
-      raw["schedule.delete"]({ params: { scheduleID: input["scheduleID"] } }).pipe(Effect.mapError(mapClientError)),
+const EndpointExperimentalAutomationDelete =
+  (raw: RawClient["server.experimental"]) => (input: ExperimentalAutomationDeleteInput) =>
+    preserveEffect<ExperimentalAutomationDeleteOutput>()(
+      raw["automation.delete"]({ params: { automationID: input["automationID"] } }).pipe(
+        Effect.mapError(mapClientError),
+      ),
     )
 
 const EndpointExperimentalArtifactsProviders =
@@ -1766,6 +1804,11 @@ const EndpointExperimentalJobList = (raw: RawClient["server.experimental"]) => (
     ),
   )
 
+const EndpointExperimentalJobCancel = (raw: RawClient["server.experimental"]) => (input: ExperimentalJobCancelInput) =>
+  preserveEffect<ExperimentalJobCancelOutput>()(
+    raw["job.cancel"]({ params: { id: input["id"] } }).pipe(Effect.mapError(mapClientError)),
+  )
+
 const adaptGroupExperimental = (raw: RawClient["server.experimental"]) => ({
   persistentPty: {
     read: EndpointExperimentalPersistentPtyRead(raw),
@@ -1779,13 +1822,13 @@ const adaptGroupExperimental = (raw: RawClient["server.experimental"]) => ({
     remove: EndpointExperimentalPersistentPtyRemove(raw),
     connectToken: EndpointExperimentalPersistentPtyConnectToken(raw),
   },
-  schedule: {
-    create: EndpointExperimentalScheduleCreate(raw),
-    list: EndpointExperimentalScheduleList(raw),
-    get: EndpointExperimentalScheduleGet(raw),
-    pause: EndpointExperimentalSchedulePause(raw),
-    resume: EndpointExperimentalScheduleResume(raw),
-    delete: EndpointExperimentalScheduleDelete(raw),
+  automation: {
+    create: EndpointExperimentalAutomationCreate(raw),
+    list: EndpointExperimentalAutomationList(raw),
+    get: EndpointExperimentalAutomationGet(raw),
+    pause: EndpointExperimentalAutomationPause(raw),
+    resume: EndpointExperimentalAutomationResume(raw),
+    delete: EndpointExperimentalAutomationDelete(raw),
   },
   artifacts: {
     providers: EndpointExperimentalArtifactsProviders(raw),
@@ -1795,7 +1838,7 @@ const adaptGroupExperimental = (raw: RawClient["server.experimental"]) => ({
     update: EndpointExperimentalArtifactsUpdate(raw),
     delete: EndpointExperimentalArtifactsDelete(raw),
   },
-  job: { list: EndpointExperimentalJobList(raw) },
+  job: { list: EndpointExperimentalJobList(raw), cancel: EndpointExperimentalJobCancel(raw) },
 })
 
 const EndpointShellList = (raw: RawClient["server.shell"]) => (input?: ShellListInput) =>
@@ -2295,8 +2338,6 @@ const adaptClient = (raw: RawClient) => {
       connect: client.experimental.mcp.connect,
       /** @deprecated Use `client.experimental.mcp.disconnect`. Removed in the next minor. */
       disconnect: client.experimental.mcp.disconnect,
-      /** @deprecated Use `client.experimental.mcp.tools`. Removed in the next minor. */
-      tools: client.experimental.mcp.tools,
       /** @deprecated Use `client.experimental.mcp.client`. Removed in the next minor. */
       client: {
         /** @deprecated Use `client.experimental.mcp.client.token`. Removed in the next minor. */
@@ -2322,85 +2363,11 @@ const adaptClient = (raw: RawClient) => {
     usage: {
       /** @deprecated Use `client.experimental.usage.limits`. Removed in the next minor. */
       limits: client.experimental.usage.limits,
-      /** @deprecated Use `client.experimental.usage.subscriptions`. Removed in the next minor. */
-      subscriptions: client.experimental.usage.subscriptions,
-      /** @deprecated Use `client.experimental.usage.history`. Removed in the next minor. */
-      history: client.experimental.usage.history,
-      /** @deprecated Use `client.experimental.usage.included`. Removed in the next minor. */
-      included: client.experimental.usage.included,
     },
     config: {
       ...client.config,
       /** @deprecated Use `client.experimental.config.update`. Removed in the next minor. */
       update: client.experimental.config.update,
-      /** @deprecated Use `client.experimental.config.mcp`. Removed in the next minor. */
-      mcp: {
-        /** @deprecated Use `client.experimental.config.mcp.set`. Removed in the next minor. */
-        set: client.experimental.config.mcp.set,
-        /** @deprecated Use `client.experimental.config.mcp.remove`. Removed in the next minor. */
-        remove: client.experimental.config.mcp.remove,
-      },
-      /** @deprecated Use `client.experimental.config.providers`. Removed in the next minor. */
-      providers: {
-        /** @deprecated Use `client.experimental.config.providers.switch`. Removed in the next minor. */
-        switch: client.experimental.config.providers.switch,
-        /** @deprecated Use `client.experimental.config.providers.get`. Removed in the next minor. */
-        get: client.experimental.config.providers.get,
-        /** @deprecated Use `client.experimental.config.providers.set`. Removed in the next minor. */
-        set: client.experimental.config.providers.set,
-      },
-      /** @deprecated Use `client.experimental.config.provider`. Removed in the next minor. */
-      provider: {
-        /** @deprecated Use `client.experimental.config.provider.set`. Removed in the next minor. */
-        set: client.experimental.config.provider.set,
-        /** @deprecated Use `client.experimental.config.provider.remove`. Removed in the next minor. */
-        remove: client.experimental.config.provider.remove,
-      },
-      /** @deprecated Use `client.experimental.config.decisions`. Removed in the next minor. */
-      decisions: {
-        /** @deprecated Use `client.experimental.config.decisions.set`. Removed in the next minor. */
-        set: client.experimental.config.decisions.set,
-        /** @deprecated Use `client.experimental.config.decisions.remove`. Removed in the next minor. */
-        remove: client.experimental.config.decisions.remove,
-      },
-      /** @deprecated Use `client.experimental.config.weather`. Removed in the next minor. */
-      weather: {
-        /** @deprecated Use `client.experimental.config.weather.set`. Removed in the next minor. */
-        set: client.experimental.config.weather.set,
-        /** @deprecated Use `client.experimental.config.weather.remove`. Removed in the next minor. */
-        remove: client.experimental.config.weather.remove,
-      },
-      /** @deprecated Use `client.experimental.config.time`. Removed in the next minor. */
-      time: {
-        /** @deprecated Use `client.experimental.config.time.set`. Removed in the next minor. */
-        set: client.experimental.config.time.set,
-        /** @deprecated Use `client.experimental.config.time.remove`. Removed in the next minor. */
-        remove: client.experimental.config.time.remove,
-      },
-      /** @deprecated Use `client.experimental.config.addons`. Removed in the next minor. */
-      addons: {
-        /** @deprecated Use `client.experimental.config.addons.set`. Removed in the next minor. */
-        set: client.experimental.config.addons.set,
-      },
-      /** @deprecated Use `client.experimental.config.workers`. Removed in the next minor. */
-      workers: {
-        /** @deprecated Use `client.experimental.config.workers.set`. Removed in the next minor. */
-        set: client.experimental.config.workers.set,
-      },
-      /** @deprecated Use `client.experimental.config.plugin`. Removed in the next minor. */
-      plugin: {
-        /** @deprecated Use `client.experimental.config.plugin.add`. Removed in the next minor. */
-        add: client.experimental.config.plugin.add,
-        /** @deprecated Use `client.experimental.config.plugin.remove`. Removed in the next minor. */
-        remove: client.experimental.config.plugin.remove,
-      },
-      /** @deprecated Use `client.experimental.config.skill`. Removed in the next minor. */
-      skill: {
-        /** @deprecated Use `client.experimental.config.skill.add`. Removed in the next minor. */
-        add: client.experimental.config.skill.add,
-        /** @deprecated Use `client.experimental.config.skill.remove`. Removed in the next minor. */
-        remove: client.experimental.config.skill.remove,
-      },
     },
   }
 }

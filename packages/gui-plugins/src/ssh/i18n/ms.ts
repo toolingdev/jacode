@@ -31,4 +31,5 @@ export default {
   "stage.connecting": "Menyambung melalui SSH…",
   "stage.authentication": "Pengesahan diperlukan",
   "menu.delete": "Padam",
+  "error.unavailable": "SSH tidak tersedia",
 }

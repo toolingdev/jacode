@@ -32,4 +32,5 @@ export default {
   "stage.connecting": "Ühendamine üle SSH…",
   "stage.authentication": "Nõutav autentimine",
   "menu.delete": "Kustuta",
+  "error.unavailable": "SSH pole saadaval",
 }

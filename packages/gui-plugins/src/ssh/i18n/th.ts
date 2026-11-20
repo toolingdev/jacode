@@ -29,4 +29,5 @@ export default {
   "stage.connecting": "กำลังเชื่อมต่อผ่าน SSH…",
   "stage.authentication": "ต้องมีการตรวจสอบสิทธิ์",
   "menu.delete": "ลบ",
+  "error.unavailable": "SSH ไม่พร้อมใช้งาน",
 }

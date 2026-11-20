@@ -4,7 +4,7 @@ import { ToolFailure } from "@opencode/ai/effect"
 import type { Context } from "@opencode/plugin/effect/plugin"
 import type { Document, Entry } from "@opencode/schema/config"
 import type { ConfigExperimental } from "@opencode/schema/config/experimental"
-import { Schedule } from "@opencode/schema/schedule"
+import { Automation } from "@opencode/schema/automation"
 import { Duration, Effect, Option, Schedule as EffectSchedule, Schema, SchemaGetter } from "effect"
 import { Config } from "../../config.js"
 
@@ -112,7 +112,7 @@ const ScheduleInput = Schema.Struct({
   title: Schema.optionalKey(
     Schema.String.annotate({ description: "A title for the task's chat on the worker, so the user can find it." }),
   ),
-  ...Schedule.Request.fields,
+  ...Automation.Request.fields,
 })
 
 const ScheduleOutput = Schema.Struct({
@@ -137,7 +137,7 @@ const StatusOutput = Schema.Struct({
       status: Schema.String,
       runCount: Schema.Finite,
       nextDueAt: Schema.optionalKey(Schema.String),
-      lastFiredAt: Schema.optionalKey(Schema.String),
+      lastRunAt: Schema.optionalKey(Schema.String),
       lastOutcome: Schema.optionalKey(Schema.String),
     }),
   ),
@@ -146,7 +146,7 @@ const StatusOutput = Schema.Struct({
 
 const ListOutput = Schema.Struct({ workers: Schema.Array(Schema.Struct({ name: Schema.String, url: Schema.String })) })
 
-// The parts of a schedule the worker sends back that these tools report; its times arrive as Unix milliseconds.
+// The parts of an automation the worker sends back that these tools report; its times arrive as Unix milliseconds.
 const Millis = Schema.Finite.pipe(
   Schema.decodeTo(Schema.String, {
     decode: SchemaGetter.transform((ms) => new Date(ms).toISOString()),
@@ -158,7 +158,7 @@ const RemoteSchedule = Schema.Struct({
   status: Schema.String,
   runCount: Schema.Finite,
   nextDueAt: Schema.optionalKey(Millis),
-  lastFiredAt: Schema.optionalKey(Millis),
+  lastRunAt: Schema.optionalKey(Millis),
   lastOutcome: Schema.optionalKey(Schema.String),
 })
 
@@ -320,7 +320,7 @@ export const Plugin = {
       editor.add({
         name: "worker_schedule",
         description:
-          "Schedule a task on a worker instead of this computer, when the user asks for it to run remotely or it must run while this computer may be asleep or off. Takes the same timing as schedule_create. The task gets its own chat on the worker, which wakes with `prompt` and keeps the results; write the prompt so it stands alone, with every detail the worker needs, since it cannot see this chat. Note the returned sessionID: worker_schedule_status reads the results back later.",
+          "Schedule a task on a worker instead of this computer, when the user asks for it to run remotely or it must run while this computer may be asleep or off. Takes the same trigger and action as automation_create; a prompt action goes to the task's chat on the worker. The task gets its own chat on the worker, which wakes with `prompt` and keeps the results; write the prompt so it stands alone, with every detail the worker needs, since it cannot see this chat. Note the returned sessionID: worker_schedule_status reads the results back later.",
         input: ScheduleInput,
         output: ScheduleOutput,
         options: { namespace: "opencode", codemode: true, pinned: true },
@@ -328,13 +328,19 @@ export const Plugin = {
           Effect.gen(function* () {
             const worker = yield* find(input.worker)
             const session = yield* call(worker, "POST", "/api/session", {
-              title: input.title ?? input.name ?? "Scheduled task",
+              title: input.title ?? input.name,
             }).pipe(
               Effect.flatMap(Schema.decodeUnknownEffect(SessionData)),
               Effect.map((value) => value.data),
             )
-            const request = { ...input, worker: undefined, title: undefined }
-            const schedule = yield* call(worker, "POST", "/api/experimental/schedule", {
+            // A prompt goes to the worker chat made for it: a target in this computer's chats means nothing there.
+            const request = {
+              name: input.name,
+              trigger: input.trigger,
+              expires: input.expires,
+              action: input.action.type === "prompt" ? { type: "prompt", prompt: input.action.prompt } : input.action,
+            }
+            const schedule = yield* call(worker, "POST", "/api/experimental/automation", {
               sessionID: session.id,
               ...request,
             }).pipe(
@@ -379,7 +385,7 @@ export const Plugin = {
             const schedules = yield* call(
               worker,
               "GET",
-              `/api/experimental/schedule?sessionID=${encodeURIComponent(input.sessionID)}`,
+              `/api/experimental/automation?sessionID=${encodeURIComponent(input.sessionID)}`,
             ).pipe(
               Effect.flatMap(Schema.decodeUnknownEffect(SchedulesData)),
               Effect.map((value) => value.data),

@@ -218,8 +218,8 @@ export const Plugin = define({
         // Only the scope is kept on the message; the list of switched-on models served this prompt alone.
         if (request) event.metadata = { ...event.metadata, smartAuto: { scope: request.scope } }
 
-        // A scheduled prompt was approved when it was scheduled, so it is never held for a plan.
-        const plan = settings.plan === true && event.metadata?.schedule === undefined
+        // An automation prompt was approved when it was created, so it is never held for a plan.
+        const plan = settings.plan === true && event.metadata?.automation === undefined
 
         if (!request && !plan) return
         const image = hasImage(event.prompt)

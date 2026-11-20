@@ -31,4 +31,5 @@ export default {
   "stage.connecting": "SSH로 연결 중…",
   "stage.authentication": "인증 필요",
   "menu.delete": "삭제",
+  "error.unavailable": "SSH를 사용할 수 없습니다",
 }

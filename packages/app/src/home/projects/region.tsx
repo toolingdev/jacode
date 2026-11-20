@@ -5,8 +5,9 @@ import type { HomeScrollController } from "../scroll"
 
 export function HomeProjects(props: {
   projects: HomeProjectsController
-  scroll: HomeScrollController
+  scroll?: HomeScrollController
   dropdown?: boolean
+  scope?: boolean
 }) {
   // Fork feature: the folder that chats without a project run in is shown as Chats, not as one of the projects.
   const chat = useChatFolder()
@@ -14,6 +15,7 @@ export function HomeProjects(props: {
   return (
     <HomeProjectsView
       dropdown={props.dropdown}
+      scope={props.scope}
       language={props.projects.copy.language}
       servers={props.projects.server.list()}
       projects={props.projects.project.list().filter((project) => !chat.is(project.worktree))}
@@ -26,7 +28,7 @@ export function HomeProjects(props: {
       collapsed={props.projects.server.collapsed}
       canRevealProject={props.projects.project.canReveal}
       hasUnread={props.projects.project.hasUnread}
-      onWheel={props.scroll.viewport.containWheel}
+      onWheel={(event) => props.scroll?.viewport.containWheel(event)}
       onChooseProject={props.projects.project.choose}
       onFocusServer={props.projects.server.focus}
       onAuthenticateServer={props.projects.server.authenticate}

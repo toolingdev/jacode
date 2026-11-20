@@ -32,4 +32,5 @@ export default {
   "stage.connecting": "SSH-р холбож байна…",
   "stage.authentication": "Нэвтрэх хэрэгтэй",
   "menu.delete": "Устгах",
+  "error.unavailable": "SSH боломжгүй байна",
 }

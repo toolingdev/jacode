@@ -34,4 +34,5 @@ export default {
   "stage.connecting": "SSH orqali ulanmoqda…",
   "stage.authentication": "Autentifikatsiya talab qilinadi",
   "menu.delete": "Oʻchirish",
+  "error.unavailable": "SSH mavjud emas",
 }

@@ -31,4 +31,5 @@ export default {
   "stage.connecting": "Yhdistetään SSH:n kautta…",
   "stage.authentication": "Todennus vaaditaan",
   "menu.delete": "Poista",
+  "error.unavailable": "SSH ei ole käytettävissä",
 }

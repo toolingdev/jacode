@@ -32,4 +32,5 @@ export default {
   "stage.connecting": "SSH හරහා සම්බන්ධ වෙමින්…",
   "stage.authentication": "සත්‍යාපනය අවශ්‍යයි",
   "menu.delete": "මකන්න",
+  "error.unavailable": "SSH ලබා ගත නොහැක",
 }

@@ -34,4 +34,5 @@ export default {
   "stage.connecting": "Opretter forbindelse via SSH...",
   "stage.authentication": "Godkendelse påkrævet",
   "menu.delete": "Slet",
+  "error.unavailable": "SSH er ikke tilgængelig",
 }

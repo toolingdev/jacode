@@ -23,4 +23,5 @@ export default {
   "load.failed": "No se pudieron cargar los cambios",
   "load.timeout": "El servidor tardó demasiado en responder",
   offline: "No se puede conectar con este servidor",
+  "menu.count.many": "{{count}} archivos modificados",
 }

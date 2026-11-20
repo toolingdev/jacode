@@ -33,4 +33,5 @@ export default {
   "stage.connecting": "Kobler over SSH...",
   "stage.authentication": "Autentisering kreves",
   "menu.delete": "Slett",
+  "error.unavailable": "SSH er ikke tilgjengelig",
 }

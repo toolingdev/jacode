@@ -34,4 +34,5 @@ export default {
   "stage.connecting": "Povezivanje putem SSH-a…",
   "stage.authentication": "Potrebna je autentikacija",
   "menu.delete": "Izbriši",
+  "error.unavailable": "SSH nije dostupan",
 }

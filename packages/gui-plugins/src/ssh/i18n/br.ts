@@ -34,4 +34,5 @@ export default {
   "stage.connecting": "Conectando através de SSH…",
   "stage.authentication": "Autenticação necessária",
   "menu.delete": "Excluir",
+  "error.unavailable": "SSH não está disponível",
 }

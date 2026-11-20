@@ -33,4 +33,5 @@ export default {
   "stage.connecting": "Đang kết nối qua SSH…",
   "stage.authentication": "Cần xác thực",
   "menu.delete": "Xóa",
+  "error.unavailable": "SSH không khả dụng",
 }

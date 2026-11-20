@@ -31,4 +31,5 @@ export default {
   "stage.connecting": "Tengist yfir SSH…",
   "stage.authentication": "Auðkenning krafist",
   "menu.delete": "Eyða",
+  "error.unavailable": "SSH er ekki tiltækt",
 }

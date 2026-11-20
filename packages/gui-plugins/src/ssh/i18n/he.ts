@@ -28,4 +28,5 @@ export default {
   "stage.connecting": "מתחבר באמצעות SSH…",
   "stage.authentication": "נדרש אימות",
   "menu.delete": "מחק",
+  "error.unavailable": "SSH אינו זמין",
 }

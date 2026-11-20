@@ -33,4 +33,5 @@ export default {
   "stage.connecting": "Свързване чрез SSH…",
   "stage.authentication": "Изисква се удостоверяване",
   "menu.delete": "Изтриване",
+  "error.unavailable": "SSH не е наличен",
 }

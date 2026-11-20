@@ -30,4 +30,5 @@ export default {
   "stage.connecting": "SSH मा जडान गर्दै…",
   "stage.authentication": "प्रमाणीकरण आवश्यक छ",
   "menu.delete": "मेट्नुहोस्",
+  "error.unavailable": "SSH उपलब्ध छैन",
 }

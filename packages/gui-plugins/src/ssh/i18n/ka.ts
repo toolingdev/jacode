@@ -34,4 +34,5 @@ export default {
   "stage.connecting": "კავშირის დამყარება SSH-ის საშუალებით…",
   "stage.authentication": "ავთენტიფიკაცია საჭირო არის",
   "menu.delete": "წაშლა",
+  "error.unavailable": "SSH მიუწვდომელია",
 }

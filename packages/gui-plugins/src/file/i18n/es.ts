@@ -53,4 +53,6 @@ export default {
   "search.failed": "No se pudieron buscar archivos",
   "search.timeout": "El servidor tardó demasiado en responder",
   "search.offline": "No se puede conectar con este servidor",
+  "view.table.rows.many": "{{count}} filas",
+  "view.table.columns.many": "{{count}} columnas",
 }

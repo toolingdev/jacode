@@ -29,4 +29,5 @@ export default {
   "stage.connecting": "جارٍ الاتصال عبر SSH…",
   "stage.authentication": "المصادقة مطلوبة",
   "menu.delete": "حذف",
+  "error.unavailable": "SSH غير متاح",
 }

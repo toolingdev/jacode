@@ -37,7 +37,7 @@ import type { FileSystem } from "@opencode/schema/filesystem"
 import type { Command } from "@opencode/schema/command"
 import type { OpenCodeEvent } from "@opencode/protocol/groups/event"
 import type { Pty } from "@opencode/schema/pty"
-import type { Schedule } from "@opencode/schema/schedule"
+import type { Automation } from "@opencode/schema/automation"
 import type { Artifact } from "@opencode/schema/artifact"
 import type { Job } from "@opencode/schema/job"
 import type { Reference } from "@opencode/schema/reference"
@@ -1521,6 +1521,28 @@ export type ExperimentalGenerateImageOperation<E = never> = (
   input: ExperimentalGenerateImageInput,
 ) => Effect.Effect<ExperimentalGenerateImageOutput, E>
 
+export type ExperimentalGenerateVideoCreateInput = {
+  readonly model: Model.Ref
+  readonly prompt: string
+  readonly start?: Generate.ImageFile | undefined
+  readonly end?: Generate.ImageFile | undefined
+  readonly references?: ReadonlyArray<Generate.File> | undefined
+  readonly duration?: number | undefined
+  readonly aspect?: Generate.VideoAspect | undefined
+  readonly resolution?: Generate.VideoResolution | undefined
+  readonly sound?: boolean | undefined
+}
+export type ExperimentalGenerateVideoCreateOutput = Generate.VideoRunning
+export type ExperimentalGenerateVideoCreateOperation<E = never> = (
+  input: ExperimentalGenerateVideoCreateInput,
+) => Effect.Effect<ExperimentalGenerateVideoCreateOutput, E>
+
+export type ExperimentalGenerateVideoGetInput = { readonly id: Generate.VideoID }
+export type ExperimentalGenerateVideoGetOutput = Generate.VideoJob
+export type ExperimentalGenerateVideoGetOperation<E = never> = (
+  input: ExperimentalGenerateVideoGetInput,
+) => Effect.Effect<ExperimentalGenerateVideoGetOutput, E>
+
 export type ExperimentalGenerateDecisionsInput = {
   readonly model: Model.Ref
   readonly input: ReadonlyArray<Generate.DecisionPart>
@@ -1534,6 +1556,10 @@ export type ExperimentalGenerateDecisionsOperation<E = never> = (
 export interface ExperimentalGenerateApi<E = never> {
   readonly text: ExperimentalGenerateTextOperation<E>
   readonly image: ExperimentalGenerateImageOperation<E>
+  readonly video: {
+    readonly create: ExperimentalGenerateVideoCreateOperation<E>
+    readonly get: ExperimentalGenerateVideoGetOperation<E>
+  }
   readonly decisions: ExperimentalGenerateDecisionsOperation<E>
 }
 
@@ -1775,9 +1801,6 @@ export interface McpApi<E = never> {
 
   /** @deprecated Use `client.experimental.mcp.disconnect`. Removed in the next minor. */
   readonly disconnect: ExperimentalMcpDisconnectOperation<E>
-
-  /** @deprecated Use `client.experimental.mcp.tools`. Removed in the next minor. */
-  readonly tools: ExperimentalMcpToolsOperation<E>
 
   /** @deprecated Use `client.experimental.mcp.client`. Removed in the next minor. */
   readonly client: {
@@ -2166,6 +2189,7 @@ export type EventSubscribeInput = {
         | "shell.created"
         | "shell.exited"
         | "shell.deleted"
+        | "experimental.job.updated"
         | "form.created"
         | "form.replied"
         | "form.cancelled"
@@ -2420,49 +2444,51 @@ export type ExperimentalPersistentPtyConnectTokenOperation<E = never> = (
   input: ExperimentalPersistentPtyConnectTokenInput,
 ) => Effect.Effect<ExperimentalPersistentPtyConnectTokenOutput, E>
 
-export type ExperimentalScheduleCreateInput = {
-  readonly sessionID: Session.ID
-  readonly name?: string | undefined
-  readonly when?: Schedule.WhenInput | undefined
-  readonly if?: Schedule.ConditionInput | undefined
-  readonly until?: Schedule.ConditionInput | undefined
-  readonly ends?: Schedule.Ends | undefined
-  readonly prompt: string
+export type ExperimentalAutomationCreateInput = {
+  readonly sessionID?: Session.ID | undefined
+  readonly directory?: string | undefined
+  readonly name: string
+  readonly trigger: Automation.Trigger
+  readonly action: Automation.ActionInput
+  readonly expires?: string | undefined
 }
-export type ExperimentalScheduleCreateOutput = Schedule.Info
-export type ExperimentalScheduleCreateOperation<E = never> = (
-  input: ExperimentalScheduleCreateInput,
-) => Effect.Effect<ExperimentalScheduleCreateOutput, E>
+export type ExperimentalAutomationCreateOutput = Automation.Info
+export type ExperimentalAutomationCreateOperation<E = never> = (
+  input: ExperimentalAutomationCreateInput,
+) => Effect.Effect<ExperimentalAutomationCreateOutput, E>
 
-export type ExperimentalScheduleListInput = { readonly sessionID: Session.ID }
-export type ExperimentalScheduleListOutput = ReadonlyArray<Schedule.Info>
-export type ExperimentalScheduleListOperation<E = never> = (
-  input: ExperimentalScheduleListInput,
-) => Effect.Effect<ExperimentalScheduleListOutput, E>
+export type ExperimentalAutomationListInput = {
+  readonly sessionID?: Session.ID | undefined
+  readonly directory?: string | undefined
+}
+export type ExperimentalAutomationListOutput = ReadonlyArray<Automation.Info>
+export type ExperimentalAutomationListOperation<E = never> = (
+  input?: ExperimentalAutomationListInput,
+) => Effect.Effect<ExperimentalAutomationListOutput, E>
 
-export type ExperimentalScheduleGetInput = { readonly scheduleID: Schedule.ID }
-export type ExperimentalScheduleGetOutput = Schedule.Info
-export type ExperimentalScheduleGetOperation<E = never> = (
-  input: ExperimentalScheduleGetInput,
-) => Effect.Effect<ExperimentalScheduleGetOutput, E>
+export type ExperimentalAutomationGetInput = { readonly automationID: Automation.ID }
+export type ExperimentalAutomationGetOutput = Automation.Info
+export type ExperimentalAutomationGetOperation<E = never> = (
+  input: ExperimentalAutomationGetInput,
+) => Effect.Effect<ExperimentalAutomationGetOutput, E>
 
-export type ExperimentalSchedulePauseInput = { readonly scheduleID: Schedule.ID }
-export type ExperimentalSchedulePauseOutput = Schedule.Info
-export type ExperimentalSchedulePauseOperation<E = never> = (
-  input: ExperimentalSchedulePauseInput,
-) => Effect.Effect<ExperimentalSchedulePauseOutput, E>
+export type ExperimentalAutomationPauseInput = { readonly automationID: Automation.ID }
+export type ExperimentalAutomationPauseOutput = Automation.Info
+export type ExperimentalAutomationPauseOperation<E = never> = (
+  input: ExperimentalAutomationPauseInput,
+) => Effect.Effect<ExperimentalAutomationPauseOutput, E>
 
-export type ExperimentalScheduleResumeInput = { readonly scheduleID: Schedule.ID }
-export type ExperimentalScheduleResumeOutput = Schedule.Info
-export type ExperimentalScheduleResumeOperation<E = never> = (
-  input: ExperimentalScheduleResumeInput,
-) => Effect.Effect<ExperimentalScheduleResumeOutput, E>
+export type ExperimentalAutomationResumeInput = { readonly automationID: Automation.ID }
+export type ExperimentalAutomationResumeOutput = Automation.Info
+export type ExperimentalAutomationResumeOperation<E = never> = (
+  input: ExperimentalAutomationResumeInput,
+) => Effect.Effect<ExperimentalAutomationResumeOutput, E>
 
-export type ExperimentalScheduleDeleteInput = { readonly scheduleID: Schedule.ID }
-export type ExperimentalScheduleDeleteOutput = void
-export type ExperimentalScheduleDeleteOperation<E = never> = (
-  input: ExperimentalScheduleDeleteInput,
-) => Effect.Effect<ExperimentalScheduleDeleteOutput, E>
+export type ExperimentalAutomationDeleteInput = { readonly automationID: Automation.ID }
+export type ExperimentalAutomationDeleteOutput = void
+export type ExperimentalAutomationDeleteOperation<E = never> = (
+  input: ExperimentalAutomationDeleteInput,
+) => Effect.Effect<ExperimentalAutomationDeleteOutput, E>
 
 export type ExperimentalArtifactsProvidersInput = {
   readonly location?: { readonly directory?: string | undefined } | undefined
@@ -2543,6 +2569,12 @@ export type ExperimentalJobListOperation<E = never> = (
   input?: ExperimentalJobListInput,
 ) => Effect.Effect<ExperimentalJobListOutput, E>
 
+export type ExperimentalJobCancelInput = { readonly id: string }
+export type ExperimentalJobCancelOutput = void
+export type ExperimentalJobCancelOperation<E = never> = (
+  input: ExperimentalJobCancelInput,
+) => Effect.Effect<ExperimentalJobCancelOutput, E>
+
 export interface ExperimentalApi<E = never> {
   readonly persistentPty: {
     readonly read: ExperimentalPersistentPtyReadOperation<E>
@@ -2556,13 +2588,13 @@ export interface ExperimentalApi<E = never> {
     readonly remove: ExperimentalPersistentPtyRemoveOperation<E>
     readonly connectToken: ExperimentalPersistentPtyConnectTokenOperation<E>
   }
-  readonly schedule: {
-    readonly create: ExperimentalScheduleCreateOperation<E>
-    readonly list: ExperimentalScheduleListOperation<E>
-    readonly get: ExperimentalScheduleGetOperation<E>
-    readonly pause: ExperimentalSchedulePauseOperation<E>
-    readonly resume: ExperimentalScheduleResumeOperation<E>
-    readonly delete: ExperimentalScheduleDeleteOperation<E>
+  readonly automation: {
+    readonly create: ExperimentalAutomationCreateOperation<E>
+    readonly list: ExperimentalAutomationListOperation<E>
+    readonly get: ExperimentalAutomationGetOperation<E>
+    readonly pause: ExperimentalAutomationPauseOperation<E>
+    readonly resume: ExperimentalAutomationResumeOperation<E>
+    readonly delete: ExperimentalAutomationDeleteOperation<E>
   }
   readonly artifacts: {
     readonly providers: ExperimentalArtifactsProvidersOperation<E>
@@ -2572,7 +2604,7 @@ export interface ExperimentalApi<E = never> {
     readonly update: ExperimentalArtifactsUpdateOperation<E>
     readonly delete: ExperimentalArtifactsDeleteOperation<E>
   }
-  readonly job: { readonly list: ExperimentalJobListOperation<E> }
+  readonly job: { readonly list: ExperimentalJobListOperation<E>; readonly cancel: ExperimentalJobCancelOperation<E> }
 }
 
 export type ShellListInput = { readonly location?: { readonly directory?: string | undefined } | undefined }
@@ -2858,93 +2890,6 @@ export interface ConfigApi<E = never> {
 
   /** @deprecated Use `client.experimental.config.update`. Removed in the next minor. */
   readonly update: ExperimentalConfigUpdateOperation<E>
-
-  /** @deprecated Use `client.experimental.config.mcp`. Removed in the next minor. */
-  readonly mcp: {
-    /** @deprecated Use `client.experimental.config.mcp.set`. Removed in the next minor. */
-    readonly set: ExperimentalConfigMcpSetOperation<E>
-
-    /** @deprecated Use `client.experimental.config.mcp.remove`. Removed in the next minor. */
-    readonly remove: ExperimentalConfigMcpRemoveOperation<E>
-  }
-
-  /** @deprecated Use `client.experimental.config.providers`. Removed in the next minor. */
-  readonly providers: {
-    /** @deprecated Use `client.experimental.config.providers.switch`. Removed in the next minor. */
-    readonly switch: ExperimentalConfigProvidersSwitchOperation<E>
-
-    /** @deprecated Use `client.experimental.config.providers.get`. Removed in the next minor. */
-    readonly get: ExperimentalConfigProvidersGetOperation<E>
-
-    /** @deprecated Use `client.experimental.config.providers.set`. Removed in the next minor. */
-    readonly set: ExperimentalConfigProvidersSetOperation<E>
-  }
-
-  /** @deprecated Use `client.experimental.config.provider`. Removed in the next minor. */
-  readonly provider: {
-    /** @deprecated Use `client.experimental.config.provider.set`. Removed in the next minor. */
-    readonly set: ExperimentalConfigProviderSetOperation<E>
-
-    /** @deprecated Use `client.experimental.config.provider.remove`. Removed in the next minor. */
-    readonly remove: ExperimentalConfigProviderRemoveOperation<E>
-  }
-
-  /** @deprecated Use `client.experimental.config.decisions`. Removed in the next minor. */
-  readonly decisions: {
-    /** @deprecated Use `client.experimental.config.decisions.set`. Removed in the next minor. */
-    readonly set: ExperimentalConfigDecisionsSetOperation<E>
-
-    /** @deprecated Use `client.experimental.config.decisions.remove`. Removed in the next minor. */
-    readonly remove: ExperimentalConfigDecisionsRemoveOperation<E>
-  }
-
-  /** @deprecated Use `client.experimental.config.weather`. Removed in the next minor. */
-  readonly weather: {
-    /** @deprecated Use `client.experimental.config.weather.set`. Removed in the next minor. */
-    readonly set: ExperimentalConfigWeatherSetOperation<E>
-
-    /** @deprecated Use `client.experimental.config.weather.remove`. Removed in the next minor. */
-    readonly remove: ExperimentalConfigWeatherRemoveOperation<E>
-  }
-
-  /** @deprecated Use `client.experimental.config.time`. Removed in the next minor. */
-  readonly time: {
-    /** @deprecated Use `client.experimental.config.time.set`. Removed in the next minor. */
-    readonly set: ExperimentalConfigTimeSetOperation<E>
-
-    /** @deprecated Use `client.experimental.config.time.remove`. Removed in the next minor. */
-    readonly remove: ExperimentalConfigTimeRemoveOperation<E>
-  }
-
-  /** @deprecated Use `client.experimental.config.addons`. Removed in the next minor. */
-  readonly addons: {
-    /** @deprecated Use `client.experimental.config.addons.set`. Removed in the next minor. */
-    readonly set: ExperimentalConfigAddonsSetOperation<E>
-  }
-
-  /** @deprecated Use `client.experimental.config.workers`. Removed in the next minor. */
-  readonly workers: {
-    /** @deprecated Use `client.experimental.config.workers.set`. Removed in the next minor. */
-    readonly set: ExperimentalConfigWorkersSetOperation<E>
-  }
-
-  /** @deprecated Use `client.experimental.config.plugin`. Removed in the next minor. */
-  readonly plugin: {
-    /** @deprecated Use `client.experimental.config.plugin.add`. Removed in the next minor. */
-    readonly add: ExperimentalConfigPluginAddOperation<E>
-
-    /** @deprecated Use `client.experimental.config.plugin.remove`. Removed in the next minor. */
-    readonly remove: ExperimentalConfigPluginRemoveOperation<E>
-  }
-
-  /** @deprecated Use `client.experimental.config.skill`. Removed in the next minor. */
-  readonly skill: {
-    /** @deprecated Use `client.experimental.config.skill.add`. Removed in the next minor. */
-    readonly add: ExperimentalConfigSkillAddOperation<E>
-
-    /** @deprecated Use `client.experimental.config.skill.remove`. Removed in the next minor. */
-    readonly remove: ExperimentalConfigSkillRemoveOperation<E>
-  }
 }
 
 export type ExperimentalConfigUpdateInput = { readonly shell: string | null }
@@ -3444,15 +3389,6 @@ export type McpDisconnectOutput = ExperimentalMcpDisconnectOutput
 /** @deprecated Use `ExperimentalMcpDisconnectOperation`. Removed in the next minor. */
 export type McpDisconnectOperation<E = never> = ExperimentalMcpDisconnectOperation<E>
 
-/** @deprecated Use `ExperimentalMcpToolsInput`. Removed in the next minor. */
-export type McpToolsInput = ExperimentalMcpToolsInput
-
-/** @deprecated Use `ExperimentalMcpToolsOutput`. Removed in the next minor. */
-export type McpToolsOutput = ExperimentalMcpToolsOutput
-
-/** @deprecated Use `ExperimentalMcpToolsOperation`. Removed in the next minor. */
-export type McpToolsOperation<E = never> = ExperimentalMcpToolsOperation<E>
-
 /** @deprecated Use `ExperimentalMcpClientTokenInput`. Removed in the next minor. */
 export type McpClientTokenInput = ExperimentalMcpClientTokenInput
 
@@ -3495,33 +3431,6 @@ export type UsageLimitsOutput = ExperimentalUsageLimitsOutput
 /** @deprecated Use `ExperimentalUsageLimitsOperation`. Removed in the next minor. */
 export type UsageLimitsOperation<E = never> = ExperimentalUsageLimitsOperation<E>
 
-/** @deprecated Use `ExperimentalUsageSubscriptionsInput`. Removed in the next minor. */
-export type UsageSubscriptionsInput = ExperimentalUsageSubscriptionsInput
-
-/** @deprecated Use `ExperimentalUsageSubscriptionsOutput`. Removed in the next minor. */
-export type UsageSubscriptionsOutput = ExperimentalUsageSubscriptionsOutput
-
-/** @deprecated Use `ExperimentalUsageSubscriptionsOperation`. Removed in the next minor. */
-export type UsageSubscriptionsOperation<E = never> = ExperimentalUsageSubscriptionsOperation<E>
-
-/** @deprecated Use `ExperimentalUsageHistoryInput`. Removed in the next minor. */
-export type UsageHistoryInput = ExperimentalUsageHistoryInput
-
-/** @deprecated Use `ExperimentalUsageHistoryOutput`. Removed in the next minor. */
-export type UsageHistoryOutput = ExperimentalUsageHistoryOutput
-
-/** @deprecated Use `ExperimentalUsageHistoryOperation`. Removed in the next minor. */
-export type UsageHistoryOperation<E = never> = ExperimentalUsageHistoryOperation<E>
-
-/** @deprecated Use `ExperimentalUsageIncludedInput`. Removed in the next minor. */
-export type UsageIncludedInput = ExperimentalUsageIncludedInput
-
-/** @deprecated Use `ExperimentalUsageIncludedOutput`. Removed in the next minor. */
-export type UsageIncludedOutput = ExperimentalUsageIncludedOutput
-
-/** @deprecated Use `ExperimentalUsageIncludedOperation`. Removed in the next minor. */
-export type UsageIncludedOperation<E = never> = ExperimentalUsageIncludedOperation<E>
-
 /** @deprecated Use `ExperimentalConfigUpdateInput`. Removed in the next minor. */
 export type ConfigUpdateInput = ExperimentalConfigUpdateInput
 
@@ -3530,168 +3439,6 @@ export type ConfigUpdateOutput = ExperimentalConfigUpdateOutput
 
 /** @deprecated Use `ExperimentalConfigUpdateOperation`. Removed in the next minor. */
 export type ConfigUpdateOperation<E = never> = ExperimentalConfigUpdateOperation<E>
-
-/** @deprecated Use `ExperimentalConfigMcpSetInput`. Removed in the next minor. */
-export type ConfigMcpSetInput = ExperimentalConfigMcpSetInput
-
-/** @deprecated Use `ExperimentalConfigMcpSetOutput`. Removed in the next minor. */
-export type ConfigMcpSetOutput = ExperimentalConfigMcpSetOutput
-
-/** @deprecated Use `ExperimentalConfigMcpSetOperation`. Removed in the next minor. */
-export type ConfigMcpSetOperation<E = never> = ExperimentalConfigMcpSetOperation<E>
-
-/** @deprecated Use `ExperimentalConfigMcpRemoveInput`. Removed in the next minor. */
-export type ConfigMcpRemoveInput = ExperimentalConfigMcpRemoveInput
-
-/** @deprecated Use `ExperimentalConfigMcpRemoveOutput`. Removed in the next minor. */
-export type ConfigMcpRemoveOutput = ExperimentalConfigMcpRemoveOutput
-
-/** @deprecated Use `ExperimentalConfigMcpRemoveOperation`. Removed in the next minor. */
-export type ConfigMcpRemoveOperation<E = never> = ExperimentalConfigMcpRemoveOperation<E>
-
-/** @deprecated Use `ExperimentalConfigProvidersSwitchInput`. Removed in the next minor. */
-export type ConfigProvidersSwitchInput = ExperimentalConfigProvidersSwitchInput
-
-/** @deprecated Use `ExperimentalConfigProvidersSwitchOutput`. Removed in the next minor. */
-export type ConfigProvidersSwitchOutput = ExperimentalConfigProvidersSwitchOutput
-
-/** @deprecated Use `ExperimentalConfigProvidersSwitchOperation`. Removed in the next minor. */
-export type ConfigProvidersSwitchOperation<E = never> = ExperimentalConfigProvidersSwitchOperation<E>
-
-/** @deprecated Use `ExperimentalConfigProvidersGetInput`. Removed in the next minor. */
-export type ConfigProvidersGetInput = ExperimentalConfigProvidersGetInput
-
-/** @deprecated Use `ExperimentalConfigProvidersGetOutput`. Removed in the next minor. */
-export type ConfigProvidersGetOutput = ExperimentalConfigProvidersGetOutput
-
-/** @deprecated Use `ExperimentalConfigProvidersGetOperation`. Removed in the next minor. */
-export type ConfigProvidersGetOperation<E = never> = ExperimentalConfigProvidersGetOperation<E>
-
-/** @deprecated Use `ExperimentalConfigProvidersSetInput`. Removed in the next minor. */
-export type ConfigProvidersSetInput = ExperimentalConfigProvidersSetInput
-
-/** @deprecated Use `ExperimentalConfigProvidersSetOutput`. Removed in the next minor. */
-export type ConfigProvidersSetOutput = ExperimentalConfigProvidersSetOutput
-
-/** @deprecated Use `ExperimentalConfigProvidersSetOperation`. Removed in the next minor. */
-export type ConfigProvidersSetOperation<E = never> = ExperimentalConfigProvidersSetOperation<E>
-
-/** @deprecated Use `ExperimentalConfigProviderSetInput`. Removed in the next minor. */
-export type ConfigProviderSetInput = ExperimentalConfigProviderSetInput
-
-/** @deprecated Use `ExperimentalConfigProviderSetOutput`. Removed in the next minor. */
-export type ConfigProviderSetOutput = ExperimentalConfigProviderSetOutput
-
-/** @deprecated Use `ExperimentalConfigProviderSetOperation`. Removed in the next minor. */
-export type ConfigProviderSetOperation<E = never> = ExperimentalConfigProviderSetOperation<E>
-
-/** @deprecated Use `ExperimentalConfigProviderRemoveInput`. Removed in the next minor. */
-export type ConfigProviderRemoveInput = ExperimentalConfigProviderRemoveInput
-
-/** @deprecated Use `ExperimentalConfigProviderRemoveOutput`. Removed in the next minor. */
-export type ConfigProviderRemoveOutput = ExperimentalConfigProviderRemoveOutput
-
-/** @deprecated Use `ExperimentalConfigProviderRemoveOperation`. Removed in the next minor. */
-export type ConfigProviderRemoveOperation<E = never> = ExperimentalConfigProviderRemoveOperation<E>
-
-/** @deprecated Use `ExperimentalConfigDecisionsSetInput`. Removed in the next minor. */
-export type ConfigDecisionsSetInput = ExperimentalConfigDecisionsSetInput
-
-/** @deprecated Use `ExperimentalConfigDecisionsSetOutput`. Removed in the next minor. */
-export type ConfigDecisionsSetOutput = ExperimentalConfigDecisionsSetOutput
-
-/** @deprecated Use `ExperimentalConfigDecisionsSetOperation`. Removed in the next minor. */
-export type ConfigDecisionsSetOperation<E = never> = ExperimentalConfigDecisionsSetOperation<E>
-
-/** @deprecated Use `ExperimentalConfigDecisionsRemoveOutput`. Removed in the next minor. */
-export type ConfigDecisionsRemoveOutput = ExperimentalConfigDecisionsRemoveOutput
-
-/** @deprecated Use `ExperimentalConfigDecisionsRemoveOperation`. Removed in the next minor. */
-export type ConfigDecisionsRemoveOperation<E = never> = ExperimentalConfigDecisionsRemoveOperation<E>
-
-/** @deprecated Use `ExperimentalConfigWeatherSetInput`. Removed in the next minor. */
-export type ConfigWeatherSetInput = ExperimentalConfigWeatherSetInput
-
-/** @deprecated Use `ExperimentalConfigWeatherSetOutput`. Removed in the next minor. */
-export type ConfigWeatherSetOutput = ExperimentalConfigWeatherSetOutput
-
-/** @deprecated Use `ExperimentalConfigWeatherSetOperation`. Removed in the next minor. */
-export type ConfigWeatherSetOperation<E = never> = ExperimentalConfigWeatherSetOperation<E>
-
-/** @deprecated Use `ExperimentalConfigWeatherRemoveOutput`. Removed in the next minor. */
-export type ConfigWeatherRemoveOutput = ExperimentalConfigWeatherRemoveOutput
-
-/** @deprecated Use `ExperimentalConfigWeatherRemoveOperation`. Removed in the next minor. */
-export type ConfigWeatherRemoveOperation<E = never> = ExperimentalConfigWeatherRemoveOperation<E>
-
-/** @deprecated Use `ExperimentalConfigTimeSetInput`. Removed in the next minor. */
-export type ConfigTimeSetInput = ExperimentalConfigTimeSetInput
-
-/** @deprecated Use `ExperimentalConfigTimeSetOutput`. Removed in the next minor. */
-export type ConfigTimeSetOutput = ExperimentalConfigTimeSetOutput
-
-/** @deprecated Use `ExperimentalConfigTimeSetOperation`. Removed in the next minor. */
-export type ConfigTimeSetOperation<E = never> = ExperimentalConfigTimeSetOperation<E>
-
-/** @deprecated Use `ExperimentalConfigTimeRemoveOutput`. Removed in the next minor. */
-export type ConfigTimeRemoveOutput = ExperimentalConfigTimeRemoveOutput
-
-/** @deprecated Use `ExperimentalConfigTimeRemoveOperation`. Removed in the next minor. */
-export type ConfigTimeRemoveOperation<E = never> = ExperimentalConfigTimeRemoveOperation<E>
-
-/** @deprecated Use `ExperimentalConfigAddonsSetInput`. Removed in the next minor. */
-export type ConfigAddonsSetInput = ExperimentalConfigAddonsSetInput
-
-/** @deprecated Use `ExperimentalConfigAddonsSetOutput`. Removed in the next minor. */
-export type ConfigAddonsSetOutput = ExperimentalConfigAddonsSetOutput
-
-/** @deprecated Use `ExperimentalConfigAddonsSetOperation`. Removed in the next minor. */
-export type ConfigAddonsSetOperation<E = never> = ExperimentalConfigAddonsSetOperation<E>
-
-/** @deprecated Use `ExperimentalConfigWorkersSetInput`. Removed in the next minor. */
-export type ConfigWorkersSetInput = ExperimentalConfigWorkersSetInput
-
-/** @deprecated Use `ExperimentalConfigWorkersSetOutput`. Removed in the next minor. */
-export type ConfigWorkersSetOutput = ExperimentalConfigWorkersSetOutput
-
-/** @deprecated Use `ExperimentalConfigWorkersSetOperation`. Removed in the next minor. */
-export type ConfigWorkersSetOperation<E = never> = ExperimentalConfigWorkersSetOperation<E>
-
-/** @deprecated Use `ExperimentalConfigPluginAddInput`. Removed in the next minor. */
-export type ConfigPluginAddInput = ExperimentalConfigPluginAddInput
-
-/** @deprecated Use `ExperimentalConfigPluginAddOutput`. Removed in the next minor. */
-export type ConfigPluginAddOutput = ExperimentalConfigPluginAddOutput
-
-/** @deprecated Use `ExperimentalConfigPluginAddOperation`. Removed in the next minor. */
-export type ConfigPluginAddOperation<E = never> = ExperimentalConfigPluginAddOperation<E>
-
-/** @deprecated Use `ExperimentalConfigPluginRemoveInput`. Removed in the next minor. */
-export type ConfigPluginRemoveInput = ExperimentalConfigPluginRemoveInput
-
-/** @deprecated Use `ExperimentalConfigPluginRemoveOutput`. Removed in the next minor. */
-export type ConfigPluginRemoveOutput = ExperimentalConfigPluginRemoveOutput
-
-/** @deprecated Use `ExperimentalConfigPluginRemoveOperation`. Removed in the next minor. */
-export type ConfigPluginRemoveOperation<E = never> = ExperimentalConfigPluginRemoveOperation<E>
-
-/** @deprecated Use `ExperimentalConfigSkillAddInput`. Removed in the next minor. */
-export type ConfigSkillAddInput = ExperimentalConfigSkillAddInput
-
-/** @deprecated Use `ExperimentalConfigSkillAddOutput`. Removed in the next minor. */
-export type ConfigSkillAddOutput = ExperimentalConfigSkillAddOutput
-
-/** @deprecated Use `ExperimentalConfigSkillAddOperation`. Removed in the next minor. */
-export type ConfigSkillAddOperation<E = never> = ExperimentalConfigSkillAddOperation<E>
-
-/** @deprecated Use `ExperimentalConfigSkillRemoveInput`. Removed in the next minor. */
-export type ConfigSkillRemoveInput = ExperimentalConfigSkillRemoveInput
-
-/** @deprecated Use `ExperimentalConfigSkillRemoveOutput`. Removed in the next minor. */
-export type ConfigSkillRemoveOutput = ExperimentalConfigSkillRemoveOutput
-
-/** @deprecated Use `ExperimentalConfigSkillRemoveOperation`. Removed in the next minor. */
-export type ConfigSkillRemoveOperation<E = never> = ExperimentalConfigSkillRemoveOperation<E>
 
 /** @deprecated Use `ExperimentalGenerateApi`. Removed in the next minor. */
 export type GenerateApi<E = never> = ExperimentalGenerateApi<E>
@@ -3779,14 +3526,5 @@ export interface AppApi<E = never> {
   readonly usage: {
     /** @deprecated Use `client.experimental.usage.limits`. Removed in the next minor. */
     readonly limits: ExperimentalUsageLimitsOperation<E>
-
-    /** @deprecated Use `client.experimental.usage.subscriptions`. Removed in the next minor. */
-    readonly subscriptions: ExperimentalUsageSubscriptionsOperation<E>
-
-    /** @deprecated Use `client.experimental.usage.history`. Removed in the next minor. */
-    readonly history: ExperimentalUsageHistoryOperation<E>
-
-    /** @deprecated Use `client.experimental.usage.included`. Removed in the next minor. */
-    readonly included: ExperimentalUsageIncludedOperation<E>
   }
 }

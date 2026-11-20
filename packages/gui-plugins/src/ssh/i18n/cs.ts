@@ -34,4 +34,5 @@ export default {
   "stage.connecting": "Připojování přes SSH…",
   "stage.authentication": "Je vyžadováno ověření",
   "menu.delete": "Odstranit",
+  "error.unavailable": "SSH není k dispozici",
 }

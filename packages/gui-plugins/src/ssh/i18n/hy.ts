@@ -32,4 +32,5 @@ export default {
   "stage.connecting": "Կապ հաստատում SSH-ի միջոցով…",
   "stage.authentication": "Պայմանավորվածություն պահանջվում է",
   "menu.delete": "Ջնջել",
+  "error.unavailable": "SSH-ն հասանելի չէ",
 }
