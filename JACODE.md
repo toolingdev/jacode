@@ -104,6 +104,27 @@ can give it the same providers as this computer.
 
 The app keeps the list of workers in config as `experimental.workers`; there is nothing to edit by hand.
 
+### Ways in: reaching this computer from a phone or another device
+
+Settings › Workers › Pair a device connects a phone, tablet or another computer to JaCode on this computer; a phone
+needs no app, only its browser. Under **Ways in** you choose how those devices get here, and put the choices in order:
+
+- **Tailscale**: private to your own devices on your tailnet, encrypted end to end. JaCode serves itself on port 8443
+  with `tailscale serve`; the tailnet needs HTTPS certificates turned on, and the device needs the Tailscale app.
+- **Tailscale Funnel**: a public HTTPS address from Tailscale (port 10000), for devices without Tailscale.
+- **OpenTunnel**: a public address through OpenCode's relay, which passes traffic it cannot read. This is the way a
+  new install starts with.
+- **Same network**: devices on the same Wi-Fi or LAN, over plain HTTP. Turning it on makes the background service
+  listen beyond this computer.
+- **Your own address**: an address you run yourself, such as a WireGuard address or a reverse proxy.
+
+Each way shows whether it works now, at which address, or why not. The background service checks every address once a
+minute. The Pair dialog hands out every working address in your order: its QR code opens the first in a phone's
+camera, and each other address has its own link to copy. The Remote access switch pauses every way at once; turning it
+on again brings back what you chose. Nothing is reachable while JaCode's background service is stopped, and turning
+Tailscale off removes JaCode's serve setting again. From a terminal: `opencode service get access-status`, and
+`opencode service set access '<json>'`.
+
 ## Providers
 
 Settings › Providers lists every connected provider once, under Connected providers.

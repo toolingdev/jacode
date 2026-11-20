@@ -6,6 +6,7 @@ import { Effect, FileSystem, Option, Schedule, Schema } from "effect"
 import { randomBytes } from "crypto"
 import path from "path"
 import { selfCommand } from "../util/process"
+import { RemoteAccess } from "./remote-access"
 import { RemoteTunnel } from "./remote-tunnel"
 
 // The CLI's service configuration file, plus the Service.EnsureOptions binding that
@@ -25,10 +26,12 @@ export const Info = Schema.Struct({
   password: Schema.optional(Schema.String),
   cors: Schema.optional(Schema.Array(Schema.String)),
   env: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+  // Fork feature: the other ways in and their order; see RemoteAccess.
+  access: Schema.optional(RemoteAccess.Config),
 })
 export type Info = typeof Info.Type
 
-const keys = ["disabled", "remote", "hostname", "port", "password", "cors", "env"] as const
+const keys = ["disabled", "remote", "hostname", "port", "password", "cors", "env", "access", "access-status"] as const
 type Key = (typeof keys)[number]
 
 const decodeInfo = Schema.decodeUnknownEffect(Schema.fromJsonString(Info))
@@ -107,7 +110,9 @@ function configKey(key: string): Key {
     key === "port" ||
     key === "password" ||
     key === "cors" ||
-    key === "env"
+    key === "env" ||
+    key === "access" ||
+    key === "access-status"
   )
     return key
   throw new Error(`Unknown service config key: ${key}`)
@@ -128,8 +133,53 @@ const paths = Effect.gen(function* () {
       ...(name !== "service.json" && OPENCODE_CHANNEL !== "local" ? [path.join(global.state, "service.json")] : []),
     ],
     configFile: path.join(global.config, name),
+    accessStatusFile: path.join(global.state, name.replace(/\.json$/, "-access.json")),
   }
 })
+
+/** Where the running service writes what it found for each way in. */
+export const accessStatusFile = Effect.fnUntraced(function* () {
+  return (yield* paths).accessStatusFile
+})
+
+const decodeAccessInput = Schema.decodeUnknownEffect(Schema.fromJsonString(RemoteAccess.Input))
+const decodeAccessStatus = Schema.decodeUnknownOption(Schema.fromJsonString(RemoteAccess.Status))
+
+// The status a running service wrote; a status left by a service that has stopped says every way is off.
+const accessStatus = Effect.fnUntraced(function* () {
+  const { fs, accessStatusFile } = yield* paths
+  const config = yield* read()
+  const text = yield* fs.readFileString(accessStatusFile).pipe(Effect.option)
+  const status = Option.isSome(text) ? Option.getOrUndefined(decodeAccessStatus(text.value)) : undefined
+  const running = status !== undefined && alive(status.pid)
+
+  return JSON.stringify(
+    {
+      enabled: RemoteAccess.anyEnabled(config.access, config.remote !== undefined),
+      paused: config.access?.paused === true,
+      running,
+      entries: RemoteAccess.order(config.access).map((method) => {
+        const on = RemoteAccess.enabled(method, config.access, config.remote !== undefined)
+        const chosen = RemoteAccess.enabled(method, { ...config.access, paused: false }, config.remote !== undefined)
+        const found = running ? status.entries.find((entry) => entry.method === method) : undefined
+
+        return { ...(found ?? { method, state: on ? "starting" : "off" }), chosen }
+      }),
+      custom: config.access?.custom,
+    },
+    null,
+    2,
+  )
+})
+
+function alive(pid: number) {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch {
+    return false
+  }
+}
 
 // Clients find the service at its registration under XDG_STATE_HOME. A saved value would move the
 // registration away from them, and children of the service (tool shells, a relaunched Desktop) would
@@ -224,7 +274,9 @@ export const get = Effect.fn("cli.service-config.get")(function* (key?: string, 
       return String((yield* read()).disabled ?? false)
     }
     case "remote": {
-      return String((yield* read()).remote !== undefined)
+      // Fork feature: remote access is on while any way in is, not only OpenTunnel.
+      const config = yield* read()
+      return String(RemoteAccess.anyEnabled(config.access, config.remote !== undefined))
     }
     case "hostname": {
       return (yield* read()).hostname ?? ""
@@ -243,6 +295,17 @@ export const get = Effect.fn("cli.service-config.get")(function* (key?: string, 
       const env = (yield* read()).env ?? {}
       return name === undefined ? JSON.stringify(env, null, 2) : (env[name] ?? "")
     }
+    case "access": {
+      const config = yield* read()
+      return JSON.stringify(
+        { ...config.access, order: RemoteAccess.order(config.access), opentunnel: config.remote !== undefined },
+        null,
+        2,
+      )
+    }
+    case "access-status": {
+      return yield* accessStatus()
+    }
   }
   throw new Error(`Unknown service config key: ${key}`)
 })
@@ -260,11 +323,25 @@ export const set = Effect.fn("cli.service-config.set")(function* (key: string, v
     }
     case "remote": {
       if (value !== "true" && value !== "false") throw new Error("Remote must be true or false")
+      // Fork feature: the switch pauses and resumes every way in. Turning it on with nothing else chosen turns on
+      // OpenTunnel, as upstream does.
+      const access = (yield* read()).access
+      const others = RemoteAccess.anyEnabled({ ...access, paused: false }, false)
+      if (value === "true" && others) {
+        yield* Service.stop(yield* options())
+        yield* write({ ...(yield* read()), access: { ...access, paused: false } })
+        return
+      }
       // A tunnel that cannot be created leaves remote access off instead of a service that keeps retrying.
       if (value === "true") yield* RemoteTunnel.ensure()
       yield* Service.stop(yield* options())
       if (value === "true") {
         yield* remote()
+        return
+      }
+      // With other ways chosen, pausing keeps OpenTunnel's address too, so turning the switch on brings all back.
+      if (others) {
+        yield* write({ ...(yield* read()), access: { ...access, paused: true } })
         return
       }
       yield* disableRemote()
@@ -293,6 +370,13 @@ export const set = Effect.fn("cli.service-config.set")(function* (key: string, v
       const existing = yield* read()
       yield* write({ ...existing, env: { ...existing.env, [value]: nestedValue } })
       return
+    }
+    case "access": {
+      yield* setAccess(yield* decodeAccessInput(value))
+      return
+    }
+    case "access-status": {
+      throw new Error("access-status is read-only")
     }
     case "cors": {
       const cors = value.split(",").map((origin) => origin.trim())
@@ -357,7 +441,34 @@ export const unset = Effect.fn("cli.service-config.unset")(function* (key: strin
       yield* write(next)
       return
     }
+    case "access": {
+      yield* Service.stop(yield* options())
+      const { access: _access, ...next } = yield* read()
+      yield* write(next)
+      return
+    }
+    case "access-status": {
+      throw new Error("access-status is read-only")
+    }
   }
+})
+
+// Stores the ways in and their order, and turns OpenTunnel on or off when the input says so. Choosing a way also
+// resumes remote access if the switch had paused it.
+const setAccess = Effect.fnUntraced(function* (input: RemoteAccess.Input) {
+  const custom = input.custom?.trim()
+  if (custom) {
+    const url = URL.parse(custom)
+    if (!url || (url.protocol !== "http:" && url.protocol !== "https:") || url.search || url.hash)
+      throw new Error("The custom address must be an http:// or https:// URL without a query")
+  }
+  const { opentunnel, ...config } = input
+  const existing = yield* read()
+  if (opentunnel === true && existing.remote === undefined) yield* RemoteTunnel.ensure()
+  yield* Service.stop(yield* options())
+  if (opentunnel === true) yield* remote()
+  if (opentunnel === false && existing.remote !== undefined) yield* disableRemote()
+  yield* write({ ...(yield* read()), access: { ...config, custom: custom || undefined, paused: false } })
 })
 
 export * as ServiceConfig from "./service-config"

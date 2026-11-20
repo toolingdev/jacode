@@ -3,7 +3,7 @@ import { powerSaveBlocker } from "electron"
 import { Schema } from "effect"
 import { builtinMainContext } from "@opencode/plugin/gui/builtin"
 import type { Plugin } from "@opencode/plugin/gui/main"
-import { Pairing } from "./contract"
+import { AccessStatus, Pairing } from "./contract"
 import { createDispatch } from "./dispatch"
 import {
   createPairingMainState,
@@ -112,6 +112,28 @@ const setup: Plugin.MainSetup = (ctx) => {
     }).finally(() => signal?.removeEventListener("abort", cancel))
   }
 
+  // Fork feature: the ways in. Changes run one at a time, since each one restarts the background service.
+  const access = { queue: Promise.resolve() }
+  const decodeAccess = Schema.decodeUnknownPromise(Schema.fromJsonString(AccessStatus))
+
+  const accessCommand = (args: readonly string[], timeout: number, signal?: AbortSignal) =>
+    new Promise<string>((resolve, reject) => {
+      execFile(
+        cli.command[0] ?? "opencode",
+        [...cli.command.slice(1), "service", ...args],
+        {
+          signal: AbortSignal.any([ctx.signal, ...(signal ? [signal] : [])]),
+          timeout,
+          windowsHide: true,
+        },
+        (error, stdout, stderr) => {
+          if (!error) return resolve(stdout.trim())
+          log.write("error", "remote access command failed", { args, error: error.message, stderr })
+          reject(new Error(stderr.trim().split("\n").at(-1) || error.message))
+        },
+      )
+    })
+
   if (stored.value) dispatch({ type: "screen.set", enabled: true, started: false })
   ctx.onCleanup(() => dispatch({ type: "disposed" }))
 
@@ -124,6 +146,18 @@ const setup: Plugin.MainSetup = (ctx) => {
     },
     screenActive,
     setScreenActive: (enabled) => dispatch({ type: "screen.set", enabled, started: screenActive() }),
+    access: async (_, caller) => decodeAccess(await accessCommand(["get", "access-status"], 15_000, caller.signal)),
+    // Turning a way on can create the OpenTunnel tunnel, which can take a few minutes.
+    setAccess: (input) => {
+      const next = access.queue.then(() => accessCommand(["set", "access", JSON.stringify(input)], 300_000))
+
+      access.queue = next.then(
+        () => undefined,
+        () => undefined,
+      )
+
+      return next.then(() => undefined)
+    },
   })
 }
 

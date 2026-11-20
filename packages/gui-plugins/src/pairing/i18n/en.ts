@@ -7,7 +7,8 @@ export default {
     "Connect a phone, tablet, or another computer from anywhere through an end-to-end encrypted tunnel.",
   "pair.open": "Pair device",
   "pair.unavailable": "Pairing is unavailable right now.",
-  "dialog.description": "Scan the code with JaCode on another device, or copy the link.",
+  "dialog.description": "Scan the code with your phone's camera or JaCode on another device, or copy a link.",
+  "dialog.links": "Every working way in, in order",
   "remote.title": "Remote access",
   "remote.description":
     "Paired devices reach JaCode on this computer over the internet. Turning it off disconnects them until you pair them again.",
@@ -25,4 +26,38 @@ export default {
   error: "Could not update pairing details. Try again.",
   expires: "Expires in {{time}}",
   refresh: "Refresh code",
+  "access.title": "Ways in",
+  "access.description":
+    "How other devices reach JaCode on this computer. Pairing hands out the working addresses in this order, so a device tries the first and falls back to the next.",
+  "access.paused": "Remote access is off, so none of these run. Turn it on above.",
+  "access.stopped": "The background service is not running, so nothing is reachable right now.",
+  "access.saving": "Saving and restarting the background service…",
+  "access.failed": "Could not save. {{reason}}",
+  "access.unavailable": "Could not read the ways in. Try again.",
+  "access.up": "Move {{method}} up",
+  "access.down": "Move {{method}} down",
+  "access.state.off": "Off",
+  "access.state.starting": "Setting up…",
+  "access.state.ready": "Working: {{url}}",
+  "access.state.failed": "Not working: {{reason}}",
+  "access.state.failed.unknown": "Not working.",
+  "access.custom.placeholder": "https://jacode.example.com",
+  "access.custom.label": "Your own address",
+  "access.custom.save": "Save address",
+  "access.custom.clear": "Clear",
+  "method.tailscale": "Tailscale",
+  "method.tailscale.about":
+    "Only your own devices signed in to your tailnet. Encrypted end to end by Tailscale (WireGuard); the device needs the Tailscale app.",
+  "method.funnel": "Tailscale Funnel",
+  "method.funnel.about":
+    "A public HTTPS address from Tailscale, so devices without Tailscale can connect. Anyone on the internet can reach the sign-in page; the pairing credential still guards it.",
+  "method.opentunnel": "OpenTunnel",
+  "method.opentunnel.about":
+    "A public address through OpenCode's relay. Encrypted end to end: the relay passes traffic it cannot read.",
+  "method.lan": "Same network (Wi-Fi or LAN)",
+  "method.lan.about":
+    "Devices on the same network reach this computer directly, without encryption. Works only at the same place.",
+  "method.custom": "Your own address",
+  "method.custom.about":
+    "An address you run yourself, such as a WireGuard address or a reverse proxy. JaCode hands it out and checks that it answers.",
 }

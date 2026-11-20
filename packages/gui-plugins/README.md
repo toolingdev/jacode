@@ -564,6 +564,46 @@ Pairing connects another device to this machine's server from anywhere, and keep
 import { Schema } from "effect"
 import { Ipc } from "@opencode/plugin/gui"
 
+/** Fork feature: a way another device reaches this computer. */
+export const AccessMethod = Schema.Literals(["tailscale", "funnel", "opentunnel", "lan", "custom"])
+
+export type AccessMethod = typeof AccessMethod.Type
+
+/** What the background service found for one way in: off, being set up, working at `url`, or failed with `message`. */
+export const AccessEntry = Schema.Struct({
+  method: AccessMethod,
+  state: Schema.Literals(["off", "starting", "ready", "failed"]),
+  url: Schema.optional(Schema.String),
+  message: Schema.optional(Schema.String),
+  /** Whether the user turned this way on, even while the Remote access switch pauses it. */
+  chosen: Schema.Boolean,
+})
+
+export type AccessEntry = typeof AccessEntry.Type
+
+/** Every way in, in the user's order, as `opencode service get access-status` prints it. */
+export const AccessStatus = Schema.Struct({
+  enabled: Schema.Boolean,
+  paused: Schema.Boolean,
+  running: Schema.Boolean,
+  entries: Schema.Array(AccessEntry),
+  custom: Schema.optional(Schema.String),
+})
+
+export type AccessStatus = typeof AccessStatus.Type
+
+/** The ways in to turn on and their order, as `opencode service set access` takes it. */
+export const AccessInput = Schema.Struct({
+  order: Schema.Array(AccessMethod),
+  tailscale: Schema.Boolean,
+  funnel: Schema.Boolean,
+  lan: Schema.Boolean,
+  opentunnel: Schema.Boolean,
+  custom: Schema.optional(Schema.String),
+})
+
+export type AccessInput = typeof AccessInput.Type
+
 /**
  * Turns on remote access and keeps this machine's display awake while another device uses it. The window asks the
  * local server for its remote address and pairing codes through its own `ServerRef`; remote access, which changes
@@ -583,6 +623,10 @@ export const Pairing = Ipc.define({
     screenActive: { output: Schema.Boolean },
     /** Holds or releases the display sleep blocker, and remembers the choice. */
     setScreenActive: { input: Schema.Boolean },
+    /** Fork feature: every way in and what the background service found for it. */
+    access: { output: AccessStatus },
+    /** Fork feature: turns ways in on or off and orders them, then starts the background service again. */
+    setAccess: { input: AccessInput },
   },
 })
 ```
@@ -609,7 +653,7 @@ import { powerSaveBlocker } from "electron"
 import { Schema } from "effect"
 import { builtinMainContext } from "@opencode/plugin/gui/builtin"
 import type { Plugin } from "@opencode/plugin/gui/main"
-import { Pairing } from "./contract"
+import { AccessStatus, Pairing } from "./contract"
 import { createDispatch } from "./dispatch"
 import {
   createPairingMainState,
@@ -718,6 +762,28 @@ const setup: Plugin.MainSetup = (ctx) => {
     }).finally(() => signal?.removeEventListener("abort", cancel))
   }
 
+  // Fork feature: the ways in. Changes run one at a time, since each one restarts the background service.
+  const access = { queue: Promise.resolve() }
+  const decodeAccess = Schema.decodeUnknownPromise(Schema.fromJsonString(AccessStatus))
+
+  const accessCommand = (args: readonly string[], timeout: number, signal?: AbortSignal) =>
+    new Promise<string>((resolve, reject) => {
+      execFile(
+        cli.command[0] ?? "opencode",
+        [...cli.command.slice(1), "service", ...args],
+        {
+          signal: AbortSignal.any([ctx.signal, ...(signal ? [signal] : [])]),
+          timeout,
+          windowsHide: true,
+        },
+        (error, stdout, stderr) => {
+          if (!error) return resolve(stdout.trim())
+          log.write("error", "remote access command failed", { args, error: error.message, stderr })
+          reject(new Error(stderr.trim().split("\n").at(-1) || error.message))
+        },
+      )
+    })
+
   if (stored.value) dispatch({ type: "screen.set", enabled: true, started: false })
   ctx.onCleanup(() => dispatch({ type: "disposed" }))
 
@@ -730,6 +796,18 @@ const setup: Plugin.MainSetup = (ctx) => {
     },
     screenActive,
     setScreenActive: (enabled) => dispatch({ type: "screen.set", enabled, started: screenActive() }),
+    access: async (_, caller) => decodeAccess(await accessCommand(["get", "access-status"], 15_000, caller.signal)),
+    // Turning a way on can create the OpenTunnel tunnel, which can take a few minutes.
+    setAccess: (input) => {
+      const next = access.queue.then(() => accessCommand(["set", "access", JSON.stringify(input)], 300_000))
+
+      access.queue = next.then(
+        () => undefined,
+        () => undefined,
+      )
+
+      return next.then(() => undefined)
+    },
   })
 }
 

@@ -1,7 +1,7 @@
 import { Button } from "@opencode/ui/button"
 import { Dialog, DialogBody, DialogHeader, DialogTitleGroup } from "@opencode/ui/dialog"
 import { Loader } from "@opencode/ui/loader"
-import { createMemo, createSignal, Match, onCleanup, Show, Switch, untrack, type Accessor } from "solid-js"
+import { createMemo, createSignal, For, Match, onCleanup, Show, Switch, untrack, type Accessor } from "solid-js"
 import { renderSVG } from "@opencode/util/qr"
 import { createKeyed, usePlugin, type DialogHandle, type Live, type IpcClient } from "@opencode/plugin/gui"
 import type { Pairing } from "./contract"
@@ -21,7 +21,8 @@ import {
   type PairingEffect,
   type PairingEvent,
 } from "./machine"
-import { remoteAddress } from "./remote"
+import AccessMethods from "./access"
+import { addressMethod, remoteAddress } from "./remote"
 
 type Client = IpcClient<typeof Pairing.spec>
 
@@ -167,10 +168,31 @@ export default function PairingPage(props: {
 
       if (!server) return missing()
 
-      return void server.client.server.info({ signal: start(attempt, effect.timeoutMs, missing) }).then((info) => {
+      const signal = start(attempt, effect.timeoutMs, missing)
+
+      const found = (addresses: readonly string[]) => {
+        const tunnel = addresses[0]
+
+        dispatch(tunnel ? { type: "tunnel.found", attempt, tunnel, addresses } : { type: "tunnel.missing", attempt })
+      }
+
+      // Fork feature: every working way in, in the user's order, from the background service; the server's own
+      // tunnel address when pairing's main side cannot say.
+      const live = main()
+
+      if (live)
+        return void live.value
+          .access({ signal })
+          .then(
+            (access) =>
+              found(access.entries.flatMap((entry) => (entry.state === "ready" && entry.url ? [entry.url] : []))),
+            missing,
+          )
+
+      return void server.client.server.info({ signal }).then((info) => {
         const tunnel = remoteAddress(info.urls)
 
-        dispatch(tunnel ? { type: "tunnel.found", attempt, tunnel } : { type: "tunnel.missing", attempt })
+        found(tunnel ? [tunnel] : [])
       }, missing)
     }
 
@@ -214,68 +236,71 @@ export default function PairingPage(props: {
   onCleanup(() => dispatch({ type: "disposed" }))
 
   return (
-    // Fork feature: a section of the Workers page, not a page of its own.
-    <ui.SettingsSection
-      title={ctx.t("title")}
-      footer={
-        <>
-          <Show when={pageView().remoteError}>
-            <p class="text-text-danger-base" role="alert">
-              {ctx.t("remote.error")}
-            </p>
-          </Show>
-          <Show when={pageView().screenError}>
-            <div class="flex flex-wrap items-center gap-2">
+    <>
+      {/* Fork feature: a section of the Workers page, not a page of its own. */}
+      <ui.SettingsSection
+        title={ctx.t("title")}
+        footer={
+          <>
+            <Show when={pageView().remoteError}>
               <p class="text-text-danger-base" role="alert">
-                {ctx.t("screenActive.error")}
+                {ctx.t("remote.error")}
               </p>
-              <ui.Button size="small" variant="ghost" onClick={() => dispatch({ type: "screen.retry" })}>
-                {ctx.t("retry")}
-              </ui.Button>
-            </div>
-          </Show>
-          <Show when={pageView().unavailable}>
-            <p class="text-text-danger-base" role="alert">
-              {ctx.t("pair.unavailable")}
-            </p>
-          </Show>
-        </>
-      }
-    >
-      <ui.SettingsRow title={ctx.t("pair.title")} description={ctx.t("pair.description")}>
-        <ui.Button disabled={pageView().pairDisabled} onClick={() => dispatch({ type: "dialog.opened" })}>
-          {ctx.t("pair.open")}
-        </ui.Button>
-      </ui.SettingsRow>
-      <Show when={pageView().mainActive}>
-        <ui.SettingsRow
-          id="settings-remote-access"
-          title={ctx.t("remote.title")}
-          description={ctx.t("remote.description")}
-        >
-          <ui.Switch
-            label={ctx.t("remote.title")}
-            hideLabel
-            checked={pageView().remoteChecked}
-            disabled={pageView().remoteDisabled}
-            onChange={(enabled) => dispatch({ type: "toggled", enabled })}
-          />
+            </Show>
+            <Show when={pageView().screenError}>
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="text-text-danger-base" role="alert">
+                  {ctx.t("screenActive.error")}
+                </p>
+                <ui.Button size="small" variant="ghost" onClick={() => dispatch({ type: "screen.retry" })}>
+                  {ctx.t("retry")}
+                </ui.Button>
+              </div>
+            </Show>
+            <Show when={pageView().unavailable}>
+              <p class="text-text-danger-base" role="alert">
+                {ctx.t("pair.unavailable")}
+              </p>
+            </Show>
+          </>
+        }
+      >
+        <ui.SettingsRow title={ctx.t("pair.title")} description={ctx.t("pair.description")}>
+          <ui.Button disabled={pageView().pairDisabled} onClick={() => dispatch({ type: "dialog.opened" })}>
+            {ctx.t("pair.open")}
+          </ui.Button>
         </ui.SettingsRow>
-        <ui.SettingsRow
-          id="settings-keep-screen-active"
-          title={ctx.t("screenActive.title")}
-          description={ctx.t("screenActive.description")}
-        >
-          <ui.Switch
-            label={ctx.t("screenActive.title")}
-            hideLabel
-            checked={pageView().screenChecked}
-            disabled={pageView().screenDisabled}
-            onChange={(enabled) => dispatch({ type: "screen.toggled", enabled })}
-          />
-        </ui.SettingsRow>
-      </Show>
-    </ui.SettingsSection>
+        <Show when={pageView().mainActive}>
+          <ui.SettingsRow
+            id="settings-remote-access"
+            title={ctx.t("remote.title")}
+            description={ctx.t("remote.description")}
+          >
+            <ui.Switch
+              label={ctx.t("remote.title")}
+              hideLabel
+              checked={pageView().remoteChecked}
+              disabled={pageView().remoteDisabled}
+              onChange={(enabled) => dispatch({ type: "toggled", enabled })}
+            />
+          </ui.SettingsRow>
+          <ui.SettingsRow
+            id="settings-keep-screen-active"
+            title={ctx.t("screenActive.title")}
+            description={ctx.t("screenActive.description")}
+          >
+            <ui.Switch
+              label={ctx.t("screenActive.title")}
+              hideLabel
+              checked={pageView().screenChecked}
+              disabled={pageView().screenDisabled}
+              onChange={(enabled) => dispatch({ type: "screen.toggled", enabled })}
+            />
+          </ui.SettingsRow>
+        </Show>
+      </ui.SettingsSection>
+      <AccessMethods pairing={props.pairing} />
+    </>
   )
 }
 
@@ -283,7 +308,7 @@ function DialogPairing(props: {
   dialog: Accessor<DialogState>
   onEvent: (event: Extract<PairingEvent, { type: "code.refresh" | "retry" | "tick" | "dialog.closed" }>) => void
 }) {
-  const ctx = usePlugin()
+  const ctx = usePlugin<typeof definition>()
   const system = ctx.system
   const view = createMemo(() => viewDialog(props.dialog()))
   const url = createMemo(() => dialogUrl(props.dialog()))
@@ -419,6 +444,32 @@ function DialogPairing(props: {
                     </Button>
                   </div>
                 </div>
+                {/* Fork feature: every working way in, in order; a device that cannot use the first tries the next. */}
+                <Show when={current().links.length > 1}>
+                  <ol class="flex flex-col gap-1" aria-label={ctx.t("dialog.links")}>
+                    <For each={current().links}>
+                      {(link, index) => (
+                        <li class="flex min-w-0 items-center gap-2">
+                          <span class="shrink-0 text-12-medium text-v2-text-text-base">
+                            {`${index() + 1}. ${ctx.t(`method.${addressMethod(link.address)}`)}`}
+                          </span>
+                          <span class="min-w-0 flex-1 truncate text-12-regular text-v2-text-text-muted">
+                            {link.address}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="small"
+                            class="shrink-0"
+                            disabled={copyView().disabled}
+                            onClick={() => dispatchCopy({ type: "copy.requested", url: link.url })}
+                          >
+                            {ctx.t("copyLink")}
+                          </Button>
+                        </li>
+                      )}
+                    </For>
+                  </ol>
+                </Show>
               </>
             )}
           </Match>

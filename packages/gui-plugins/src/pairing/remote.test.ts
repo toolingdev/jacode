@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test"
-import { remoteAddress } from "./remote"
+import { describe, expect, test } from "bun:test"
+import { addressMethod, remoteAddress } from "./remote"
 
 test.each([
   [
@@ -16,4 +16,15 @@ test.each([
   ["nothing from a malformed address", ["not a url"], undefined],
 ])("remote address: %s", (_, urls, expected) => {
   expect(remoteAddress(urls)).toBe(expected)
+})
+
+describe("addressMethod", () => {
+  test("names each way in by its address", () => {
+    expect(addressMethod("https://mac.tail123.ts.net:8443")).toBe("tailscale")
+    expect(addressMethod("https://mac.tail123.ts.net:10000")).toBe("funnel")
+    expect(addressMethod("https://a1b2.c3d4.opentunnel.xyz")).toBe("opentunnel")
+    expect(addressMethod("http://192.168.0.20:49374")).toBe("lan")
+    expect(addressMethod("http://172.20.1.4:49374")).toBe("lan")
+    expect(addressMethod("https://jacode.example.com")).toBe("custom")
+  })
 })

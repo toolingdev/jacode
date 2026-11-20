@@ -101,10 +101,17 @@ export type DialogState =
       readonly step: "polling" | "waiting"
       readonly retries: number
     }
-  | { readonly status: "code"; readonly attempt: number; readonly tunnel: string }
+  | {
+      readonly status: "code"
+      readonly attempt: number
+      readonly tunnel: string
+      /** Fork feature: every working address in the user's order, the tunnel first. */
+      readonly addresses: readonly string[]
+    }
   | {
       readonly status: "ready"
       readonly tunnel: string
+      readonly addresses: readonly string[]
       readonly code: string
       readonly url: string
       readonly expiresIn: number
@@ -112,7 +119,7 @@ export type DialogState =
       /** The attempt fetching the next code while this one stays on screen. */
       readonly refreshing: number | undefined
     }
-  | { readonly status: "code-error"; readonly tunnel: string }
+  | { readonly status: "code-error"; readonly tunnel: string; readonly addresses: readonly string[] }
   | { readonly status: "failed"; readonly reason: "remote" | "tunnel" }
 
 /**
@@ -153,7 +160,13 @@ export type PairingEvent =
   /** The user clicked "Pair device". */
   | { readonly type: "dialog.opened" }
   | { readonly type: "dialog.closed" }
-  | { readonly type: "tunnel.found"; readonly attempt: number; readonly tunnel: string }
+  | {
+      readonly type: "tunnel.found"
+      readonly attempt: number
+      readonly tunnel: string
+      /** Fork feature: every working address in the user's order; the tunnel alone when left out. */
+      readonly addresses?: readonly string[]
+    }
   /** The server advertises no tunnel yet, or the request failed or timed out. */
   | { readonly type: "tunnel.missing"; readonly attempt: number }
   /** A `wait` effect's delay ended; `for` names the phase it belongs to, as the effect did. */
@@ -530,7 +543,11 @@ function transitionCode(state: PairingState, event: PairingEvent): PairingTransi
       return { state, effects: NONE }
 
     return {
-      state: { ...state, issued: attempt, dialog: { status: "code", attempt, tunnel: event.tunnel } },
+      state: {
+        ...state,
+        issued: attempt,
+        dialog: { status: "code", attempt, tunnel: event.tunnel, addresses: event.addresses ?? [event.tunnel] },
+      },
       effects: [
         { type: "abort", attempt: event.attempt },
         { type: "fetch-code", attempt, timeoutMs: CODE_TIMEOUT_MS },
@@ -592,13 +609,14 @@ function transitionCode(state: PairingState, event: PairingEvent): PairingTransi
             ? {
                 status: "ready",
                 tunnel: dialog.tunnel,
+                addresses: dialog.addresses,
                 code: event.code,
                 url,
                 expiresIn: event.expiresIn,
                 loadedAt: event.now,
                 refreshing: undefined,
               }
-            : { status: "code-error", tunnel: dialog.tunnel },
+            : { status: "code-error", tunnel: dialog.tunnel, addresses: dialog.addresses },
       },
       effects: [{ type: "abort", attempt: event.attempt }],
     }
@@ -607,7 +625,11 @@ function transitionCode(state: PairingState, event: PairingEvent): PairingTransi
   if (event.type === "code.refresh") {
     if (dialog.status === "code-error")
       return {
-        state: { ...state, issued: attempt, dialog: { status: "code", attempt, tunnel: dialog.tunnel } },
+        state: {
+          ...state,
+          issued: attempt,
+          dialog: { status: "code", attempt, tunnel: dialog.tunnel, addresses: dialog.addresses },
+        },
         effects: [{ type: "fetch-code", attempt, timeoutMs: CODE_TIMEOUT_MS }],
       }
 
@@ -828,8 +850,13 @@ export type DialogView =
   | {
       readonly kind: "ready"
       readonly url: string
-      /** The QR code's content, as `opencode pair --remote` prints it: {"code","urls"} JSON the app's scanner reads. */
+      /**
+       * Fork feature: the QR code carries the first address's link, so a phone's camera opens it in the browser. The
+       * app's scanner reads links as well as the {"code","urls"} JSON `opencode pair` prints.
+       */
       readonly qr: string
+      /** Fork feature: the link for every working address, in the user's order. */
+      readonly links: readonly { readonly address: string; readonly url: string }[]
       readonly refreshing: boolean
     }
   | { readonly kind: "code-error" }
@@ -844,7 +871,12 @@ export function viewDialog(dialog: DialogState): DialogView {
     return {
       kind: "ready",
       url: dialog.url,
-      qr: JSON.stringify({ code: dialog.code, urls: [dialog.tunnel] }),
+      qr: dialog.url,
+      links: dialog.addresses.flatMap((address) => {
+        const url = URL.parse(`/auth/connect/${dialog.code}`, address)?.href
+
+        return url ? [{ address, url }] : []
+      }),
       refreshing: dialog.refreshing !== undefined,
     }
 

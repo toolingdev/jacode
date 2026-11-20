@@ -16,6 +16,7 @@ import { PortOwner } from "./services/port-owner"
 import { ServiceConfig } from "./services/service-config"
 import { RetainedImage } from "./services/retained-image"
 import { ServiceRegistration } from "./services/service-registration"
+import { RemoteAccess } from "./services/remote-access"
 import { RemoteTunnel } from "./services/remote-tunnel"
 import { WebUi } from "./services/web-ui"
 import { databasePath } from "./database-path"
@@ -69,7 +70,9 @@ const processEffect = Effect.fnUntraced(function* (options: Options) {
       const foreground = options.mode === "default"
       const serviceOptions = options.mode === "service" ? yield* ServiceConfig.options() : undefined
       const config = options.mode === "service" ? yield* ServiceConfig.read() : {}
-      const hostname = options.hostname ?? config.hostname ?? "127.0.0.1"
+      // Fork feature: the local network way in needs the service to listen beyond loopback.
+      const lan = RemoteAccess.enabled("lan", config.access, config.remote !== undefined)
+      const hostname = options.hostname ?? config.hostname ?? (lan ? "0.0.0.0" : "127.0.0.1")
       const port = options.port ?? config.port ?? (options.mode === "service" ? ServiceConfig.defaultPort() : undefined)
       const findIncumbent =
         serviceOptions !== undefined && port !== undefined
@@ -97,7 +100,14 @@ const processEffect = Effect.fnUntraced(function* (options: Options) {
       if (!password) return yield* Effect.fail(new Error("Missing server password"))
       const instanceID = randomUUID()
       const transform = yield* WebUi.handler()
-      const remote = { urls: [] as ReadonlyArray<string> }
+      const access =
+        options.mode === "service"
+          ? RemoteAccess.board({
+              config: config.access,
+              opentunnel: config.remote !== undefined && config.access?.paused !== true,
+              file: yield* ServiceConfig.accessStatusFile(),
+            })
+          : undefined
       const launch = start(
         {
           app: {
@@ -165,7 +175,7 @@ const processEffect = Effect.fnUntraced(function* (options: Options) {
                 }),
             },
         transform,
-        () => remote.urls,
+        () => access?.urls() ?? [],
       )
       const server = yield* launch.pipe(
         Effect.catch((error) => {
@@ -193,7 +203,21 @@ const processEffect = Effect.fnUntraced(function* (options: Options) {
         }),
       )
       if (server === undefined) return
-      if (serviceOptions !== undefined && config.remote !== undefined && NetAddress.isInetAddress(server.address)) {
+      if (access !== undefined && NetAddress.isInetAddress(server.address)) {
+        yield* Effect.forkScoped(
+          RemoteAccess.run({
+            board: access,
+            port: server.address.port,
+            bound: NetAddress.formatIp(server.address.address),
+          }),
+        )
+      }
+      if (
+        serviceOptions !== undefined &&
+        access?.on("opentunnel") === true &&
+        config.remote !== undefined &&
+        NetAddress.isInetAddress(server.address)
+      ) {
         const bound = NetAddress.formatIp(server.address.address)
         // A wildcard bind also listens on loopback, which is all the tunnel needs to reach.
         const target =
@@ -204,9 +228,7 @@ const processEffect = Effect.fnUntraced(function* (options: Options) {
           RemoteTunnel.run({
             route: config.remote.route,
             target,
-            onURL: (url) => {
-              remote.urls = url === undefined ? [] : [url]
-            },
+            onURL: (url) => access?.set("opentunnel", url === undefined ? { state: "starting" } : { state: "starting", url }),
           }),
         )
       }
