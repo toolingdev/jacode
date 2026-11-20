@@ -327,23 +327,27 @@ export const set = Effect.fn("cli.service-config.set")(function* (key: string, v
       // OpenTunnel, as upstream does.
       const access = (yield* read()).access
       const others = RemoteAccess.anyEnabled({ ...access, paused: false }, false)
+      // The setting is written before the service stops: the app starts it again at once, and it must read the
+      // new value.
       if (value === "true" && others) {
-        yield* Service.stop(yield* options())
         yield* write({ ...(yield* read()), access: { ...access, paused: false } })
+        yield* Service.stop(yield* options())
         return
       }
       // A tunnel that cannot be created leaves remote access off instead of a service that keeps retrying.
       if (value === "true") yield* RemoteTunnel.ensure()
-      yield* Service.stop(yield* options())
       if (value === "true") {
+        yield* Service.stop(yield* options())
         yield* remote()
         return
       }
       // With other ways chosen, pausing keeps OpenTunnel's address too, so turning the switch on brings all back.
       if (others) {
         yield* write({ ...(yield* read()), access: { ...access, paused: true } })
+        yield* Service.stop(yield* options())
         return
       }
+      yield* Service.stop(yield* options())
       yield* disableRemote()
       return
     }
@@ -465,10 +469,11 @@ const setAccess = Effect.fnUntraced(function* (input: RemoteAccess.Input) {
   const { opentunnel, ...config } = input
   const existing = yield* read()
   if (opentunnel === true && existing.remote === undefined) yield* RemoteTunnel.ensure()
-  yield* Service.stop(yield* options())
+  // Written before the service stops: the app starts it again at once, and it must read the new choices.
   if (opentunnel === true) yield* remote()
   if (opentunnel === false && existing.remote !== undefined) yield* disableRemote()
   yield* write({ ...(yield* read()), access: { ...config, custom: custom || undefined, paused: false } })
+  yield* Service.stop(yield* options())
 })
 
 export * as ServiceConfig from "./service-config"

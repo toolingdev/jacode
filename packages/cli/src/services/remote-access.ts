@@ -52,6 +52,11 @@ export type Status = typeof Status.Type
 const TAILSCALE_PORT = 8443
 const FUNNEL_PORT = 10_000
 const CHECK_EVERY = "60 seconds"
+// Tailscale fetches a certificate the first time its address is used, which can take half a minute.
+const PROBE_TIMEOUT_MS = 30_000
+// A new address that does not answer yet is asked again this often before the minute check takes over.
+const RETRY_EVERY_MS = 5_000
+const RETRIES = 6
 
 /** Every method in the user's order: their order first, then any method it leaves out. */
 export function order(config: Config | undefined) {
@@ -108,18 +113,33 @@ export function board(input: { config: Config | undefined; opentunnel: boolean; 
 
   // Asks an address whether this server answers there. A 401 is an answer: the server is reachable and only wants
   // the pairing credential. A result for an address that has since changed is dropped.
-  const probe = async (method: Method) => {
+  const probe = async (method: Method, final = true) => {
     const url = entries.get(method)?.url
 
     if (!url) return
 
-    const answered = await fetch(`${url}/api/info`, { signal: AbortSignal.timeout(8_000) }).then(
+    const answered = await fetch(`${url}/api/info`, { signal: AbortSignal.timeout(PROBE_TIMEOUT_MS) }).then(
       (response) => response.status === 200 || response.status === 401,
       () => false,
     )
 
     if (entries.get(method)?.url !== url) return
+
+    // A try that is not the last leaves the address setting up.
+    if (!answered && !final) return false
     set(method, { state: answered ? "ready" : "failed", url, message: answered ? undefined : `${UNREACHABLE} ${url}` })
+
+    return answered
+  }
+
+  // A new address gets a few quick tries, so a slow first answer does not leave it failed for a whole minute.
+  const settle = async (method: Method, left: number): Promise<void> => {
+    if ((await probe(method, left <= 0)) !== false) return
+
+    if (left <= 0) return
+    await new Promise((resolve) => setTimeout(resolve, RETRY_EVERY_MS))
+
+    return settle(method, left - 1)
   }
 
   return {
@@ -130,7 +150,7 @@ export function board(input: { config: Config | undefined; opentunnel: boolean; 
     set: (method: Method, next: Omit<Entry, "method">) => {
       set(method, next)
 
-      if (next.state === "starting" && next.url) void probe(method)
+      if (next.state === "starting" && next.url) void settle(method, RETRIES)
     },
     /** Checks every address again, except those that failed before they had one to check. */
     check: () =>
