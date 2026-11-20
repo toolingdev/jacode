@@ -25,6 +25,11 @@ opens the app. The app keeps its own settings and data apart from any other Open
 
 On first launch a welcome card walks through picking a provider, adding its key and sending a first message.
 
+**Updates.** An installed JaCode updates itself from this repository's releases. It checks at start, downloads a newer
+build in the background and checks it, and the button at the top right (or JaCode › Check for Updates…) installs it and
+restarts. The app it replaces is kept beside the download until the next update. A copy built from source is updated by
+building again.
+
 ## Chats
 
 - **Chats without a folder.** Not every conversation is about code. "Chats" on Home holds conversations that are not
@@ -108,6 +113,14 @@ can give it the same providers as this computer.
   tells you the result and its dot turns cyan. While this computer is off, results wait on the worker.
 
 The app keeps the list of workers in config as `experimental.workers`; there is nothing to edit by hand.
+
+**Worker updates.** A worker always runs the same version as the app. When the app updates, Settings › Workers ›
+Worker updates brings each worker JaCode set up to the new version over SSH: it waits until the worker has no chat or
+task running, sends the new worker software (from this computer, or downloaded from the release), restarts it, and
+checks that it answers with the new version; if it does not, the previous version is put back. A worker that is off is
+updated once it is back, checked every five minutes. A worker connected by a pairing link needs its SSH address given
+once in that section. Update now updates one at once; the switch turns automatic updates off. The Docker worker is
+rebuilt at the new version when it starts.
 
 ### Ways in: reaching this computer from a phone or another device
 

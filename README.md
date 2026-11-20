@@ -83,7 +83,9 @@ Get the latest build from [Releases](https://github.com/toolingdev/jacode/releas
   isn't signed yet, so the first time, right-click JaCode and choose **Open**, or run
   `xattr -dr com.apple.quarantine /Applications/JaCode.app`.
 - **Linux workers:** `opencode-linux-x64` and `opencode-linux-arm64`, the worker software for the machines you add
-  as workers.
+  as workers. The app fetches the right one by itself when you set up a worker.
+
+After that, JaCode updates itself from Releases, and keeps your workers on the same version.
 
 ## Build from source
 

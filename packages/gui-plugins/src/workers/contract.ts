@@ -46,7 +46,47 @@ export const DockerWorker = Schema.Struct({
 
 export type DockerWorker = typeof DockerWorker.Type
 
-export const WorkersState = Schema.Struct({ docker: Schema.NullOr(DockerWorker) })
+/** A worker JaCode keeps at the app's version, reached over ssh. */
+export const UpdateTarget = Schema.Struct({ id: Schema.String, name: Schema.String, target: Schema.String })
+
+export type UpdateTarget = typeof UpdateTarget.Type
+
+/**
+ * Where a worker's update stands. `busy` waits for it to be idle and `offline` for it to come back; both are tried
+ * again on their own. `rolled-back` means the new version did not start and the previous one runs again; `unmanaged`
+ * a worker JaCode did not set up, which it cannot update.
+ */
+export const WorkerUpdate = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  state: Schema.Literals([
+    "checking",
+    "current",
+    "busy",
+    "offline",
+    "downloading",
+    "updating",
+    "updated",
+    "rolled-back",
+    "unmanaged",
+    "failed",
+  ]),
+  /** The version the worker runs, when known. */
+  version: Schema.optional(Schema.String),
+  message: Schema.optional(Schema.String),
+})
+
+export type WorkerUpdate = typeof WorkerUpdate.Type
+
+export const WorkersState = Schema.Struct({
+  docker: Schema.NullOr(DockerWorker),
+  /** The workers kept at the app's version, and where each one's update stands. */
+  updates: Schema.Array(WorkerUpdate),
+  /** Whether workers are updated without asking. */
+  auto: Schema.Boolean,
+  /** The app's own version, which every worker follows. */
+  version: Schema.String,
+})
 
 export type WorkersState = typeof WorkersState.Type
 
@@ -76,5 +116,11 @@ export const Workers = Ipc.define({
     },
     /** Stops and removes the Docker worker. Its work stays in its Docker volume. */
     dockerRemove: { input: Schema.Struct({}) },
+    /** The workers to keep at the app's version; the list replaces the one before. */
+    track: { input: Schema.Struct({ workers: Schema.Array(UpdateTarget) }) },
+    /** Updates one worker now, even with automatic updates off. */
+    updateNow: { input: Schema.Struct({ id: Schema.String }) },
+    /** Turns automatic worker updates on or off. */
+    setAuto: { input: Schema.Struct({ auto: Schema.Boolean }) },
   },
 })

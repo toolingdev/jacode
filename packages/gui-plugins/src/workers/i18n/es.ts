@@ -98,4 +98,23 @@ export default {
   "copy.running": "Copiando proveedores…",
   "link.about":
     "Cierra esto, elige Agregar worker, luego Conectar uno ya configurado, y pega el enlace de vinculación o escribe la dirección y la contraseña.",
+  "updates.title": "Actualizaciones de los trabajadores",
+  "updates.auto": "Actualizar los trabajadores automáticamente",
+  "updates.auto.about":
+    "Los trabajadores siempre usan la misma versión que esta app ({{version}}). Uno ocupado se actualiza cuando queda libre, y uno apagado cuando vuelve.",
+  "updates.now": "Actualizar ahora",
+  "updates.version.unknown": "desconocida",
+  "updates.state.checking": "Revisando…",
+  "updates.state.current": "Al día ({{version}})",
+  "updates.state.busy": "Usa {{version}}. Espera a quedar libre para actualizarse.",
+  "updates.state.offline": "No se puede alcanzar ahora. Se actualiza cuando vuelva.",
+  "updates.state.downloading": "Obteniendo la nueva versión…",
+  "updates.state.updating": "Actualizando y reiniciando…",
+  "updates.state.updated": "Actualizado a {{app}}",
+  "updates.state.rolled-back": "La nueva versión no arrancó, así que volvió a {{version}}. Inténtalo de nuevo con Actualizar ahora.",
+  "updates.state.unmanaged": "No lo configuró JaCode, así que no se puede actualizar desde aquí.",
+  "updates.state.failed": "La actualización falló: {{reason}}",
+  "updates.address.about": "Conectado con un enlace de emparejamiento. Indica su dirección SSH para que esta app lo mantenga al día.",
+  "updates.address.label": "Dirección SSH para actualizaciones",
+  "updates.address.save": "Guardar",
 }

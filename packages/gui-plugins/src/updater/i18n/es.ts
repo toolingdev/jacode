@@ -4,10 +4,10 @@ export default {
   "action.checking": "Buscando…",
   "action.downloading": "Descargando…",
   "action.installRestart": "Instalar y reiniciar",
-  "action.download": "Descargar OpenCode",
+  "action.download": "Descargar JaCode",
   "action.installing": "Instalando…",
   "toast.latest.title": "Estás al día",
-  "toast.latest.description": "Estás usando la última versión de OpenCode.",
+  "toast.latest.description": "Estás usando la última versión de JaCode.",
   "migration.title": "Pasar de Beta a Estable",
   "migration.description":
     "Por ahora, OpenCode Beta se está trasladando a OpenCode Estable. Descarga la versión {{version}} e instala OpenCode desde la imagen de disco para seguir recibiendo actualizaciones.",
@@ -33,7 +33,7 @@ export default {
   "action.reloading": "Volviendo a cargar…",
   "web.ready.title": "Actualización lista",
   "web.ready.message":
-    "Hay una nueva versión de OpenCode lista. Vuelve a cargar para usarla en todas las ventanas abiertas.",
+    "Hay una nueva versión de JaCode lista. Vuelve a cargar para usarla en todas las ventanas abiertas.",
   "web.reload": "Volver a cargar",
   "web.reset.title": "Volver a cargar desde el servidor",
   "web.reset.description": "Borra la copia guardada de la app y carga la versión actual del servidor",

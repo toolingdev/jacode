@@ -4,6 +4,7 @@ import {
   MenuItem,
   Panel,
   Server,
+  SettingsPage,
   Slot,
   type MountedSession,
   type PanelTab,
@@ -11,8 +12,10 @@ import {
   type ServerEntry,
 } from "@opencode/plugin/gui"
 import { onIdle } from "@opencode/plugin/gui/builtin"
+import { Schema } from "effect"
 import { lazy, onCleanup, Show, Suspense } from "solid-js"
-import { Workers } from "./contract"
+import { Ssh } from "../ssh/contract"
+import { Workers, type UpdateTarget, type WorkersState } from "./contract"
 import type definition from "./index"
 import { screenUrl } from "./screen"
 
@@ -88,6 +91,89 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
   })
 
   ctx.add(MenuItem, (): MenuItem => ({ menu: "server.add", id: "setup", title: ctx.t("add"), order: 0, run: open }))
+
+  // Fork feature: every worker follows the app's version. Workers set up over SSH are known by their address; a worker
+  // connected by a pairing link needs its SSH address given once on the Workers page.
+  const ssh = ctx.use(Ssh)
+  const addresses = ctx.storage.store("updateAddresses", {
+    schema: Schema.Record(Schema.String, Schema.String),
+    initial: {},
+  })
+  const main = () => {
+    const live = ipc()
+
+    return live.status === "active" ? live.value : undefined
+  }
+  const linked = () =>
+    ctx.servers
+      .list()
+      .flatMap((id) => ctx.servers.get(id) ?? [])
+      .filter((ref) => !ref.builtin && !ref.local && URL.canParse(ref.url))
+      .map((ref) => ({ id: `link:${ref.id}`, name: ref.name, target: addresses.value?.[`link:${ref.id}`] }))
+  const sshWorkers = () => {
+    const live = ssh()
+
+    return live.status === "active" ? (live.value.state()?.servers.map((item) => item.config) ?? []) : []
+  }
+
+  createKeyed(
+    () => {
+      const client = main()
+      const workers: UpdateTarget[] = [
+        ...sshWorkers().map((config) => ({ id: `ssh:${config.id}`, name: config.name, target: config.target })),
+        ...linked().flatMap((worker) => (worker.target ? [{ id: worker.id, name: worker.name, target: worker.target }] : [])),
+      ]
+
+      return client && addresses.value !== undefined ? { client, workers } : undefined
+    },
+    (value) => void value.client.track({ workers: value.workers }).catch(() => undefined),
+    { equals: (a, b) => a.client === b.client && JSON.stringify(a.workers) === JSON.stringify(b.workers) },
+  )
+
+  // A worker reached through the SSH plugin connects only at the app's version, so once updated it connects again.
+  createKeyed(
+    () => {
+      const updated = main()
+        ?.state()
+        ?.updates.filter((update) => update.state === "updated" && update.id.startsWith("ssh:"))
+        .map((update) => update.id.slice(4))
+
+      return updated && updated.length > 0 ? updated.join("\n") : undefined
+    },
+    (ids) => {
+      const live = ssh()
+
+      if (live.status !== "active") return
+      for (const config of sshWorkers().filter((item) => ids.split("\n").includes(item.id)))
+        void live.value.start({ ...config, background: true }).catch(() => undefined)
+    },
+  )
+
+  const tracking: Tracking = {
+    state: () => main()?.state(),
+    linked,
+    setAuto: (auto) => main()?.setAuto({ auto }) ?? Promise.resolve(),
+    updateNow: (id) => main()?.updateNow({ id }) ?? Promise.resolve(),
+    setAddress: (id, target) => addresses.set({ ...addresses.value, [id]: target }),
+  }
+  const Updates = lazy(() => import("./updates"))
+
+  ctx.add(SettingsPage, {
+    id: "updates",
+    page: "servers",
+    icon: "worker",
+    get title() {
+      return ctx.t("updates.title")
+    },
+    get entries() {
+      return [{ id: "updates", title: ctx.t("updates.title"), keywords: "worker update version" }]
+    },
+    render: () => (
+      <Suspense>
+        <Updates tracking={tracking} />
+      </Suspense>
+    ),
+  })
 
   // Fork feature: this computer's own server learns which workers it may hand scheduled tasks to, so a chat here can
   // schedule a task on a worker that keeps running while this computer sleeps. Workers on this computer (Docker, a
@@ -172,6 +258,15 @@ const setup: Plugin.Setup<typeof definition> = (ctx) => {
       open()
     },
   }))
+}
+
+/** What the Updates section reads and does, from the plugin's setup. */
+export type Tracking = {
+  readonly state: () => WorkersState | undefined
+  readonly linked: () => readonly { readonly id: string; readonly name: string; readonly target?: string }[]
+  readonly setAuto: (auto: boolean) => Promise<unknown>
+  readonly updateNow: (id: string) => Promise<unknown>
+  readonly setAddress: (id: string, target: string) => void
 }
 
 export default setup

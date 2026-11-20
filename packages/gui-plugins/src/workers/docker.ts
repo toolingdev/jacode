@@ -116,7 +116,8 @@ const answers = (port: number) =>
  */
 export async function ensureWorker(input: {
   version: string
-  binaries: string
+  /** The path of the server software for a processor (`opencode-linux-x64`), fetched when it is not here. */
+  binary: (name: string) => Promise<string>
   port?: number
   step: (name: string, detail: string) => void
 }) {
@@ -128,12 +129,12 @@ export async function ensureWorker(input: {
     const context = await mkdtemp(path.join(tmpdir(), "jacode-worker-image-"))
 
     try {
-      await copyFile(
-        path.join(input.binaries, `opencode-linux-${arch === "amd64" ? "x64" : "arm64"}`),
-        path.join(context, "opencode"),
-      ).catch(() => {
-        throw new DockerError("binary", arch)
-      })
+      await input
+        .binary(`opencode-linux-${arch === "amd64" ? "x64" : "arm64"}`)
+        .then((file) => copyFile(file, path.join(context, "opencode")))
+        .catch(() => {
+          throw new DockerError("binary", arch)
+        })
       await writeFile(path.join(context, "Dockerfile"), dockerfile)
       await writeFile(path.join(context, "entrypoint.sh"), entrypoint)
       await docker(["build", "-t", image, context], 30 * 60_000)

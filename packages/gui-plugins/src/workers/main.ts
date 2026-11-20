@@ -3,11 +3,23 @@ import path from "node:path"
 import { Schema } from "effect"
 import { app } from "electron"
 import type { Plugin } from "@opencode/plugin/gui/main"
-import { Workers, type DockerWorker, type WorkerCheck, type WorkerReport, type WorkerRequest } from "./contract"
+import {
+  Workers,
+  type DockerWorker,
+  type UpdateTarget,
+  type WorkerCheck,
+  type WorkerReport,
+  type WorkerRequest,
+  type WorkerUpdate,
+} from "./contract"
 import { CONTAINER, docker, DockerError, ensureWorker } from "./docker"
 import { binaryName, EXIT_MARKER, readReport } from "./report"
 import script from "./setup.sh?raw"
 import { parseAddress, runOn, SshError } from "./ssh"
+import { obtain, updateWorker } from "./update"
+
+// How often workers that were busy, offline or failed are tried again.
+const RETRY_MS = 5 * 60_000
 
 /** How the Docker worker is doing right now, and the start that is under way, if any. */
 interface DockerLive {
@@ -40,7 +52,12 @@ const setup: Plugin.MainSetup = (ctx) => {
 
     if (mode === "install") {
       const name = binaryName(await runOn({ address, command: "uname -m", timeout: 30_000 }))
-      const binary = name ? await readFile(path.join(binaries, name)).catch(() => undefined) : undefined
+      // The copy beside the app, else the one of this version from JaCode's releases.
+      const binary = name
+        ? await obtain({ binaries, version: ctx.cli.version, name })
+            .then((file) => readFile(file))
+            .catch(() => undefined)
+        : undefined
 
       if (!binary) return failed("binary", name ?? "")
 
@@ -86,8 +103,78 @@ const setup: Plugin.MainSetup = (ctx) => {
 
   const live: DockerLive = { state: "stopped" }
 
+  // Fork feature: workers kept at the app's version. The list comes from the window, which knows every worker.
+  const auto = ctx.storage.store("autoUpdate", { schema: Schema.Boolean, initial: true })
+  const updates = new Map<string, { target: UpdateTarget; status: WorkerUpdate }>()
+  const queue = { running: false, again: false }
+
+  const status = (id: string, change: Omit<WorkerUpdate, "id" | "name">) => {
+    const entry = updates.get(id)
+
+    if (!entry) return
+    entry.status = { id, name: entry.target.name, ...change }
+    provider.changed()
+  }
+
+  // One worker at a time, so two updates never send 270 MB each at once.
+  const cycle = async (only?: string) => {
+    if (queue.running) {
+      queue.again = true
+      return
+    }
+    queue.running = true
+    for (const [id, entry] of updates) {
+      if (only ? id !== only : !auto.value) continue
+      if (!only && ["current", "updated", "rolled-back", "unmanaged"].includes(entry.status.state)) continue
+      status(id, { state: "checking", version: entry.status.version })
+      const outcome = await updateWorker({
+        target: entry.target.target,
+        version: ctx.cli.version,
+        binaries,
+        step: (state) => status(id, { state, version: entry.status.version }),
+      }).catch((error: Error) => ({ state: "failed" as const, version: undefined, message: error.message }))
+
+      status(id, outcome)
+    }
+    queue.running = false
+    if (queue.again) {
+      queue.again = false
+      void cycle()
+    }
+  }
+
+  const timer = setInterval(() => void cycle(), RETRY_MS)
+
+  ctx.onCleanup(() => clearInterval(timer))
+
   const provider = ctx.provide(Workers, {
-    state: () => ({ docker: saved.value ? { name: saved.value.name, state: live.state, http: live.http } : null }),
+    state: () => ({
+      docker: saved.value ? { name: saved.value.name, state: live.state, http: live.http } : null,
+      updates: [...updates.values()].map((entry) => entry.status),
+      auto: auto.value,
+      version: ctx.cli.version,
+    }),
+    track: async (input) => {
+      const ids = new Set(input.workers.map((worker) => worker.id))
+
+      for (const id of updates.keys()) if (!ids.has(id)) updates.delete(id)
+      for (const target of input.workers) {
+        const known = updates.get(target.id)
+
+        // A new address is a new machine as far as its version goes.
+        if (known && known.target.target === target.target) known.target = target
+        if (!known || known.target.target !== target.target)
+          updates.set(target.id, { target, status: { id: target.id, name: target.name, state: "checking" } })
+      }
+      provider.changed()
+      void cycle()
+    },
+    updateNow: async (input) => void cycle(input.id),
+    setAuto: async (input) => {
+      auto.set(input.auto)
+      provider.changed()
+      if (input.auto) void cycle()
+    },
     check: (request) => report(request, "check"),
     install: (request) => report(request, "install"),
     environment: async (input) =>
@@ -124,7 +211,7 @@ const setup: Plugin.MainSetup = (ctx) => {
 
     live.starting = ensureWorker({
       version: ctx.cli.version,
-      binaries,
+      binary: (name) => obtain({ binaries, version: ctx.cli.version, name }),
       port: saved.value?.port || undefined,
       step: (step, detail) => checks.push({ status: "ok", name: step, detail }),
     })

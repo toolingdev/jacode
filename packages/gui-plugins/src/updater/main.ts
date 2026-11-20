@@ -10,15 +10,15 @@ const setup: Plugin.MainSetup = async (ctx) => {
   const builtin = builtinMainContext(ctx)
   const build = ctx.app
   const lifecycle = builtin.lifecycle
-  // Fork: never self-update. The update feeds serve upstream's builds, which would replace this fork's app.
-  // Updates come from rebuilding after merging upstream.
-  const enabled = false
+  // Fork: updates come from JaCode's own GitHub releases, never upstream's feeds, which would replace this app. Only an
+  // installed Mac app updates itself; a build run from source is updated by rebuilding.
+  const enabled = build.packaged && process.platform === "darwin"
   // Holds no resources, so it needs no cleanup.
   const context = logContext(ctx.log.write)
   const runPromise = Effect.runPromiseWith(context)
   const runFork = Effect.runForkWith(context)
 
-  if (build.packaged && !enabled) runFork(Effect.logInfo("auto updater disabled, app-update.yml is missing"))
+  if (build.packaged && !enabled) runFork(Effect.logInfo("auto updater disabled, JaCode updates itself on macOS only"))
 
   // The update main staged for the next start; stored before in the updater's settings file.
   const ready = builtin.storage.store("ready", {
@@ -27,10 +27,8 @@ const setup: Plugin.MainSetup = async (ctx) => {
     from: { settings: "ready", file: "opencode.updater" },
   })
 
-  // electron-updater loads only in packaged builds with a feed, after the first window is up.
-  const platform = enabled
-    ? await import("./platform").then((module) => runPromise(module.make(build.channel)))
-    : undefined
+  // Loads only in packaged builds, after the first window is up.
+  const platform = enabled ? await import("./platform-fork").then((module) => runPromise(module.make())) : undefined
 
   if (ctx.signal.aborted) return
   const scope = Scope.makeUnsafe()

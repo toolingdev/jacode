@@ -67,7 +67,13 @@ const stopped = async (tries: number): Promise<boolean> => {
   return stopped(tries - 1)
 }
 
-if (!(await stopped(40))) throw new Error(`${bundle} is still running; quit it and run this again`)
+// A copy that closed its windows but did not exit within 20 seconds is stuck quitting; stop it.
+if (!(await stopped(40))) {
+  console.log(`${bundle} did not quit; stopping it`)
+  await $`pkill -f ${path.join(installed, "Contents/MacOS")}`.nothrow().quiet()
+  if (!(await stopped(10))) await $`pkill -9 -f ${path.join(installed, "Contents/MacOS")}`.nothrow().quiet()
+  if (!(await stopped(10))) throw new Error(`${bundle} is still running; quit it and run this again`)
+}
 
 if (await exists(installed))
   await rename(
