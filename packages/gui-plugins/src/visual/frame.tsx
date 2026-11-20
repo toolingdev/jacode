@@ -2,52 +2,63 @@ import { createMemo, createResource, createSignal, onCleanup, Show } from "solid
 import { VISUAL_COLORS, visualDocument, visualHeight, wantsChart, withChart, type VisualColors } from "./document"
 import type { CardStyle, ChartStyle, WeatherCardStyle } from "./styles"
 
-const palette = { theme: "", colors: {} as VisualColors }
+/** The colours read for one theme; `theme` identifies the theme they were read under. */
+type Palette = { theme: string; colors: VisualColors }
 
 /**
- * The theme's colours as plain `rgba()`. The theme writes colours in forms such as `color-mix()`, which CSS
+ * Reads the theme's colours as plain `rgba()`. The theme writes colours in forms such as `color-mix()`, which CSS
  * understands but a chart drawing on a canvas does not: it would draw black. Painting each colour and reading the
  * pixel back gives a form everything takes.
  *
  * Reading a computed style makes the browser restyle the whole app, which takes tens of milliseconds in a big
- * window. So all colours are read in one pass and kept until the theme changes: the Cards settings page shows 29
- * visuals at once, and reading per visual and per colour froze it for half a minute.
+ * window. So the reader takes all colours in one pass and keeps them until the theme changes: the Cards settings
+ * page shows 29 visuals at once, and reading per visual and per colour froze it for half a minute.
  */
-function themeColors() {
-  const root = document.documentElement
-  // The theme lives in the root's attributes and the app's theme stylesheet (`oc-theme`, written by the UI package).
-  const theme = [
-    root.className,
-    root.getAttribute("style"),
-    JSON.stringify(root.dataset),
-    document.getElementById("oc-theme")?.textContent,
-  ].join("|")
+export function createThemeColors() {
+  const palette: Palette = { theme: "", colors: {} }
 
-  if (palette.theme === theme) return palette.colors
+  return () => {
+    const root = document.documentElement
 
-  const probes = Object.entries(VISUAL_COLORS).map(([name, variable]) => {
-    const probe = document.createElement("span")
-    probe.style.color = `var(${variable})`
-    return [name, probe] as const
-  })
-  root.append(...probes.map(([, probe]) => probe))
-  const resolved = probes.map(([name, probe]) => [name, getComputedStyle(probe).color] as const)
-  probes.forEach(([, probe]) => probe.remove())
+    // The theme lives in the root's attributes and the app's theme stylesheet (`oc-theme`, written by the UI package).
+    const theme = [
+      root.className,
+      root.getAttribute("style"),
+      JSON.stringify(root.dataset),
+      document.getElementById("oc-theme")?.textContent,
+    ].join("|")
 
-  const context = document.createElement("canvas").getContext("2d", { willReadFrequently: true })
-  palette.theme = theme
-  palette.colors = Object.fromEntries(
-    resolved.flatMap(([name, color]) => {
-      if (!context || !color) return []
-      context.clearRect(0, 0, 1, 1)
-      context.fillStyle = color
-      context.fillRect(0, 0, 1, 1)
-      const [red, green, blue, alpha] = context.getImageData(0, 0, 1, 1).data
-      return [[name, `rgba(${red}, ${green}, ${blue}, ${(alpha / 255).toFixed(3)})`]]
-    }),
-  )
+    if (palette.theme === theme) return palette.colors
 
-  return palette.colors
+    const probes = Object.entries(VISUAL_COLORS).map(([name, variable]) => {
+      const probe = document.createElement("span")
+      probe.style.color = `var(${variable})`
+
+      return { name, probe }
+    })
+
+    root.append(...probes.map((entry) => entry.probe))
+    const resolved = probes.map((entry) => ({ name: entry.name, color: getComputedStyle(entry.probe).color }))
+    probes.forEach((entry) => entry.probe.remove())
+
+    const context = document.createElement("canvas").getContext("2d", { willReadFrequently: true })
+
+    palette.theme = theme
+    palette.colors = Object.fromEntries(
+      resolved.flatMap((entry) => {
+        if (!context || !entry.color) return []
+
+        context.clearRect(0, 0, 1, 1)
+        context.fillStyle = entry.color
+        context.fillRect(0, 0, 1, 1)
+        const [red, green, blue, alpha] = context.getImageData(0, 0, 1, 1).data
+
+        return [[entry.name, `rgba(${red}, ${green}, ${blue}, ${(alpha / 255).toFixed(3)})`]]
+      }),
+    )
+
+    return palette.colors
+  }
 }
 
 /**
@@ -65,11 +76,12 @@ export function VisualFrame(props: {
   /** The words the cards show; the settings samples, which show none of those cards, leave it out. */
   labels?: Record<string, string>
   fixed?: number
+  /** The theme's colours, from a `createThemeColors` reader. */
+  colors: VisualColors
 }) {
   const [height, setHeight] = createSignal(160)
   const dark = document.documentElement.dataset.colorScheme !== "light"
 
-  const colors = themeColors()
 
   // The chart library is large, so it loads only for a visual that asks for it; the others show at once.
   // The source is a word, not a boolean: a resource never loads for a false source, and a visual without a chart
@@ -94,7 +106,7 @@ export function VisualFrame(props: {
     return visualDocument({
       fragment: loaded ? withChart(props.fragment, loaded) : props.fragment,
       id: props.id,
-      colors,
+      colors: props.colors,
       dark,
       weather: props.weather,
       chart: props.chart,
