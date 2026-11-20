@@ -33,6 +33,8 @@ On first launch a welcome card walks through picking a provider, adding its key 
   computer or on a worker.
 - **Unread dots.** A chat with news shows a dot: the accent color for a new answer, red for a run that failed, amber
   when it waits on you, and cyan when a worker brought back a result.
+- **Startup animation.** While the app starts, the JaCode mark assembles out of chaos: one of five scenes, picked
+  at random, that mix the Lorenz attractor with curl-noise flow. With reduced motion on, the mark shows still.
 - **Thinking companion.** An optional pixel character keeps you company while a model works, and says what it is
   doing. Settings › Appearance.
 

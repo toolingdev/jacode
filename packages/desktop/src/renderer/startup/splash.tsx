@@ -1,4 +1,4 @@
-import { AssemblingMark } from "@opencode/ui/logo-assemble"
+import { ChaosMark } from "@opencode/ui/logo-chaos"
 import { Wordmark } from "@opencode/ui/wordmark"
 import type { Platform } from "@opencode/app/desktop"
 import { onCleanup, onMount, Show } from "solid-js"
@@ -57,7 +57,7 @@ export function LoadingSplash(props: {
             "bg-v2-background-bg-base": !props.deep,
           }}
         >
-          <AssemblingMark class="w-16 h-20 opacity-50" />
+          <ChaosMark class="w-96 h-96" land={1400} />
         </div>
       }
     >
