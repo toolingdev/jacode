@@ -24,7 +24,7 @@ describe("weather tool", () => {
   })
 
   test("reads a state written as two letters", () => {
-    expect(WeatherTool.splitLocation("Denver, CA")).toEqual({ city: "Denver", regions: ["California"] })
+    expect(WeatherTool.splitLocation("Denver, CO")).toEqual({ city: "Denver", regions: ["Colorado"] })
     expect(WeatherTool.splitLocation(" Lyon , France ")).toEqual({ city: "Lyon", regions: ["France"] })
     expect(WeatherTool.splitLocation("Tokyo")).toEqual({ city: "Tokyo", regions: [] })
   })
@@ -44,8 +44,8 @@ describe("weather tool", () => {
   test("sums hours up into the place's own days, in the asked units", () => {
     const weather = WeatherTool.summarize({
       source: "MET Norway",
-      place: "Denver, California, United States",
-      timezone: "America/Los_Angeles",
+      place: "Denver, Colorado, United States",
+      timezone: "America/Denver",
       units: "fahrenheit",
       days: 2,
       hours: [
@@ -121,7 +121,7 @@ describe("weather tool", () => {
     const weather = WeatherTool.fromWttr({
       source: "wttr.in",
       place: "Denver",
-      timezone: "America/Los_Angeles",
+      timezone: "America/Denver",
       units: "fahrenheit",
       days: 1,
       forecast,
@@ -159,7 +159,7 @@ describe("weather tool", () => {
     const weather = {
       source: "MET Norway",
       place: "Denver",
-      timezone: "America/Los_Angeles",
+      timezone: "America/Denver",
       temperatureUnit: "°F",
       windUnit: "mph",
       current: { condition: "Clear", icon: "sun" as const, temperature: 72, humidity: 40, wind: 6 },
@@ -179,8 +179,8 @@ describe("weather tool", () => {
     expect(
       WeatherTool.weatherText({
         source: "MET Norway",
-        place: "Denver, California, United States",
-        timezone: "America/Los_Angeles",
+        place: "Denver, Colorado, United States",
+        timezone: "America/Denver",
         temperatureUnit: "°F",
         windUnit: "mph",
         current: { condition: "Clear", icon: "sun", temperature: 72, humidity: 40, wind: 6 },
@@ -188,7 +188,7 @@ describe("weather tool", () => {
       }),
     ).toBe(
       [
-        "Denver, California, United States (America/Los_Angeles), from MET Norway",
+        "Denver, Colorado, United States (America/Denver), from MET Norway",
         "Now: Clear, 72°F, humidity 40%, wind 6 mph. Icon: sun",
         "2026-11-17: Rain, high 60°F, low 48°F. Icon: rain",
       ].join("\n"),
