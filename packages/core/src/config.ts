@@ -560,13 +560,20 @@ export const layer = (options?: Options) =>
           const filepath =
             (yield* Effect.filter(candidates, fs.isFile)).at(-1) ?? path.join(directory, "opencode.jsonc")
           const text = (yield* fs.readFileStringSafe(filepath)) ?? "{}\n"
+          // Only the fields the patch names change; null removes one.
+          const fields = [
+            ...("shell" in patch ? [{ path: ["shell"], value: patch.shell ?? undefined }] : []),
+            ...("computer" in patch ? [{ path: ["experimental", "computer_use"], value: patch.computer ?? undefined }] : []),
+          ]
           const updated = yield* Effect.try({
             try: () =>
-              applyEdits(
+              fields.reduce(
+                (current, field) =>
+                  applyEdits(
+                    current,
+                    modify(current, field.path, field.value, { formattingOptions: { tabSize: 2, insertSpaces: true } }),
+                  ),
                 text,
-                modify(text, ["shell"], patch.shell ?? undefined, {
-                  formattingOptions: { tabSize: 2, insertSpaces: true },
-                }),
               ),
             catch: (cause) => new FSUtil.FileSystemError({ method: "config.update", cause }),
           })

@@ -5,7 +5,9 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 import { ToolFailure } from "@opencode/ai/effect"
 import type { Context } from "@opencode/plugin/effect/plugin"
-import { Effect, Schema } from "effect"
+import { Event } from "@opencode/schema/config"
+import { Effect, Schema, Stream } from "effect"
+import { Bus } from "../../bus.js"
 import { Flag } from "../../flag.js"
 import { Permission } from "../../permission.js"
 import { toolFailure } from "../runtime.js"
@@ -13,13 +15,13 @@ import driver from "./computer.jxa" with { type: "text" }
 
 // Fork feature: the model sees and works this Mac's screen. It takes screenshots of the main display and moves the
 // mouse, clicks, drags, scrolls, types and presses keys, through macOS's own scripting host, so nothing extra is
-// installed. The tool is off in every chat until the user switches it on there (the chat then carries an `ask` rule
-// for `computer` over the default `deny`), and every action asks the user first unless they allowed that kind of
-// action always. macOS asks once for Screen Recording and Accessibility for the app.
+// installed. Every action asks the user in the chat first, unless they allowed that kind of action always; Settings ›
+// Mac control lists those and switches the tool off (`experimental.computer_use`). When macOS has not let the app
+// record the screen or control the computer yet, the tool opens that page of System Settings and says so.
 
 export const name = "computer"
 
-/** The permission action every screen action is asked under; a chat rule for it switches the tool on or off. */
+/** The permission action every screen action is asked under. */
 export const permission = "computer"
 
 // Screenshots are scaled so the long edge stays within what vision models read without shrinking them again.
@@ -68,17 +70,33 @@ export const Plugin = {
   id: "opencode.tool.computer",
   effect: Effect.fn("ComputerTool.Plugin")(function* (ctx: Context) {
     if (process.platform !== "darwin") return
-    if (!(yield* Flag.enabled("computer_use"))) return
     const permissions = yield* Permission.Service
+    const bus = yield* Bus.Service
+    // Settings › Mac control switches it while the app runs, so the choice is read again on every config change.
+    const state = { on: yield* Flag.enabled("computer_use") }
 
-    // Off until a chat switches it on: every agent ends with the tool denied, after any rule that allows everything,
-    // and only a chat's own rule, which comes after the agent's, lets it back in.
+    // Always asked: a rule that allows everything does not reach the screen. Each agent ends with an `ask` rule for
+    // the tool, so only what the user allowed always (saved rules, which come after) or a chat's own rule skips it.
+    // Switched off, the rule denies the tool instead, which takes it out of every chat's tool list.
     yield* ctx.agent.transform((editor) =>
       editor.list().forEach((agent) =>
         editor.update(agent.id, (item) => {
-          item.permissions.push({ action: permission, resource: "*", effect: "deny" })
+          item.permissions.push({ action: permission, resource: "*", effect: state.on ? "ask" : "deny" })
         }),
       ),
+    )
+
+    yield* bus.subscribe([Event.Updated]).pipe(
+      Stream.runForEach(() =>
+        Effect.gen(function* () {
+          const on = yield* Flag.enabled("computer_use")
+
+          if (on === state.on) return
+          state.on = on
+          yield* ctx.agent.reload()
+        }),
+      ),
+      Effect.forkScoped({ startImmediately: true }),
     )
 
     yield* ctx.tool.transform((editor) =>
@@ -95,13 +113,8 @@ export const Plugin = {
               catch: (error) => new ToolFailure({ message: error instanceof Error ? error.message : String(error) }),
             })
 
-            const session = yield* ctx.session.get({ sessionID: context.sessionID })
-
-            // A rule that allows everything must not reach the screen: only a chat switched on may use it.
-            if (!switchedOn(session.permissions))
-              return yield* new ToolFailure({
-                message: "Mac control is off in this chat. The user can switch it on with the Mac control pill above the composer.",
-              })
+            if (!state.on)
+              return yield* new ToolFailure({ message: "Mac control is switched off in Settings › Mac control." })
 
             yield* permissions.assert({
               action: permission,
@@ -127,7 +140,10 @@ export const Plugin = {
                   )
                   const answer = await drive(points)
 
-                  if (answer.error === "accessibility") throw new Error(ACCESSIBILITY)
+                  if (answer.error === "accessibility") {
+                    settings("Privacy_Accessibility")
+                    throw new Error(ACCESSIBILITY)
+                  }
                   await Bun.sleep(SETTLE_MS)
                 }
                 const width = Math.round(screen.width * scale)
@@ -182,20 +198,23 @@ export function plan(input: Input) {
   return { action: "key", keys: input.keys }
 }
 
-/** Whether a chat's own rules switch the tool on: the `ask` rule the Mac control pill adds. */
-export function switchedOn(rules: readonly { readonly action: string; readonly resource: string; readonly effect: string }[] | undefined) {
-  return (rules ?? []).some((rule) => rule.action === permission && rule.resource === "*" && rule.effect === "ask")
-}
-
 /** What the user approves, without fields the action does not use. */
 function describe(input: Input) {
   return Object.fromEntries(Object.entries(input).filter(([, value]) => value !== undefined))
 }
 
 const ACCESSIBILITY =
-  "macOS has not allowed JaCode to control the mouse and keyboard. Ask the user to turn JaCode on in System Settings › Privacy & Security › Accessibility, then try again."
+  "macOS has not allowed JaCode to control the mouse and keyboard yet. System Settings is now open at Privacy & Security › Accessibility: tell the user to turn JaCode on there, then ask you to try again."
 const SCREEN_RECORDING =
-  "macOS has not allowed JaCode to record the screen. Ask the user to turn JaCode on in System Settings › Privacy & Security › Screen & System Audio Recording, then quit and reopen JaCode."
+  "macOS has not allowed JaCode to see the screen yet. System Settings is now open at Privacy & Security › Screen & System Audio Recording: tell the user to turn JaCode on there, quit and reopen JaCode, then ask you to try again."
+
+/** Opens the page of System Settings where the user lets the app do what macOS refused. */
+function settings(pane: "Privacy_Accessibility" | "Privacy_ScreenCapture") {
+  Bun.spawn(["/usr/bin/open", `x-apple.systempreferences:com.apple.preference.security?${pane}`], {
+    stdout: "ignore",
+    stderr: "ignore",
+  })
+}
 
 async function drive(command: unknown): Promise<{ readonly error?: string; readonly width?: number; readonly height?: number }> {
   const process = Bun.spawn(["/usr/bin/osascript", "-l", "JavaScript", "-", JSON.stringify(command)], {
@@ -229,7 +248,10 @@ async function screenshot(width: number, height: number) {
     // -x silent, -m main display only, -C with the pointer, so the model sees where it is.
     const capture = Bun.spawnSync(["/usr/sbin/screencapture", "-x", "-m", "-C", "-t", "png", raw], { stderr: "pipe" })
 
-    if (capture.exitCode !== 0) throw new Error(SCREEN_RECORDING)
+    if (capture.exitCode !== 0) {
+      settings("Privacy_ScreenCapture")
+      throw new Error(SCREEN_RECORDING)
+    }
     const resize = Bun.spawnSync(
       ["/usr/bin/sips", "-z", String(height), String(width), "-s", "format", "jpeg", "-s", "formatOptions", "75", raw, "--out", out],
       { stdout: "ignore", stderr: "pipe" },

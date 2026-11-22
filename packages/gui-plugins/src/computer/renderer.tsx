@@ -1,58 +1,33 @@
-import { createSignal } from "solid-js"
-import { ComposerPill, type ComposerPillProps, type Plugin } from "@opencode/plugin/gui"
-import { showToast } from "@opencode/ui/toast"
-import { isOn, withComputer } from "./rules"
+import { lazy, onCleanup, Suspense } from "solid-js"
+import { SettingsPage, type Plugin } from "@opencode/plugin/gui"
+import { onIdle } from "@opencode/plugin/gui/builtin"
 import type definition from "./index"
 
 /**
- * Fork feature: the "Mac control" pill above the composer switches the computer tool on or off for one chat. It shows
- * only for chats on the app's own server on a Mac, where the tool runs.
+ * Fork feature: Settings › Mac control, where the user switches the assistant's use of this Mac's screen off or on and
+ * sees the kinds of action allowed always. Asking happens in the chat itself, through the usual approval prompt.
  */
 const setup: Plugin.Setup<typeof definition> = (ctx) => {
-  const mac = navigator.userAgent.includes("Macintosh")
-  const rules = (input: ComposerPillProps) => input.session.server.data.session.get(input.session.id)?.permissions
-  const [saving, setSaving] = createSignal(false)
+  const Section = lazy(() => import("./section"))
+  // Load the section while idle so settings opens without a blank page.
+  onCleanup(onIdle(() => void Section.preload()))
 
-  ctx.add(ComposerPill, {
-    id: "computer",
-    order: 31,
-    show: (input) => {
-      if (!mac || !input.session.server.builtin) return
-      const on = isOn(rules(input))
-
-      return {
-        icon: "monitor",
-        title: ctx.t("title"),
-        label: on ? ctx.t("label.on") : ctx.t("label.off"),
-        tone: on ? ("warning" as const) : undefined,
-      }
+  ctx.add(SettingsPage, {
+    id: "mac-control",
+    icon: "monitor",
+    get title() {
+      return ctx.t("title")
     },
-    menu: (input) => {
-      const toggle = (on: boolean) => {
-        setSaving(true)
-        void input.session.server.client.session
-          .update({ sessionID: input.session.id, permissions: withComputer(rules(input), on) })
-          .catch((cause: Error) => showToast({ variant: "error", title: ctx.t("failed"), description: cause.message }))
-          .finally(() => setSaving(false))
-      }
-
-      return (
-        <div class="flex max-w-80 flex-col gap-2 p-2">
-          <p class="text-12-regular text-v2-text-text-muted">{ctx.t("description")}</p>
-          <div class="flex items-center justify-between gap-3">
-            <span class="text-13-medium">{ctx.t("switch")}</span>
-            <ctx.ui.Switch
-              label={ctx.t("switch")}
-              hideLabel
-              checked={isOn(rules(input))}
-              disabled={saving()}
-              onChange={toggle}
-            />
-          </div>
-          <p class="text-12-regular text-v2-text-text-muted">{ctx.t("setup")}</p>
-        </div>
-      )
+    get entries() {
+      return [
+        { id: "mac-control", title: ctx.t("title"), keywords: "mac computer screen screenshot mouse keyboard control" },
+      ]
     },
+    render: () => (
+      <Suspense>
+        <Section />
+      </Suspense>
+    ),
   })
 }
 

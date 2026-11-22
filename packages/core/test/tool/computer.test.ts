@@ -40,12 +40,3 @@ describe("ComputerTool.plan", () => {
     expect(() => ComputerTool.plan({ action: "key", keys: " " })).toThrow("key needs keys")
   })
 })
-
-describe("ComputerTool.switchedOn", () => {
-  test("only the chat's ask rule for the tool switches it on", () => {
-    expect(ComputerTool.switchedOn([{ action: "computer", resource: "*", effect: "ask" }])).toBe(true)
-    expect(ComputerTool.switchedOn([{ action: "*", resource: "*", effect: "allow" }])).toBe(false)
-    expect(ComputerTool.switchedOn([{ action: "computer", resource: "*", effect: "allow" }])).toBe(false)
-    expect(ComputerTool.switchedOn(undefined)).toBe(false)
-  })
-})

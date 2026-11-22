@@ -117,7 +117,9 @@ export class Info extends Schema.Class<Info>("Config.Info")({
 }) {}
 
 export const Patch = Schema.Struct({
-  shell: Schema.NullOr(Schema.String),
+  shell: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  // Fork feature: whether chats on this Mac may use its screen (`experimental.computer_use`); null removes the choice.
+  computer: Schema.optionalKey(Schema.NullOr(Schema.Boolean)),
 }).annotate({ identifier: "Config.Patch" })
 export interface Patch extends Schema.Schema.Type<typeof Patch> {}
 

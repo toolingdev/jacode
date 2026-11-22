@@ -1,11 +1,22 @@
 export default {
   title: "Mac control",
-  "label.off": "Mac control off",
-  "label.on": "Mac control on",
-  description:
-    "Lets the assistant in this chat take screenshots of your screen and use the mouse and keyboard. It asks before every action unless you allow that kind of action always.",
-  switch: "Allow in this chat",
-  setup:
-    "The first time, macOS asks to let JaCode record the screen and control the computer. Turn JaCode on in System Settings › Privacy & Security under Screen & System Audio Recording and Accessibility, then quit and reopen JaCode.",
-  failed: "Could not change Mac control for this chat",
+  enabled: "Let the assistant use this Mac",
+  "enabled.about":
+    "When a chat needs it, the assistant can take screenshots and use the mouse and keyboard. It asks in the chat before every action, with Allow once, Allow always and Deny.",
+  allowed: "Always allowed",
+  "allowed.none": "Nothing yet. Choose Allow always when the assistant asks, and that kind of action stops asking.",
+  "allowed.where": "In {{project}}",
+  remove: "Ask again",
+  "kind.screenshot": "Take screenshots",
+  "kind.click": "Click",
+  "kind.move": "Move the pointer",
+  "kind.drag": "Drag",
+  "kind.scroll": "Scroll",
+  "kind.type": "Type text",
+  "kind.key": "Press keys",
+  macos: "macOS permissions",
+  "macos.about":
+    "The first time, macOS has to let JaCode see the screen and control the computer. The assistant opens the right page of System Settings when it is needed: turn JaCode on under Screen & System Audio Recording and under Accessibility, then quit and reopen JaCode.",
+  unavailable: "Mac control works in the app on a Mac.",
+  failed: "Could not save Mac control",
 }

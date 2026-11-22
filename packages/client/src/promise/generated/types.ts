@@ -2712,6 +2712,7 @@ export type ConfigEntry =
           recommended_api?: boolean
           full_codemode?: boolean
           machines?: boolean
+          computer_use?: boolean
           home_memory?: boolean
           schedules?: boolean
           part_rows?: boolean
@@ -5071,7 +5072,10 @@ export type ConfigGetOutput = Array<ConfigEntry>
 
 export type ConfigShellsOutput = Array<ConfigShellOption>
 
-export type ExperimentalConfigUpdateInput = { readonly shell: string | null }
+export type ExperimentalConfigUpdateInput = {
+  readonly shell?: string | null | undefined
+  readonly computer?: boolean | null | undefined
+}
 
 export type ExperimentalConfigUpdateOutput = void
 
