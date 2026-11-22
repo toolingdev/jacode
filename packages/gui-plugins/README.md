@@ -920,6 +920,7 @@ export const builtins = compose({
   time,
   workers: { ...workers, mainEntry: () => import("./workers/main") },
   "subscription-usage": subscriptionUsage,
+  computer,
 })
 ```
 
@@ -954,6 +955,7 @@ export const builtins = compose({
   time: { ...time, windowEntry: eager(timeRenderer) },
   workers: { ...workers, windowEntry: eager(workersRenderer) },
   "subscription-usage": { ...subscriptionUsage, windowEntry: eager(subscriptionUsageRenderer) },
+  computer: { ...computer, windowEntry: eager(computerRenderer) },
 })
 ```
 

@@ -102,6 +102,7 @@ import { VerseTool } from "../tool/plugin/verse.js"
 import { WeatherTool } from "../tool/plugin/weather.js"
 import { TimeTool } from "../tool/plugin/time.js"
 import { WorkerScheduleTools } from "../tool/plugin/worker-schedule.js"
+import { ComputerTool } from "../tool/plugin/computer.js"
 import { WebFetchTool } from "../tool/plugin/webfetch.js"
 import { WebSearchTool } from "../tool/plugin/websearch.js"
 import { WellKnown } from "../wellknown.js"
@@ -304,6 +305,7 @@ const pre = [
   WeatherTool.Plugin,
   TimeTool.Plugin,
   WorkerScheduleTools.Plugin,
+  ComputerTool.Plugin,
   WebFetchTool.Plugin,
   WebSearchTool.Plugin,
   WriteTool.Plugin,

@@ -1,0 +1,117 @@
+// Fork feature: the part of the computer tool that runs inside macOS's own scripting host (`osascript -l JavaScript`),
+// which can post mouse and keyboard events through CoreGraphics without any extra program. It reads one JSON command
+// as its argument and prints one JSON answer. Coordinates are macOS points on the main display, origin top-left.
+ObjC.import("CoreGraphics")
+ObjC.import("AppKit")
+ObjC.import("ApplicationServices")
+
+const KEYS = {
+  return: 36, enter: 36, tab: 48, space: 49, delete: 51, backspace: 51, escape: 53, esc: 53,
+  forwarddelete: 117, home: 115, end: 119, pageup: 116, pagedown: 121,
+  left: 123, right: 124, down: 125, up: 126,
+  f1: 122, f2: 120, f3: 99, f4: 118, f5: 96, f6: 97, f7: 98, f8: 100, f9: 101, f10: 109, f11: 103, f12: 111,
+  a: 0, s: 1, d: 2, f: 3, h: 4, g: 5, z: 6, x: 7, c: 8, v: 9, b: 11, q: 12, w: 13, e: 14, r: 15, y: 16, t: 17,
+  1: 18, 2: 19, 3: 20, 4: 21, 6: 22, 5: 23, "=": 24, 9: 25, 7: 26, "-": 27, 8: 28, 0: 29, "]": 30, o: 31, u: 32,
+  "[": 33, i: 34, p: 35, l: 37, j: 38, "'": 39, k: 40, ";": 41, "\\": 42, ",": 43, "/": 44, n: 45, m: 46, ".": 47,
+  "`": 50,
+}
+const MODIFIERS = {
+  cmd: 0x100000, command: 0x100000, shift: 0x20000, ctrl: 0x40000, control: 0x40000,
+  alt: 0x80000, option: 0x80000, opt: 0x80000, fn: 0x800000,
+}
+// kCGEventLeftMouseDown/Up, RightMouseDown/Up, MouseMoved, LeftMouseDragged; kCGMouseEventClickState.
+const LEFT_DOWN = 1, LEFT_UP = 2, RIGHT_DOWN = 3, RIGHT_UP = 4, MOVED = 5, LEFT_DRAGGED = 6, CLICK_STATE = 1
+
+function post(event) {
+  $.CGEventPost(0, event)
+}
+
+function mouse(type, x, y, button, clicks) {
+  const event = $.CGEventCreateMouseEvent(null, type, $.CGPointMake(x, y), button)
+  if (clicks) $.CGEventSetIntegerValueField(event, CLICK_STATE, clicks)
+  post(event)
+}
+
+function key(code, flags) {
+  ;[true, false].forEach((down) => {
+    const event = $.CGEventCreateKeyboardEvent(null, code, down)
+    $.CGEventSetFlags(event, flags)
+    post(event)
+  })
+}
+
+function unit(char) {
+  ;[true, false].forEach((down) => {
+    const event = $.CGEventCreateKeyboardEvent(null, 0, down)
+    const buffer = Ref("unsigned short")
+    buffer[0] = char
+    $.CGEventKeyboardSetUnicodeString(event, 1, buffer)
+    post(event)
+  })
+}
+
+function trusted() {
+  return Boolean($.AXIsProcessTrusted())
+}
+
+function run(argv) {
+  const input = JSON.parse(argv[0])
+  const frame = $.NSScreen.mainScreen.frame
+
+  if (input.action === "size") return JSON.stringify({ width: frame.size.width, height: frame.size.height })
+  if (input.action === "check") return JSON.stringify({ accessibility: trusted() })
+  if (!trusted()) return JSON.stringify({ error: "accessibility" })
+
+  if (input.action === "move") mouse(MOVED, input.x, input.y, 0)
+
+  if (input.action === "click") {
+    const right = input.button === "right"
+    mouse(MOVED, input.x, input.y, 0)
+    delay(0.05)
+    for (let count = 1; count <= (input.count ?? 1); count++) {
+      mouse(right ? RIGHT_DOWN : LEFT_DOWN, input.x, input.y, right ? 1 : 0, count)
+      mouse(right ? RIGHT_UP : LEFT_UP, input.x, input.y, right ? 1 : 0, count)
+    }
+  }
+
+  if (input.action === "drag") {
+    mouse(MOVED, input.x, input.y, 0)
+    mouse(LEFT_DOWN, input.x, input.y, 0, 1)
+    for (let step = 1; step <= 20; step++) {
+      delay(0.01)
+      mouse(LEFT_DRAGGED, input.x + ((input.toX - input.x) * step) / 20, input.y + ((input.toY - input.y) * step) / 20, 0)
+    }
+    mouse(LEFT_UP, input.toX, input.toY, 0, 1)
+  }
+
+  if (input.action === "scroll") {
+    mouse(MOVED, input.x, input.y, 0)
+    delay(0.05)
+    // Line units; a positive wheel value scrolls content up, so "down" is negative.
+    post($.CGEventCreateScrollWheelEvent2(null, 1, 2, -(input.down ?? 0), -(input.right ?? 0), 0))
+  }
+
+  if (input.action === "type") {
+    const text = String(input.text)
+    for (let index = 0; index < text.length; index++) {
+      const char = text.charCodeAt(index)
+      if (char === 10) key(KEYS.return, 0)
+      else if (char === 9) key(KEYS.tab, 0)
+      else unit(char)
+      delay(0.008)
+    }
+  }
+
+  if (input.action === "key") {
+    const parts = String(input.keys).toLowerCase().split("+").map((part) => part.trim()).filter(Boolean)
+    const name = parts.pop()
+    const flags = parts.reduce((all, part) => {
+      if (!(part in MODIFIERS)) throw new Error(`Unknown modifier ${part}`)
+      return all | MODIFIERS[part]
+    }, 0)
+    if (!(name in KEYS)) throw new Error(`Unknown key ${name}`)
+    key(KEYS[name], flags)
+  }
+
+  return JSON.stringify({ ok: true })
+}

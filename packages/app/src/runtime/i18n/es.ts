@@ -729,6 +729,7 @@ export const dict = {
   "settings.permissions.tool.todowrite.description": "Actualizar la lista de tareas",
   "settings.permissions.tool.webfetch.title": "Obtener contenido web",
   "settings.permissions.tool.webfetch.description": "Obtener contenido de una URL",
+  "settings.permissions.tool.computer.description": "Usar tu pantalla, ratón y teclado",
   "settings.permissions.tool.websearch.title": "Búsqueda web",
   "settings.permissions.tool.websearch.description": "Buscar en la web",
   "settings.permissions.tool.external_directory.title": "Directorio externo",

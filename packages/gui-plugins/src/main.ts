@@ -23,6 +23,7 @@ import weather from "./weather"
 import time from "./time"
 import workers from "./workers"
 import subscriptionUsage from "./subscription-usage"
+import computer from "./computer"
 
 /** Built-in plugins with their main entries, by id. Lists every built-in so their ids stay reserved. */
 export const builtins = compose({
@@ -50,4 +51,5 @@ export const builtins = compose({
   time,
   workers: { ...workers, mainEntry: () => import("./workers/main") },
   "subscription-usage": subscriptionUsage,
+  computer,
 })

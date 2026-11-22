@@ -151,6 +151,18 @@ this chat stops using it; other chats keep it. The pill says how many are off. T
 deny rule in its permissions, so it lasts across restarts. Adding, editing and removing tools stays in Settings ›
 Connected tools.
 
+## Mac control
+
+On a Mac, a chat can see the screen and use the mouse and keyboard. It is off in every chat. The **Mac control** pill
+above the composer switches it on for that chat only. Then the assistant can take a screenshot of the main display,
+click, double-click, drag, scroll, type and press keys, and gets a fresh screenshot after each action. Every action asks
+first; **Allow always** on the prompt allows that kind of action (screenshots, say) in this project from then on.
+
+macOS asks once to let JaCode record the screen and control the computer: turn JaCode on in System Settings › Privacy &
+Security under Screen & System Audio Recording and Accessibility, then quit and reopen JaCode. JaCode builds are not
+signed with a Developer ID, so macOS may ask again after an update. It works through macOS's own scripting host, so
+nothing else is installed. Only the main display is used. The `computer_use` flag turns the feature off entirely.
+
 ## Providers
 
 Settings › Providers lists every connected provider once, under Connected providers.

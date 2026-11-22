@@ -47,6 +47,8 @@ import workers from "./workers"
 import workersRenderer from "./workers/renderer"
 import subscriptionUsage from "./subscription-usage"
 import subscriptionUsageRenderer from "./subscription-usage/renderer"
+import computer from "./computer"
+import computerRenderer from "./computer/renderer"
 
 // The window renders once every built-in is active, so the small renderer entries load with the app, like the
 // features they replaced. Heavy UI stays behind `lazy()` inside them.
@@ -79,4 +81,5 @@ export const builtins = compose({
   time: { ...time, windowEntry: eager(timeRenderer) },
   workers: { ...workers, windowEntry: eager(workersRenderer) },
   "subscription-usage": { ...subscriptionUsage, windowEntry: eager(subscriptionUsageRenderer) },
+  computer: { ...computer, windowEntry: eager(computerRenderer) },
 })
