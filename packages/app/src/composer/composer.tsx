@@ -9,6 +9,7 @@ import { Slash } from "@opencode/ui/slash"
 import { Tooltip } from "@opencode/ui/tooltip"
 import { ComposerEditor } from "./editor/editor"
 import { DialogSelectModel, ModelSelectorDrawer } from "@/providers/models/select-dialog"
+import { isAutoModel } from "@/providers/models/auto"
 import { DialogSelectModelUnpaid } from "@/providers/models/unpaid"
 import { formatKeybind, useCommand } from "@/shell/commands/command"
 import { useLanguage } from "@/runtime/i18n/language"
@@ -37,11 +38,12 @@ export function Composer(props: {
 
     if (preview) return preview.model
     const selection = props.model.model.selection
-    // The speed shows beside the name, so the name is the model's own.
-    const model = selection.standard?.() ?? selection.current()
+    const key = selection.key()
+    // The speed shows beside the name, so the name is the model's own. Auto stays Auto: its standard model would be
+    // the one it falls back to, which named the chip after a model the chat is not on.
+    const model = (key && isAutoModel(key) ? undefined : selection.standard?.()) ?? selection.current()
 
     if (model) return model.name
-    const key = selection.key()
 
     if (key) return language.t("dialog.model.unavailable", { model: key.modelID })
 
