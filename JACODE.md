@@ -38,6 +38,9 @@ building again.
   computer or on a worker.
 - **Unread dots.** A chat with news shows a dot: the accent color for a new answer, red for a run that failed, amber
   when it waits on you, and cyan when a worker brought back a result.
+- **Long chats stay light.** Every message sends the whole chat to the model again, so a chat is summarized
+  automatically once it reaches about 200K tokens, even on models that could hold far more. Replies stay quick and
+  plan allowances last longer. A `compaction.buffer` in config replaces this.
 - **Startup animation.** While the app starts, the JaCode mark assembles out of chaos: one of five scenes, picked
   at random, that mix the Lorenz attractor with curl-noise flow. With reduced motion on, the mark shows still.
 - **Thinking companion.** An optional pixel character keeps you company while a model works, and says what it is

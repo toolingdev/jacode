@@ -425,22 +425,27 @@ it.effect("auto compaction estimates current content against the buffered prompt
         .pipe(Effect.map((outcome) => outcome.status !== "skipped"))
 
     // 85% of the input limit, which takes precedence over the context window.
-    const inputLimited = { context: 400_000, input: 272_000, output: 128_000 }
-    expect(yield* due(input(231_199, inputLimited))).toBe(false)
-    expect(yield* due(input(231_200, inputLimited))).toBe(true)
+    const inputLimited = { context: 200_000, input: 136_000, output: 64_000 }
+    expect(yield* due(input(115_599, inputLimited))).toBe(false)
+    expect(yield* due(input(115_600, inputLimited))).toBe(true)
     const native = (tokens: number, limit: { context: number; input?: number; output: number } = inputLimited) => {
       const selected = input(tokens, limit)
       return { ...selected, model: { ...selected.model, compaction: { type: "native" as const } } }
     }
-    expect(yield* due(native(231_199))).toBe(false)
-    expect(yield* due(native(231_200))).toBe(true)
+    expect(yield* due(native(115_599))).toBe(false)
+    expect(yield* due(native(115_600))).toBe(true)
     expect(yield* due(native(1_000_000, { context: 0, input: undefined, output: 0 }))).toBe(false)
+
+    // A chat never grows past 200k before compacting, however large the window.
+    const large = { context: 1_000_000, output: 128_000 }
+    expect(yield* due(input(199_999, large))).toBe(false)
+    expect(yield* due(input(200_000, large))).toBe(true)
 
     // An input limit above the context window, as some catalogs and config overrides report, cannot be used in full.
     const overstated = { context: 128_000, input: 272_000, output: 128_000 }
     expect(yield* due(input(108_799, overstated))).toBe(false)
     expect(yield* due(input(108_800, overstated))).toBe(true)
-    expect(yield* due(input(200_000, { context: 0, input: 272_000, output: 0 }))).toBe(false)
+    expect(yield* due(input(199_999, { context: 0, input: 272_000, output: 0 }))).toBe(false)
 
     // The summary's 16k output limit is more than 15% of a 100k window, so it sets the ceiling.
     const contextLimited = { context: 100_000, output: 10_000 }
@@ -1487,17 +1492,17 @@ it.effect("a background summary starts a fixed lead before the threshold, not at
     requests = []
     const compaction = yield* SessionCompaction.Service
     const session = yield* insertSession(Session.ID.make("ses_precompute_lead"))
-    // A 1M window compacts at 850k, so a background summary starts 60k before that, at 790k.
+    // A 1M window compacts at the 200k cap, so a background summary starts 60k before that, at 140k.
     const large = (messages: readonly SessionMessage.Info[]) => ({
       ...loaded(session, messages),
       model: { ...resolved, limit: { context: 1_000_000, output: 128_000 } },
     })
-    const early = [textUser("First question"), measured("First answer", 100_000), textUser("Second question")]
-    const before = [...early, measured("Second answer", 760_000)]
-    const within = [...before, textUser("Third question"), measured("Third answer", 800_000)]
-    const due = [...within, textUser("Fourth question"), measured("Fourth answer", 860_000)]
+    const early = [textUser("First question"), measured("First answer", 20_000), textUser("Second question")]
+    const before = [...early, measured("Second answer", 130_000)]
+    const within = [...before, textUser("Third question"), measured("Third answer", 150_000)]
+    const due = [...within, textUser("Fourth question"), measured("Fourth answer", 210_000)]
 
-    // 760k is past 85% of the threshold, but still more than the lead away from it.
+    // 130k is past half the threshold, but still more than the lead away from it.
     yield* compaction.precompute(Effect.succeed(large(before)))
     yield* compaction.precompute(Effect.succeed(large(within)))
     expect(yield* compaction.compact({ reason: "auto", context: large(due) })).toEqual({ status: "completed" })

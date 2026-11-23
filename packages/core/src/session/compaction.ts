@@ -130,6 +130,12 @@ const RESERVE_MIN = 16_000
  * the cache. Single steps grew by up to ~22k tokens at p99 in real sessions.
  */
 const RESERVE_SHARE = 0.15
+/**
+ * Fork feature: the most a chat grows to before automatic compaction when no buffer is set, however large the model's
+ * window. Every step sends the whole conversation again, so a chat on a million-token model would otherwise carry
+ * close to a million tokens per step before it is ever summarized, slowing replies and using up plan allowances.
+ */
+const CONTEXT_CAP = 200_000
 /** A common window size, assumed for the compaction request when the model's window is unknown. */
 const UNKNOWN_WINDOW = 200_000
 /** A summary gets at least this much output, or the room left if less, even when the estimate margin leaves less. */
@@ -1155,7 +1161,10 @@ const calculateCeiling = (limit: SessionContext.Loaded["model"]["limit"], buffer
   const tokens = typeof buffer === "string" ? Math.round((window * Number.parseFloat(buffer)) / 100) : buffer
   // A buffer that leaves no room, such as one set for a larger model, is ignored.
   if (tokens !== undefined && tokens < window) return window - tokens
-  return window - Math.max(Math.floor(window * RESERVE_SHARE), window >= 2 * RESERVE_MIN ? RESERVE_MIN : 0)
+  return Math.min(
+    CONTEXT_CAP,
+    window - Math.max(Math.floor(window * RESERVE_SHARE), window >= 2 * RESERVE_MIN ? RESERVE_MIN : 0),
+  )
 }
 
 /**
