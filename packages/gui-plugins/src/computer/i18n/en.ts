@@ -1,4 +1,7 @@
 export default {
+  description: "Let the assistant see this Mac's screen and use its mouse and keyboard when a chat needs it.",
+  "allowed.empty": "Nothing allowed always",
+  "macos.title": "Screen recording and accessibility",
   title: "Mac control",
   enabled: "Let the assistant use this Mac",
   "enabled.about":

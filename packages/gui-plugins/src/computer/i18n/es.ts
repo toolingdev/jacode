@@ -1,4 +1,7 @@
 export default {
+  description: "Permite que el asistente vea la pantalla de este Mac y use su ratón y teclado cuando un chat lo necesite.",
+  "allowed.empty": "Nada permitido siempre",
+  "macos.title": "Grabación de pantalla y accesibilidad",
   title: "Control del Mac",
   enabled: "Permitir que el asistente use este Mac",
   "enabled.about":

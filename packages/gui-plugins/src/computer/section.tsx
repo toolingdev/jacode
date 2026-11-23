@@ -88,41 +88,54 @@ export default function MacControlSection() {
     KINDS.some((known) => known === kind) ? ctx.t(`kind.${kind}` as `kind.${(typeof KINDS)[number]}`) : kind
 
   return (
-    <Show when={ctx.desktop?.os === "macos" && server()} fallback={<p class="text-13-regular">{ctx.t("unavailable")}</p>}>
-      <ui.SettingsSection title={ctx.t("title")}>
-        <ui.SettingsRow id="settings-mac-control-enabled" title={ctx.t("enabled")} description={ctx.t("enabled.about")}>
-          <ui.Switch
-            label={ctx.t("enabled")}
-            hideLabel
-            checked={enabled() ?? true}
-            disabled={enabled() === undefined}
-            onChange={toggle}
-          />
-        </ui.SettingsRow>
-      </ui.SettingsSection>
-      <ui.SettingsSection title={ctx.t("allowed")}>
-        <Show
-          when={allowed().length > 0}
-          fallback={<p class="px-1 py-2 text-12-regular text-v2-text-text-muted">{ctx.t("allowed.none")}</p>}
-        >
-          <For each={allowed()}>
-            {(item) => (
-              <ui.SettingsRow
-                id={`settings-mac-control-allowed-${item.id}`}
-                title={label(item.kind)}
-                description={ctx.t("allowed.where", { project: item.project })}
-              >
-                <ui.Button variant="neutral" size="small" onClick={() => remove(item.id)}>
-                  {ctx.t("remove")}
-                </ui.Button>
-              </ui.SettingsRow>
-            )}
-          </For>
-        </Show>
-      </ui.SettingsSection>
-      <ui.SettingsSection title={ctx.t("macos")}>
-        <p class="px-1 py-2 text-12-regular text-v2-text-text-muted">{ctx.t("macos.about")}</p>
-      </ui.SettingsSection>
-    </Show>
+    <ui.SettingsLayout title={ctx.t("title")} description={ctx.t("description")}>
+      <Show
+        when={ctx.desktop?.os === "macos" && server()}
+        fallback={
+          <ui.SettingsSection>
+            <ui.SettingsRow title={ctx.t("unavailable")} />
+          </ui.SettingsSection>
+        }
+      >
+        <ui.SettingsSection>
+          <ui.SettingsRow
+            id="settings-mac-control-enabled"
+            title={ctx.t("enabled")}
+            description={ctx.t("enabled.about")}
+          >
+            <ui.Switch
+              label={ctx.t("enabled")}
+              hideLabel
+              checked={enabled() ?? true}
+              disabled={enabled() === undefined}
+              onChange={toggle}
+            />
+          </ui.SettingsRow>
+        </ui.SettingsSection>
+        <ui.SettingsSection title={ctx.t("allowed")}>
+          <Show
+            when={allowed().length > 0}
+            fallback={<ui.SettingsRow title={ctx.t("allowed.empty")} description={ctx.t("allowed.none")} />}
+          >
+            <For each={allowed()}>
+              {(item) => (
+                <ui.SettingsRow
+                  id={`settings-mac-control-allowed-${item.id}`}
+                  title={label(item.kind)}
+                  description={ctx.t("allowed.where", { project: item.project })}
+                >
+                  <ui.Button variant="neutral" size="small" onClick={() => remove(item.id)}>
+                    {ctx.t("remove")}
+                  </ui.Button>
+                </ui.SettingsRow>
+              )}
+            </For>
+          </Show>
+        </ui.SettingsSection>
+        <ui.SettingsSection title={ctx.t("macos")}>
+          <ui.SettingsRow title={ctx.t("macos.title")} description={ctx.t("macos.about")} />
+        </ui.SettingsSection>
+      </Show>
+    </ui.SettingsLayout>
   )
 }
