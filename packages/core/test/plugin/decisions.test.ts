@@ -216,3 +216,29 @@ test("only errors another model could get past move the prompt", () => {
   expect(DecisionsPlugin.switchable({ type: "provider.content-filter", message: "" })).toBeUndefined()
   expect(DecisionsPlugin.switchable({ type: "provider.transport", message: "" })).toBeUndefined()
 })
+
+test("refused recognizes a short reply declining the request", () => {
+  expect(DecisionsPlugin.refused("I'm sorry, but I can't help with that.")).toBe(true)
+  expect(DecisionsPlugin.refused("I can’t assist with creating that content.")).toBe(true)
+  expect(DecisionsPlugin.refused("I must respectfully decline. This goes against my guidelines.")).toBe(true)
+  expect(DecisionsPlugin.refused("That request violates the content policy, so I won't write it.")).toBe(true)
+})
+
+test("refused leaves answers alone, short or long", () => {
+  expect(DecisionsPlugin.refused("Here is the script you asked for.")).toBe(false)
+  expect(DecisionsPlugin.refused(undefined)).toBe(false)
+  expect(DecisionsPlugin.refused("")).toBe(false)
+  expect(DecisionsPlugin.refused(`I can't help with the last part, but here is the rest. ${"Details. ".repeat(200)}`)).toBe(false)
+})
+
+test("reply reads the words answering the latest prompt, and none when the reply did work", () => {
+  const text = (value: string) => ({ type: "text", text: value })
+  const user = { type: "user", content: [text("first")] }
+  const answered = { type: "assistant", content: [text("old answer")] }
+
+  expect(
+    DecisionsPlugin.reply([user, answered, { type: "user", content: [text("second")] }, { type: "assistant", content: [text("I can't help with that.")] }]),
+  ).toBe("I can't help with that.")
+  expect(DecisionsPlugin.reply([user, { type: "assistant", content: [{ type: "tool" }, text("done")] }])).toBeUndefined()
+  expect(DecisionsPlugin.reply([user])).toBeUndefined()
+})

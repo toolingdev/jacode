@@ -94,6 +94,8 @@ type Pick = {
   readonly plan: boolean
   /** What Auto chose from, so a failing model can hand the prompt to the next one. */
   readonly auto?: { readonly band: Band; readonly image: boolean; readonly lists: Lists; readonly pool: readonly Candidate[]; readonly tried: ReadonlySet<string> }
+  /** Set once the prompt was handed to a less restricted model, so it is handed on at most once. */
+  readonly rescued?: boolean
 }
 
 // What the app sends with a prompt of an Auto chat: the scope, and the models switched on in it.
@@ -376,6 +378,52 @@ export const Plugin = define({
       }),
     )
 
+    // A model Auto picked that declines the request outright, doing no work, hands it to the first model with fewer
+    // restrictions the user listed that fits, once per prompt. The note admitted here runs in the same execution and
+    // the model is resolved again for it, so the listed model answers; the note also tells the user why it changed.
+    // The chat's usual model is kept for its next prompt.
+    yield* ctx.session.hook("experimental.idle", (event) =>
+      Effect.gen(function* () {
+        const pick = picks.get(event.sessionID)
+
+        if (!pick?.auto || !pick.model || pick.rescued) return
+        const settings = decisions(yield* config.entries()) ?? {}
+        const list = settings.unrestricted ?? []
+        const from = `${pick.model.providerID}/${pick.model.id}`
+
+        if (list.length === 0 || list.includes(from)) return
+        if (!refused(reply(yield* ctx.session.context({ sessionID: event.sessionID })))) return
+        const image = pick.auto.image
+        const plan = yield* plans()
+        const catalog = yield* models.available()
+        // Able to call tools, as a chat needs, and the same rule as Auto's own picks: with a subscription, only models
+        // it covers unless paid ones are allowed.
+        const next = list
+          .map((key) => catalog.find((info) => `${info.providerID}/${info.id}` === key))
+          .find(
+            (info) =>
+              info !== undefined &&
+              info.capabilities.tools &&
+              (!image || info.capabilities.input.some((input) => input.startsWith("image"))) &&
+              (settings.allowPaid === true || !plan.has(info.providerID) || plan.get(info.providerID)?.has(info.id) === true),
+          )
+
+        if (!next) return
+        const to = `${next.providerID}/${next.id}`
+        picks.set(event.sessionID, { ...pick, model: Model.Ref.make({ providerID: next.providerID, id: next.id }), rescued: true })
+        yield* ctx.session.synthetic({
+          sessionID: event.sessionID,
+          text: `<auto-switch>\nThe previous reply came from another model, ${from}, which declined the user's request. You are ${next.name}, a different model chosen for this. Answer the user's latest request above yourself, fully and directly, without mentioning the earlier refusal.\n</auto-switch>`,
+          description: `Switched to ${next.name}: ${from} declined`,
+          metadata: { source: "decisions", switched: { from, to, reason: "refused" } },
+        })
+      }).pipe(
+        Effect.catchCause((cause) =>
+          Effect.logWarning("failed to hand a refused prompt to another model", { sessionID: event.sessionID, cause }),
+        ),
+      ),
+    )
+
     yield* ctx.session.hook("context", (event) =>
       Effect.sync(() => {
         if (!picks.get(event.sessionID)?.plan) return
@@ -639,6 +687,43 @@ export function candidates(
     strength: rank(scores, item.score),
   }))
 }
+
+/**
+ * The text of the reply to the user's latest prompt, or undefined when the reply did any work (called a tool), so
+ * only a reply that is words alone can count as a refusal.
+ */
+export function reply(
+  messages: readonly { readonly type: string; readonly content?: readonly { readonly type: string; readonly text?: string }[] }[],
+) {
+  const replies = messages.slice(messages.findLastIndex((message) => message.type === "user") + 1).filter((message) => message.type === "assistant")
+  const parts = replies.flatMap((message) => message.content ?? [])
+
+  if (replies.length === 0 || parts.some((part) => part.type === "tool")) return undefined
+
+  return parts.flatMap((part) => (part.type === "text" && part.text ? [part.text] : [])).join("\n")
+}
+
+/** Whether a reply is a model declining the request: short, and saying it will not or cannot help. */
+export function refused(text: string | undefined) {
+  if (!text) return false
+  const trimmed = text.trim()
+
+  return trimmed.length > 0 && trimmed.length <= MAX_REFUSAL_CHARS && REFUSAL.test(trimmed)
+}
+
+// A refusal says so in a few sentences; a longer reply is an answer that happens to hold back on part of it.
+const MAX_REFUSAL_CHARS = 1_200
+
+const REFUSAL = new RegExp(
+  [
+    String.raw`\bI(?:'|’)?m (?:sorry|afraid),? but I (?:can(?:'|’)?t|cannot|won(?:'|’)?t|am unable|(?:'|’)m unable|am not able|(?:'|’)m not able)`,
+    String.raw`\bI (?:can(?:'|’)?t|cannot|won(?:'|’)?t|will not|am unable to|am not able to|must decline to|have to decline to|(?:'|’)m unable to|(?:'|’)m not able to|(?:'|’)m not going to|am not going to) (?:help|assist|provide|comply|do that|do this|create|write|generate|produce|fulfill|engage|support|give|share|continue)`,
+    String.raw`\bI (?:must|have to|need to) (?:respectfully )?decline\b`,
+    String.raw`\b(?:against|violates?|outside) (?:my|the|our) (?:guidelines|policies|policy|usage policy|content policy|ethical guidelines)`,
+    String.raw`\bnot (?:something|able) (?:I can|to) (?:help|assist) with\b`,
+  ].join("|"),
+  "i",
+)
 
 /** How much context a prompt needs at least: its own text, with room for the answer. */
 function need(prompt: PromptInput.Prompt) {

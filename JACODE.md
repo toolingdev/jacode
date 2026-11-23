@@ -84,6 +84,14 @@ Settings › Models › Auto shows all of this as a flow chart, and has:
 - whether paid models are allowed, and whether to plan before large tasks,
 - which providers Auto on every provider may use.
 
+When the model Auto picked declines a request outright and does no work, Auto can hand the request to a model with
+fewer restrictions, such as an uncensored model your provider offers. List those models under Settings › Models ›
+Auto › When a model refuses, in the order to try them. Auto switches at most once per prompt, to the first one that is connected, can call tools, can
+read the prompt's images and, like its other picks, is covered by your subscription unless paid models are allowed. The chat
+shows the switch, and the next prompt goes back to Auto's usual pick. Helpers of an Auto chat get the same treatment. A chat on a model you picked yourself is never switched, and with the
+list empty a refusal stays as it is. Some providers' terms do not allow sending a declined request elsewhere; check
+before listing models for them.
+
 Config: `experimental.decisions`.
 
 ```jsonc
@@ -93,6 +101,7 @@ Config: `experimental.decisions`.
       "model": "opencode/jev-1.13-free",
       "tiers": { "all": { "hard": "<providerID>/<modelID>" } },
       "allowPaid": false,
+      "unrestricted": ["<providerID>/<modelID>"],
       "plan": true,
       "confidence": 0.7,
     },

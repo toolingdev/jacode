@@ -1,4 +1,5 @@
 import type { ConfigExperimentalAutoTiers, ConfigExperimentalDecisions } from "@opencode/client/promise"
+import { Button } from "@opencode/ui/button"
 import { Select } from "@opencode/ui/select"
 import { Switch } from "@opencode/ui/switch"
 import { type Component, createMemo, createSignal, For, type JSX } from "solid-js"
@@ -51,6 +52,7 @@ export const SettingsAuto: Component = () => {
       model: current?.model,
       tiers: current?.tiers,
       allowPaid: current?.allowPaid,
+      unrestricted: current?.unrestricted,
       plan: current?.plan,
       confidence: current?.confidence,
       ...patch,
@@ -141,6 +143,24 @@ export const SettingsAuto: Component = () => {
     change({ tiers: empty ? rest : { ...rest, [scopeKey()]: next } })
   }
 
+  // Models Auto hands a request to when the model it picked declines it, in the order tried. Any connected model may
+  // be listed, so one kept out of the picker can still be the fallback.
+  const unrestricted = () => settings()?.unrestricted ?? []
+  const named = (key: string) => {
+    const item = models.list().find((model) => `${model.provider.id}/${model.id}` === key)
+
+    return item ? `${item.provider.name} · ${item.name}` : key
+  }
+  const unrestrictedOptions = createMemo((): Option[] => [
+    { value: UNSET, label: language.t("settings.auto.unrestricted.add") },
+    ...models
+      .list()
+      .filter((item) => !unrestricted().includes(`${item.provider.id}/${item.id}`))
+      .map((item) => ({ value: `${item.provider.id}/${item.id}`, label: `${item.provider.name} · ${item.name}` }))
+      .toSorted((a, b) => a.label.localeCompare(b.label)),
+  ])
+  const setUnrestricted = (next: readonly string[]) => change({ unrestricted: next.length > 0 ? [...next] : undefined })
+
   return (
     <div class="flex flex-col gap-2 pb-6">
       <div class="flex flex-col gap-1">
@@ -222,6 +242,45 @@ export const SettingsAuto: Component = () => {
         </SettingsRow>
       </SettingsList>
       <div class="flex flex-col gap-1 pt-4">
+        <h4 class="text-12-medium text-v2-text-text-base">{language.t("settings.auto.unrestricted.title")}</h4>
+        <span class="text-12-regular text-v2-text-text-muted">{language.t("settings.auto.unrestricted.about")}</span>
+      </div>
+      <SettingsList>
+        <For each={unrestricted()}>
+          {(key, index) => (
+            <SettingsRow
+              title={named(key)}
+              description={language.t("settings.auto.unrestricted.order", { position: index() + 1 })}
+            >
+              <Button
+                data-action="settings-auto-unrestricted-remove"
+                variant="ghost-muted"
+                onClick={() => setUnrestricted(unrestricted().filter((item) => item !== key))}
+              >
+                {language.t("settings.auto.unrestricted.remove")}
+              </Button>
+            </SettingsRow>
+          )}
+        </For>
+        <SettingsRow
+          title={language.t("settings.auto.unrestricted.pick.title")}
+          description={language.t(
+            unrestricted().length === 0 ? "settings.auto.unrestricted.empty" : "settings.auto.unrestricted.pick.description",
+          )}
+        >
+          <Select
+            data-action="settings-auto-unrestricted-add"
+            options={unrestrictedOptions()}
+            current={unrestrictedOptions()[0]}
+            value={(option) => option.value}
+            label={(option) => option.label}
+            placement="bottom-end"
+            gutter={6}
+            onSelect={(option) => option && option.value !== UNSET && setUnrestricted([...unrestricted(), option.value])}
+          />
+        </SettingsRow>
+      </SettingsList>
+      <div class="flex flex-col gap-1 pt-4">
         <h4 class="text-12-medium text-v2-text-text-base">{language.t("settings.auto.providers.title")}</h4>
         <span class="text-12-regular text-v2-text-text-muted">{language.t("settings.auto.providers.about")}</span>
       </div>
@@ -300,6 +359,7 @@ const AutoFlow: Component<{ slot: (slot: Slot) => string | undefined }> = (props
         </For>
         <li>{language.t("settings.auto.flow.note.unsure")}</li>
         <li>{language.t("settings.auto.flow.note.quota")}</li>
+        <li>{language.t("settings.auto.flow.note.refused")}</li>
         <li>{language.t("settings.auto.flow.note.manual")}</li>
       </ul>
     </div>

@@ -2046,6 +2046,7 @@ export function make(options: ClientOptions) {
                   model: input?.["model"],
                   tiers: input?.["tiers"],
                   allowPaid: input?.["allowPaid"],
+                  unrestricted: input?.["unrestricted"],
                   plan: input?.["plan"],
                   confidence: input?.["confidence"],
                   enabled: input?.["enabled"],

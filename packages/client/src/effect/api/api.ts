@@ -3133,6 +3133,7 @@ export type ExperimentalConfigDecisionsSetInput = {
       }
     | undefined
   readonly allowPaid?: boolean | undefined
+  readonly unrestricted?: ReadonlyArray<string> | undefined
   readonly plan?: boolean | undefined
   readonly confidence?: number | undefined
   readonly enabled?: boolean | undefined

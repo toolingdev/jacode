@@ -1113,6 +1113,7 @@ export type ConfigExperimentalDecisions = {
   model?: string
   tiers?: { [x: string]: ConfigExperimentalAutoTiers }
   allowPaid?: boolean
+  unrestricted?: Array<string>
   plan?: boolean
   confidence?: number
   enabled?: boolean
@@ -5322,6 +5323,7 @@ export type ExperimentalConfigDecisionsSetInput = {
       }
     | undefined
   readonly allowPaid?: boolean | undefined
+  readonly unrestricted?: ReadonlyArray<string> | undefined
   readonly plan?: boolean | undefined
   readonly confidence?: number | undefined
   readonly enabled?: boolean | undefined

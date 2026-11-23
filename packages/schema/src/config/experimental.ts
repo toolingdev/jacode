@@ -40,6 +40,10 @@ export const Decisions = Schema.Struct({
     description:
       "Let Auto pick models a provider's subscription does not cover, which are paid per use. Defaults to false: with a subscription, Auto keeps to the models it covers.",
   }),
+  unrestricted: Schema.Array(Schema.String).pipe(optional).annotate({
+    description:
+      "Models with fewer restrictions, as providerID/modelID, in the order tried. When the model Auto picked declines a request and does no work, Auto hands the request to the first of these that fits, once per prompt, and the chat says so. Empty or left out, a refusal stays as it is.",
+  }),
   plan: Schema.Boolean.pipe(optional).annotate({
     description:
       "Ask whether a prompt is a large task, and have the assistant reply with a short plan and wait before starting one. Applies to every chat. Defaults to false.",
