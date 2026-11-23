@@ -93,8 +93,6 @@ await $`/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServi
 
 console.log(`Installed ${installed} from ${(await $`git describe --always --dirty`.text()).trim()}`)
 
-if (process.argv.includes("--open")) await $`open ${installed}`
-
 // The Linux servers the Workers settings page installs on other machines, kept beside the app's own data: they are
 // too large to ride inside the app. Older versions' copies are of no use to this app and are removed.
 if (!process.argv.includes("--no-worker")) {
@@ -115,3 +113,6 @@ if (!process.argv.includes("--no-worker")) {
     await rm(out, { recursive: true })
   }
 }
+
+// Opened last: the app updates workers as soon as it starts, from the server files written above.
+if (process.argv.includes("--open")) await $`open ${installed}`
