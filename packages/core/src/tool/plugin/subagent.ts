@@ -54,6 +54,9 @@ export const description = [
   "Keep working on non-overlapping tasks, or briefly tell the user what you launched and end your response. Do not sleep, poll, or proactively check on the child's progress.",
   "New child sessions start with fresh context, so include all relevant context and instructions when you don't pass a sessionID.",
   "Pass the returned sessionID to continue that specific child conversation. A follow-up to a running child joins its current run.",
+  "Split work that has independent parts: when a request has several parts that do not depend on each other (separate files or modules, separate questions to research, separate checks), start one subagent per part in the same response so they run in parallel, then combine their results. Keep steps that depend on each other, and small tasks a few tool calls finish, to yourself.",
+  "In an Auto chat each subagent gets a model that fits its own task, so a quick search runs on a fast model and hard work on a strong one.",
+  "For long or heavy work that should not load this computer, worker_task hands a task to a worker instead, when one is connected.",
 ].join("\n")
 
 export const Plugin = {
@@ -199,6 +202,18 @@ export const Plugin = {
                       ? ["You are a subagent spawned by another session.", input.prompt].join("\n")
                       : input.prompt,
                   ...(running ? {} : { resume: false }),
+                  // Lets Auto pick the helper's model from the chat's own Auto setup, unless one was chosen for it.
+                  metadata: {
+                    subagent: {
+                      parentID: context.sessionID,
+                      chosen:
+                        override !== undefined ||
+                        (existing === undefined
+                          ? agent.model !== undefined
+                          : `${existing.model?.providerID}/${existing.model?.id}` !==
+                            `${parent.model?.providerID}/${parent.model?.id}`),
+                    },
+                  },
                 })
                 .pipe(
                   Effect.mapError(

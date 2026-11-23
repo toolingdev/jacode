@@ -97,6 +97,21 @@ Config: `experimental.decisions`.
 }
 ```
 
+## Helpers: splitting work
+
+A chat can hand parts of a job to helpers (subagents) that run in the background at the same time, each in its own
+child chat, and their results come back into the chat. When a request has independent parts, such as separate files,
+separate questions to research or separate checks, the chat starts one helper per part and combines what they find.
+Running helpers show in the background pill above the composer.
+
+In an Auto chat, Auto picks each helper's model from that chat's Auto setup, so a quick search runs on a fast, cheap
+model and hard work on a strong one. A helper given a model by name, or by its agent's config, keeps it. Helpers are
+never held for a plan.
+
+With a worker connected, the chat can also hand a task to the worker to run now (`worker_task`), for long or heavy
+work that should not load this computer or should keep going while it sleeps. The task gets its own chat on the
+worker, and its answer comes back into this chat by itself, usually within seconds of it finishing.
+
 ## Workers: computers that stay on
 
 A worker is another computer running JaCode's server: a home server, a VPS, or a Docker container on this Mac.

@@ -20,6 +20,10 @@ import type { PluginInternal } from "./internal.js"
 // the difficulty names is the one used. A model set for a kind of task in Settings takes the place of its list. A
 // chat on a model picked by hand is never moved.
 //
+// A subagent of an Auto chat is an Auto chat too: the subagent tool marks the prompts of a helper that runs on the
+// inherited model, and the chat's latest Auto request is used for them, so each helper gets a model that fits its own
+// task (a quick search on a fast, cheap model, say) and the work spreads across the models Auto may use.
+//
 // Separately, when plans are on, the decision model also judges whether a prompt is a large task, and the assistant
 // then replies with a plan and waits before starting it. That applies to every chat.
 //
@@ -96,6 +100,11 @@ type Pick = {
 const AutoRequest = Schema.Struct({ scope: Schema.String, models: Schema.Array(Schema.String) })
 const decodeAutoRequest = Schema.decodeUnknownOption(AutoRequest)
 
+// What the subagent tool puts on a helper's prompts: the chat that started it, and whether its model was chosen (by
+// the call or the agent's config) rather than inherited, in which case Auto leaves it alone.
+const SubagentMark = Schema.Struct({ parentID: Schema.String, chosen: Schema.Boolean })
+const decodeSubagentMark = Schema.decodeUnknownOption(SubagentMark)
+
 const taskQuestion: DecisionQuestion = {
   type: "choice",
   name: "task",
@@ -149,6 +158,8 @@ export const Plugin = define({
     } = {}
     // What the latest prompt of each session was routed to; a new prompt replaces it.
     const picks = new Map<string, Pick>()
+    // The latest Auto request of each chat, which its subagents use.
+    const requests = new Map<string, typeof AutoRequest.Type>()
     // The model each Auto chat used last, so a prompt the decision model is unsure of stays where the chat was.
     const last = new Map<string, string>()
     // The last skip reason each session was told, so a lasting outage is mentioned once, not on every prompt.
@@ -221,13 +232,18 @@ export const Plugin = define({
       Effect.gen(function* () {
         picks.delete(event.sessionID)
         const settings = decisions(yield* config.entries()) ?? {}
-        const request = Option.getOrUndefined(decodeAutoRequest(event.metadata?.smartAuto))
+        const subagent = Option.getOrUndefined(decodeSubagentMark(event.metadata?.subagent))
+        const request =
+          Option.getOrUndefined(decodeAutoRequest(event.metadata?.smartAuto)) ??
+          (subagent && !subagent.chosen ? requests.get(subagent.parentID) : undefined)
 
+        if (request) requests.set(event.sessionID, request)
         // Only the scope is kept on the message; the list of switched-on models served this prompt alone.
         if (request) event.metadata = { ...event.metadata, smartAuto: { scope: request.scope } }
 
-        // An automation prompt was approved when it was created, so it is never held for a plan.
-        const plan = settings.plan === true && event.metadata?.automation === undefined
+        // An automation prompt was approved when it was created, and a subagent's task by the chat that started it,
+        // so neither is held for a plan.
+        const plan = settings.plan === true && event.metadata?.automation === undefined && subagent === undefined
 
         if (!request && !plan) return
         const image = hasImage(event.prompt)
@@ -297,9 +313,10 @@ export const Plugin = define({
               choice: answer.choice,
               confidence: answer.confidence,
             })),
-            auto: chosen?.model
-              ? { tier: chosen.tier, model: chosen.model.key, reason: chosen.reason, from: chosen.from }
-              : undefined,
+            // Left out rather than undefined, which is not JSON and fails the prompt's response.
+            ...(chosen?.model
+              ? { auto: { tier: chosen.tier, model: chosen.model.key, reason: chosen.reason, from: chosen.from } }
+              : {}),
           },
         }
       }),

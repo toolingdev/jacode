@@ -14,12 +14,18 @@ import { Config } from "../../config.js"
 // starts and every minute after: each run that finished is delivered back into the chat once, which then tells the
 // user. While this computer is off, results wait on the worker. Workers are listed in config
 // (`experimental.workers`), which the desktop app keeps in step with the workers it is connected to.
+//
+// worker_task hands a task to a worker to run now, the way a subagent runs here, so long or heavy work does not load
+// this computer. It gets its own worker chat too, and its answer comes back the same way, checked every few seconds
+// until it has arrived.
 
 const TIMEOUT_MS = 15_000
 
 // How often linked worker chats are checked for finished runs, and how long after start the first check waits.
 const POLL = Duration.minutes(1)
 const FIRST_POLL = Duration.seconds(10)
+// How often a chat waiting on a task handed to a worker is checked, until its answer has come back.
+const TASK_POLL = Duration.seconds(10)
 
 /** The workers chats may schedule tasks on, from the latest config that lists them. */
 export function workers(entries: readonly Entry[]): readonly ConfigExperimental.Worker[] {
@@ -77,6 +83,13 @@ export function finishedRuns(messages: unknown) {
   })
 }
 
+/** Whether a worker chat's message list holds a prompt. */
+export function received(messages: unknown) {
+  const list = Schema.decodeUnknownOption(MessageList)(messages)
+
+  return list._tag === "Some" && list.value.data.some((message) => message.type === "user")
+}
+
 /** The worker chats a chat scheduled tasks in, from its metadata. */
 export function linkedTasks(metadata: unknown) {
   return Option.getOrElse(Schema.decodeUnknownOption(Linked)(metadata), () => ({ workerTasks: [] })).workerTasks
@@ -87,6 +100,8 @@ const Task = Schema.Struct({
   sessionID: Schema.String,
   title: Schema.optionalKey(Schema.String),
   delivered: Schema.optionalKey(Schema.Array(Schema.String)),
+  // "now" for a task handed over with worker_task; scheduled tasks have none.
+  kind: Schema.optionalKey(Schema.Literal("now")),
 })
 const Linked = Schema.Struct({ workerTasks: Schema.Array(Task) })
 
@@ -143,6 +158,17 @@ const StatusOutput = Schema.Struct({
   ),
   answer: Schema.NullOr(Schema.String),
 })
+
+const TaskInput = Schema.Struct({
+  worker: Schema.optionalKey(WorkerName),
+  title: Schema.String.annotate({ description: "A short title for the task's chat on the worker." }),
+  prompt: Schema.String.annotate({
+    description:
+      "The task, written to stand alone with every detail the worker needs: it cannot see this chat or this computer's files.",
+  }),
+})
+
+const TaskOutput = Schema.Struct({ worker: Schema.String, sessionID: Schema.String })
 
 const ListOutput = Schema.Struct({ workers: Schema.Array(Schema.Struct({ name: Schema.String, url: Schema.String })) })
 
@@ -248,7 +274,7 @@ export const Plugin = {
             yield* Effect.forEach(fresh, (run) =>
               ctx.session.synthetic({
                 sessionID: session.id,
-                text: `<worker-result>\nThe task "${task.title ?? "Scheduled task"}" that this chat scheduled on the worker ${worker.name} (worker chat ${task.sessionID}) finished at ${new Date(run.at).toISOString()}. Its answer:\n\n${run.text}\n</worker-result>\nTell the user this result now, briefly and in full. Take no other action on it unless the user asks.`,
+                text: `<worker-result>\nThe task "${task.title ?? "Scheduled task"}" that this chat ${task.kind === "now" ? "handed to" : "scheduled on"} the worker ${worker.name} (worker chat ${task.sessionID}) finished at ${new Date(run.at).toISOString()}. Its answer:\n\n${run.text}\n</worker-result>\nTell the user this result now, briefly and in full. Take no other action on it unless the user asks.`,
                 description: `Result from ${worker.name}: ${task.title ?? "Scheduled task"}`,
                 metadata: { source: "worker", worker: worker.name, workerSessionID: task.sessionID },
               }),
@@ -286,6 +312,25 @@ export const Plugin = {
         if (session.metadata?.workerResult !== true) return
         yield* ctx.session.update({ sessionID: event.sessionID, metadata: { ...session.metadata, workerResult: false } })
       }).pipe(Effect.ignore),
+    )
+
+    // Chats waiting on a task handed over with worker_task, checked often until every such answer has come back.
+    const waiting = new Set<LocalSessionID>()
+    const checkWaiting = Effect.forEach(
+      [...waiting],
+      (sessionID) =>
+        Effect.gen(function* () {
+          yield* deliver(yield* ctx.session.get({ sessionID }))
+          const tasks = linkedTasks((yield* ctx.session.get({ sessionID })).metadata)
+
+          if (tasks.every((task) => task.kind !== "now" || (task.delivered ?? []).length > 0)) waiting.delete(sessionID)
+        }).pipe(Effect.orElseSucceed(() => waiting.delete(sessionID))),
+      { discard: true },
+    )
+
+    yield* checkWaiting.pipe(
+      Effect.repeat(EffectSchedule.spaced(TASK_POLL)),
+      Effect.forkScoped({ startImmediately: true }),
     )
 
     yield* Effect.sleep(FIRST_POLL).pipe(
@@ -370,6 +415,48 @@ export const Plugin = {
               content: `Scheduled on ${worker.name} (chat ${session.id}, schedule ${schedule.id}): ${schedule.status}${schedule.nextDueAt ? `, next run ${schedule.nextDueAt}` : ""}. Results stay in that chat on ${worker.name}, and each finished run is brought back into this chat when this computer is on; worker_schedule_status reads them at any time.`,
             }
           }).pipe(Effect.mapError(failure("Unable to schedule on the worker"))),
+      })
+
+      editor.add({
+        name: "worker_task",
+        description:
+          "Hand a task to a worker to run now, in its own chat there, instead of on this computer: for long or heavy work (builds, test suites, big research or data jobs) that should not load this computer, or that should keep going while it sleeps. Runs in the background like a subagent: its answer comes back into this chat by itself when the worker finishes, so do not poll for it. Write the prompt so it stands alone; the worker cannot see this chat or this computer's files.",
+        input: TaskInput,
+        output: TaskOutput,
+        options: { namespace: "opencode", codemode: true, pinned: true },
+        execute: (input, context) =>
+          Effect.gen(function* () {
+            const worker = yield* find(input.worker)
+            const session = yield* call(worker, "POST", "/api/session", { title: input.title }).pipe(
+              Effect.flatMap(Schema.decodeUnknownEffect(SessionData)),
+              Effect.map((value) => value.data),
+            )
+
+            // A worker can take the prompt and still fail to answer the request (older builds did), so the worker
+            // chat itself says whether the task arrived.
+            yield* call(worker, "POST", `/api/session/${encodeURIComponent(session.id)}/prompt`, {
+              text: input.prompt,
+            }).pipe(
+              Effect.catch((error) =>
+                call(worker, "GET", `/api/session/${encodeURIComponent(session.id)}/message?limit=5`).pipe(
+                  Effect.flatMap((messages) => (received(messages) ? Effect.void : Effect.fail(error))),
+                  Effect.tapError(() => call(worker, "DELETE", `/api/session/${session.id}`).pipe(Effect.ignore)),
+                ),
+              ),
+            )
+            yield* link(context.sessionID, {
+              worker: worker.name,
+              sessionID: session.id,
+              title: input.title,
+              kind: "now",
+            }).pipe(Effect.ignore)
+            waiting.add(context.sessionID)
+
+            return {
+              output: { worker: worker.name, sessionID: session.id },
+              content: `${worker.name} is working on "${input.title}" in its chat ${session.id}. Its answer comes back into this chat by itself when it finishes; do not poll for it. Carry on with other work, or tell the user what was handed over and end your response.`,
+            }
+          }).pipe(Effect.mapError(failure("Unable to hand the task to the worker"))),
       })
 
       editor.add({

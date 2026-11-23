@@ -48,3 +48,15 @@ test("a chat's linked worker tasks come from its metadata, and none when it has 
     { worker: "w", sessionID: "s" },
   ])
 })
+
+test("a task handed to a worker keeps its kind, so its answer is checked for until it comes back", () => {
+  expect(
+    WorkerScheduleTools.linkedTasks({ workerTasks: [{ worker: "w", sessionID: "s", title: "Build", kind: "now" }] }),
+  ).toEqual([{ worker: "w", sessionID: "s", title: "Build", kind: "now" }])
+})
+
+test("a worker chat received a task when it holds a prompt", () => {
+  expect(WorkerScheduleTools.received({ data: [{ type: "user" }] })).toBe(true)
+  expect(WorkerScheduleTools.received({ data: [] })).toBe(false)
+  expect(WorkerScheduleTools.received(undefined)).toBe(false)
+})
