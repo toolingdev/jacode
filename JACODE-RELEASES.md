@@ -3,6 +3,68 @@
 Each release lists what JaCode added and what it brought in from upstream OpenCode. Builds are on the
 [Releases page](https://github.com/toolingdev/jacode/releases).
 
+## 2026.11.23
+
+The Mac app is still not signed, so macOS warns the first time it opens: right-click JaCode in Applications and choose
+Open, or run `xattr -dr com.apple.quarantine /Applications/JaCode.app` in Terminal. An installed JaCode offers this
+build as an update.
+
+### Downloads
+
+- `JaCode-2026.11.23-mac-arm64.zip`: the desktop app for Apple silicon Macs. Unzip and move JaCode to Applications.
+- `opencode-linux-x64` and `opencode-linux-arm64`: the worker software for Linux computers, the same version as the
+  app (`0.0.0-dev-202611231451`). The app installs and updates them on your workers itself.
+- `jacode-release-0.0.0-dev-202611231451.json`: the manifest the app and workers use to find and check this release.
+
+### What JaCode adds
+
+- **Updates from JaCode's releases.** The app checks this repository's releases, downloads a newer build in the
+  background and installs it with one click; workers move to the app's exact version.
+- **Mac control.** A chat can see and work this Mac's screen; it asks in the chat first, and Settings has the page
+  that controls it.
+- **Helpers.** A chat can spread its work across helpers, each on its own model (Auto picks one per helper) or on a
+  worker.
+- **Tools per chat.** Switch connected tools on or off for one chat from the Tools pill.
+- **Auto retries.** When the model Auto picked fails, the prompt moves at once to the next model that fits.
+- **Long chats stay light.** A chat is summarized once it reaches about 200K tokens, even on models that hold more.
+- Cards now show in the browser and on paired phones.
+
+### Brought in from upstream OpenCode
+
+212 upstream commits, through `698800f59c` (2026-11-23). Highlights:
+
+- **Automations** are now a plain `automations` config key, on unless you set it to `false`. They can run a fixed shell
+  command, scheduled code gets the chat's Code Mode tools, plugins can create and manage them, and the automation
+  tools have their own `automation` group.
+- **Model speeds**: a model's faster and slower service tiers (fast, flex) show as a speed of that model instead of
+  separate entries.
+- **Chats**: archive the open chat with ⌘⇧S, open a chat in the background from Home, drafts in the inbox sidebar,
+  and send browser, file and review comments with Mod+Enter.
+- **Timeline**: tall file diffs fold, a Code Mode script's diffs show while it runs, and long script groups no
+  longer freeze the timeline.
+- **Browser pane**: import browsing history and complete the address bar from it, open links beside the tab they came
+  from, middle-click opens a new tab, and each site's icon shows in its tab.
+- **Model picker** stays responsive with large catalogs and no longer jumps on open, scroll or select.
+- **Other**: Claude Agent as a web search provider, key chords in shortcuts, back and forward mouse buttons, newer MCP
+  protocol with push events, ChatGPT plan model lists from models.dev, and many focus-ring, compaction, shell and
+  Windows fixes.
+
+### Kept as JaCode has it
+
+Where upstream changed code JaCode had changed, JaCode's version stays: Auto in the model picker (now beside model
+speeds), the plan filter and prices in Settings › Models, "chat" wording in new texts, the JaCode name, and the
+automation tools pinned so the model always knows it can schedule work.
+
+### Replaced by upstream's version
+
+- JaCode's own switch that kept automations on in every build. Upstream now keeps automations on by default in every
+  build through the `automations` config key, so nothing changes for you; an old `experimental.automations` setting
+  is still read.
+
+### Left out
+
+Nothing. Every upstream change came in.
+
 ## 2026.11.20
 
 The first published JaCode build. The Mac app is not signed yet, so macOS warns the first time it opens: right-click
