@@ -98,7 +98,7 @@ export const SettingsModels: Component<{
   }
 
   const list = useFilteredList<ModelItem>({
-    items: (_filter) => models.list().filter((item) => !planOnly()[item.provider.id] || plan(item) !== "paid"),
+    items: (_filter) => models.listed().filter((item) => !planOnly()[item.provider.id] || plan(item) !== "paid"),
     key: (x) => `${x.provider.id}:${x.id}`,
     filterKeys: ["provider.name", "name", "id"],
     sortBy: (a, b) => a.name.localeCompare(b.name),
@@ -149,7 +149,7 @@ export const SettingsModels: Component<{
     return [price, context].filter((part) => part !== undefined).join(" · ")
   }
 
-  const managed = createMemo(() => consoleModelGroup(models.list()))
+  const managed = createMemo(() => consoleModelGroup(models.listed()))
   const searching = () => list.filter().length > 0
   const expanded = (key: string) => searching() || !store.collapsed[key]
 

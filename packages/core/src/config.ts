@@ -9,7 +9,9 @@ import { Directory, Document, Info, type Patch, type Entry, Event } from "@openc
 import type { ConfigExperimental } from "@opencode/schema/config/experimental"
 import type { ConfigProvider } from "@opencode/schema/config/provider"
 import type { Mcp } from "@opencode/schema/mcp"
+import { App } from "./app.js"
 import { Credential } from "./credential.js"
+import { FlagResolve } from "./flag/resolve.js"
 import { Bus } from "./bus.js"
 import { Watcher } from "./filesystem/watcher.js"
 import { FSUtil } from "@opencode/util/fs-util"
@@ -187,6 +189,8 @@ export const layer = (options?: Options) =>
       const globalService = yield* Global.Service
       const wellknown = yield* WellKnown.Service
       const processes = yield* AppProcess.Service
+      const app = yield* App.Service
+      const overrides = yield* FlagResolve.Overrides
       const integrations = new Map<string, ConfigIntegration.Document>()
       // Integrations set their documents from outside this layer, so their reloads run with its services.
       const context = yield* Effect.context<FSUtil.Service | Global.Service | Location.Service>()
@@ -207,10 +211,10 @@ export const layer = (options?: Options) =>
           return
         }
         const result = ConfigNormalize.normalize(input)
-        // Every reload repeats the routine notes on a config that loads. A rejected config or a dropped malformed
-        // setting is the user's to fix, so those stay warnings.
+        // Every reload repeats routine notes. Rejected configs and dropped malformed or removed settings need a warning.
         yield* Effect.forEach(result.diagnostics, (diagnostic) => {
-          const log = result.type === "rejected" || diagnostic.kind === "invalid" ? Effect.logWarning : Effect.logDebug
+          const warn = result.type === "rejected" || diagnostic.kind === "invalid" || diagnostic.kind === "removed"
+          const log = warn ? Effect.logWarning : Effect.logDebug
           return log("configuration normalization diagnostic", {
             source,
             path: diagnostic.path[0] === "$" ? "$" : `$.${diagnostic.path.join(".")}`,
@@ -436,25 +440,36 @@ export const layer = (options?: Options) =>
             ),
           ),
         )
+        const below = [
+          ...managedPolicies,
+          ...integrated,
+          ...wellknownDocuments.flat(),
+          ...globalSupplementary,
+          ...explicit,
+          ...direct,
+          ...projectSupplementary,
+        ]
+        const above = [...content, ...managedSettings]
+        // Config can't read the Flag service, which reads Config, so it resolves project_overlay from everything but
+        // the overlay itself.
+        const overlay = FlagResolve.resolve({ entries: [...below, ...above], channel: app.channel, overrides })
+          .project_overlay.enabled
+          ? yield* ConfigDiscovery.overlay(options)
+          : undefined
+        const effective = overlay ? { ...sources, project: [...sources.project, overlay] } : sources
         return {
           configs: [
-            ...managedPolicies,
-            ...integrated,
-            ...wellknownDocuments.flat(),
-            ...globalSupplementary,
-            ...explicit,
-            ...direct,
-            ...projectSupplementary,
-            ...content,
-            ...managedSettings,
+            ...below,
+            ...(overlay?.present ? yield* loadDirectory(overlay.path, references).pipe(Effect.orDie) : []),
+            ...above,
           ],
-          isInput: yield* ConfigWatch.inputs(sources, references),
+          sources: effective,
+          isInput: yield* ConfigWatch.inputs(effective, references),
         }
       })
 
       const initial = yield* ConfigDiscovery.discover(options)
-      let sources = initial
-      let { configs, isInput } = yield* load(initial)
+      let { configs, isInput, sources } = yield* load(initial)
       const updates = yield* PubSub.unbounded<Watcher.Update>()
       const reloads = yield* PubSub.sliding<void>(1)
       // Readiness rescans recover writes made before a watch attached.
@@ -490,15 +505,14 @@ export const layer = (options?: Options) =>
 
       const reload = Effect.fn("Config.reload")(
         function* () {
-          const discovered = yield* ConfigDiscovery.discover(options)
-          const next = yield* load(discovered)
+          const next = yield* load(yield* ConfigDiscovery.discover(options))
           isInput = next.isInput
-          yield* reconcile(discovered)
+          yield* reconcile(next.sources)
           const compatibilityChanged =
-            !isDeepStrictEqual(sources.claude, discovered.claude) ||
-            !isDeepStrictEqual(sources.agents, discovered.agents)
+            !isDeepStrictEqual(sources.claude, next.sources.claude) ||
+            !isDeepStrictEqual(sources.agents, next.sources.agents)
           if (isDeepStrictEqual(configs, next.configs) && !compatibilityChanged) return
-          sources = discovered
+          sources = next.sources
           configs = next.configs
           yield* bus.publish(Event.Updated, {})
         },
@@ -551,7 +565,7 @@ export const layer = (options?: Options) =>
         Effect.forever,
         Effect.forkScoped({ startImmediately: true }),
       )
-      yield* reloadLock.withPermit(reconcile(initial))
+      yield* reloadLock.withPermit(reconcile(sources))
 
       const update = Effect.fn("Config.update")(
         function* (patch: Patch) {
@@ -758,6 +772,7 @@ export function configured(options?: Options) {
       Credential.node,
       WellKnown.node,
       AppProcess.node,
+      App.node,
     ],
   })
 }

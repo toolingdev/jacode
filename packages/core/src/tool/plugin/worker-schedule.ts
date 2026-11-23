@@ -365,7 +365,7 @@ export const Plugin = {
       editor.add({
         name: "worker_schedule",
         description:
-          "Schedule a task on a worker instead of this computer, when the user asks for it to run remotely or it must run while this computer may be asleep or off. Takes the same trigger and action as automation_create; a prompt action goes to the task's chat on the worker. The task gets its own chat on the worker, which wakes with `prompt` and keeps the results; write the prompt so it stands alone, with every detail the worker needs, since it cannot see this chat. Note the returned sessionID: worker_schedule_status reads the results back later.",
+          "Schedule a task on a worker instead of this computer, when the user asks for it to run remotely or it must run while this computer may be asleep or off. Takes the same trigger and action as automation.create; a prompt action goes to the task's chat on the worker. The task gets its own chat on the worker, which wakes with `prompt` and keeps the results; write the prompt so it stands alone, with every detail the worker needs, since it cannot see this chat. Note the returned sessionID: worker_schedule_status reads the results back later.",
         input: ScheduleInput,
         output: ScheduleOutput,
         options: { namespace: "opencode", codemode: true, pinned: true },

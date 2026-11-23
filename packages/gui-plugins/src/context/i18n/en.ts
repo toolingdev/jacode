@@ -6,7 +6,6 @@ export default {
   "usage.cost": "Cost",
   "usage.view": "View context usage",
   "usage.toggle": "Toggle chat context",
-  "systemPrompt.title": "System Prompt",
   "rawMessages.title": "Raw messages",
   "export.session": "Export chat",
   "stats.session": "Chat",
