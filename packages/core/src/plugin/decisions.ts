@@ -378,6 +378,30 @@ export const Plugin = define({
       }),
     )
 
+    // A tool that hands back an image, such as a screenshot, mid-prompt: a model Auto picked that cannot read images
+    // would only be told the image was dropped, so the prompt moves to the first model that reads them before the
+    // next step. A model the user listed for refusals is kept, as it is not one of Auto's own picks.
+    yield* ctx.tool.hook("execute.after", (event) =>
+      Effect.sync(() => {
+        const pick = picks.get(event.sessionID)
+
+        if (event.status !== "completed" || !pick?.auto || !pick.model || pick.auto.image) return
+        if (!hasImageContent(event.result.content)) return
+        const current = `${pick.model.providerID}/${pick.model.id}`
+
+        if (pick.auto.pool.find((candidate) => candidate.key === current)?.images !== false) return
+        const next = fallback({ ...pick.auto, band: "image", image: true })
+
+        if (!next) return
+        picks.set(event.sessionID, {
+          ...pick,
+          model: next.ref,
+          auto: { ...pick.auto, band: "image", image: true, tried: new Set([...pick.auto.tried, next.key]) },
+        })
+        last.set(event.sessionID, next.key)
+      }),
+    )
+
     // A model Auto picked that declines the request outright, doing no work, hands it to the first model with fewer
     // restrictions the user listed that fits, once per prompt. The note admitted here runs in the same execution and
     // the model is resolved again for it, so the listed model answers; the note also tells the user why it changed.
@@ -742,6 +766,11 @@ export function hasImage(prompt: Pick_<PromptInput.Prompt, "files">) {
   return (prompt.files ?? []).some(
     (file) => file.uri.startsWith("data:image/") || /\.(png|jpe?g|gif|webp)$/i.test(file.name ?? file.uri),
   )
+}
+
+/** Whether a tool's result carries an image for the model to look at. */
+export function hasImageContent(content: string | readonly { readonly type: string; readonly mime?: string }[] | undefined) {
+  return typeof content !== "string" && (content ?? []).some((item) => item.type === "file" && item.mime?.toLowerCase().startsWith("image/") === true)
 }
 
 /** The answer to a question, when the decision model was sure enough of it to act on. */

@@ -242,3 +242,10 @@ test("reply reads the words answering the latest prompt, and none when the reply
   expect(DecisionsPlugin.reply([user, { type: "assistant", content: [{ type: "tool" }, text("done")] }])).toBeUndefined()
   expect(DecisionsPlugin.reply([user])).toBeUndefined()
 })
+
+test("hasImageContent finds an image a tool handed back, and nothing in text", () => {
+  expect(DecisionsPlugin.hasImageContent([{ type: "text" }, { type: "file", mime: "image/png" }])).toBe(true)
+  expect(DecisionsPlugin.hasImageContent([{ type: "file", mime: "application/pdf" }])).toBe(false)
+  expect(DecisionsPlugin.hasImageContent("a screenshot was saved")).toBe(false)
+  expect(DecisionsPlugin.hasImageContent(undefined)).toBe(false)
+})
