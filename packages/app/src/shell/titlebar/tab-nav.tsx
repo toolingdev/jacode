@@ -16,6 +16,7 @@ import { ServerBadge } from "@/servers/registry/badge"
 import type { SessionInfo } from "@opencode/client/promise"
 import { showToast } from "@/shell/notifications/toast"
 import { createSessionExporter } from "@/session/commands/export-session"
+import { SessionCopyMenu } from "@/session/session-copy-menu"
 import { SessionReadMenuItem } from "@/session/session-read-menu-item"
 import { sessionTabTitle } from "./tab-title"
 import { TabPreviewPopover } from "./tab-popover"
@@ -86,6 +87,8 @@ export function TabNavItem(
     muted?: boolean
     /** Menu items shown above an open tab's own. */
     menuItems?: () => JSX.Element
+    /** Runs on a middle click for a row without close actions, such as a pinned session. */
+    onMiddleClick?: () => void
     fallbackTitle?: string
     fallbackDirectory?: string
     onNavigate: () => void
@@ -474,8 +477,14 @@ export function TabNavItem(
         event.stopPropagation()
       }}
       onAuxClick={(event) => {
-        if (event.button !== MIDDLE_MOUSE_BUTTON || !actions) return
-        closeTab(event)
+        if (event.button !== MIDDLE_MOUSE_BUTTON) return
+
+        if (actions) return closeTab(event)
+
+        if (!props.onMiddleClick) return
+        event.preventDefault()
+        event.stopPropagation()
+        props.onMiddleClick()
       }}
     >
       <Show when={promptPulse()} keyed>
@@ -676,6 +685,10 @@ export function TabNavItem(
               <Menu.Item disabled={!props.session} onSelect={() => startRename("menu")}>
                 {language.t("common.rename")}
               </Menu.Item>
+              <Show when={props.contextMenuExtra}>{(extra) => extra()()}</Show>
+              <SessionReadMenuItem server={props.server} session={props.session} />
+              <Menu.Separator />
+              <SessionCopyMenu server={props.server} session={props.session} />
               <Menu.Item
                 disabled={!props.session || exporter.exporting({ server: props.server, sessionID: props.session.id })}
                 onSelect={() => {
@@ -686,15 +699,6 @@ export function TabNavItem(
               >
                 {language.t("common.export")}…
               </Menu.Item>
-              <SessionReadMenuItem server={props.server} session={props.session} />
-              <Show when={props.contextMenuExtra}>
-                {(extra) => (
-                  <>
-                    <Menu.Separator />
-                    {extra()()}
-                  </>
-                )}
-              </Show>
               <Menu.Separator />
               <TabCloseMenuItems
                 orientation={props.orientation}
