@@ -3,6 +3,53 @@
 Each release lists what JaCode added and what it brought in from upstream OpenCode. Builds are on the
 [Releases page](https://github.com/toolingdev/jacode/releases).
 
+## 2026.11.27
+
+The Mac app is still not signed, so macOS warns the first time it opens: right-click JaCode in Applications and choose
+Open, or run `xattr -dr com.apple.quarantine /Applications/JaCode.app` in Terminal. An installed JaCode offers this
+build as an update.
+
+### Downloads
+
+- `JaCode-2026.11.27-mac-arm64.zip`: the desktop app for Apple silicon Macs. Unzip and move JaCode to Applications.
+- `opencode-linux-x64` and `opencode-linux-arm64`: the worker software for Linux computers, the same version as the
+  app (`0.0.0-dev-202611272116`). The app installs and updates them on your workers itself.
+- `jacode-release-0.0.0-dev-202611272116.json`: the manifest the app and workers use to find and check this release.
+
+### What JaCode adds
+
+- **Auto handles screenshots.** When a tool hands back an image and the model Auto picked can't read images, the
+  chat moves to a model that can.
+- **Auto takes refused prompts elsewhere.** When the model Auto picked refuses a prompt, Auto hands it to a less
+  restricted model.
+- The composer's model chip says Auto in an Auto chat, and Settings › Mac control has the standard page heading.
+
+### Brought in from upstream OpenCode
+
+312 upstream commits, through `68ea328db1` (2026-11-27). Highlights:
+
+- **Questions**: answer a question from the composer (the New question UI experiment), and submit answers with Enter,
+  with a setting for Cmd/Ctrl+Enter.
+- **Chats**: bare `/rename` makes a new title, a Copy submenu in chat menus, archived chats show dimmed in Search,
+  interrupting before the model answers undoes the prompt, and a chat you send input to is unarchived.
+- **Models**: model speeds (fast, flex) ship for everyone, a searchable model list after connecting a provider, and
+  voice, embedding and transcription models can be set in config.
+- **Browser pane**: an address bar and recent pages on the side panel's New tab.
+- **Code Mode**: scripts can call `agent()` and `llm()` and ask for structured JSON output; a script's file changes
+  group into one patch, and its file calls show as reads and writes.
+- **Automations**: Home shows where each automation runs and which chat it wakes; failed runs no longer pause them.
+- **Machines**: copy files and forward ports directly between machines.
+- **Themes**: Sakura, Espresso, Witch Hazel, E-Ink, Dune, Modus, Alabaster, VS Code, Cyberdream, Poimandres and
+  Oxocarbon, with contrast tuned to WCAG 2.2. OpenMono is the default mono font.
+- **Lab**: the Component Lab is now Lab, with pages and states.
+- Many fixes across providers (Z.AI, Tencent, Copilot, ChatGPT accounts, Claude Code), MCP OAuth and connections,
+  ACP, the TUI, and the terminal.
+
+### Left out
+
+- **Install updates on quit** (upstream setting): it relies on upstream's updater, and JaCode updates itself from
+  its own releases.
+
 ## 2026.11.23
 
 The Mac app is still not signed, so macOS warns the first time it opens: right-click JaCode in Applications and choose
